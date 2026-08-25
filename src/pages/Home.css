@@ -1,0 +1,99 @@
+.stage {
+  padding: 220px 0 260px;
+  overflow: clip; /* clip (bukan hidden) supaya position: sticky tetap hidup */
+}
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionGroup {
+  display: contents;
+}
+
+/* Skew dipasang DI SINI (per block judul), bukan di .list —
+   supaya label 01/02/03 tetap lurus. */
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6vw;
+  transform-origin: left center;
+  transition: transform 0.15s ease-out;
+}
+
+.sectionLabel {
+  position: sticky;
+  z-index: 15;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  color: var(--color-white);
+  opacity: 0.85;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+  transition: opacity 0.3s ease;
+}
+.sectionLabel--active {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.projectGroup {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.projectRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+  padding: 0.3vw 6vw;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 40px;
+}
+.metaSpacer {
+  width: 40px;
+}
+
+.slash {
+  width: 2.5px;
+  height: 6vw;
+  background: var(--color-black);
+  transform: rotate(25deg);
+  opacity: 0.85;
+}
+
+.year {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-black);
+  opacity: 0.9;
+  transform: rotate(-14deg);
+  white-space: nowrap;
+}
+
+.title {
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  line-height: 0.92;
+  color: var(--color-black);
+  letter-spacing: -2px;
+  text-align: right;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+.projectGroup:hover .title {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--color-black);
+}

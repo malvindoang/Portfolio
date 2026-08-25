@@ -1,0 +1,673 @@
+.detail {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 220px 6vw 0;
+  color: var(--color-black);
+}
+
+/* ================= HERO ================= */
+
+.detailHero {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  height: 50vh;
+  min-height: 360px;
+  overflow: hidden;
+  margin-bottom: 96px;
+}
+
+.detailHeroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+  filter: grayscale(1) contrast(1.1);
+  opacity: 0;
+  transform: scale(1.05);
+  animation: heroImageReveal var(--motion-duration)
+    var(--motion-ease) forwards;
+}
+
+.detailHeroOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    135deg,
+    var(--color-bg),
+    #000 85%
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.75;
+}
+
+.detailHeroTitle {
+  position: absolute;
+  z-index: 2;
+  right: 4vw;
+  bottom: 6%;
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3.5rem, 9vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -2px;
+  text-align: right;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--color-white);
+  opacity: 0;
+  animation: heroTitleReveal var(--motion-duration)
+    var(--motion-ease) forwards;
+  animation-delay: calc(var(--motion-duration) * 0.4);
+  transition: color var(--motion-duration-fast)
+    var(--motion-ease);
+}
+
+.detailHeroTitle:hover {
+  color: var(--color-white);
+}
+
+@keyframes heroImageReveal {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroTitleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= REVEAL ON SCROLL ================= */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+.reveal.inView {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================= CREDIT + INTRO ================= */
+
+.detailIntro {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr;
+  gap: 48px;
+  margin-bottom: 96px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.detailIntroCol {
+  position: relative;
+  z-index: 1;
+}
+
+.detailIntroCol:nth-child(2) {
+  transition-delay: var(--motion-stagger);
+}
+
+.detailIntroCol:nth-child(3) {
+  transition-delay: calc(
+    var(--motion-stagger) * 2
+  );
+}
+
+.detailIntroHeading {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.6;
+  letter-spacing: -0.5px;
+}
+
+.detailIntroBody {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  opacity: 0.85;
+}
+
+.detailIntroSidebar {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detailCreditsLabel {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+/* ================= BODY SECTIONS (zigzag) ================= */
+
+.detailSection {
+  margin: 128px 0;
+}
+
+.detailSectionCount {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin-bottom: 18px;
+}
+
+.detailSectionTitle {
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: #1e1e1e;
+  margin: 0 0 14px;
+}
+
+.detailSectionText {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-black);
+  opacity: 0.85;
+}
+
+/* -------- baris: media + teks berdampingan, zigzag -------- */
+
+.detailSectionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+/* 'left' = teks di kiri / gambar di kanan → DOM dibalik */
+.detailSection--left .detailSectionRow {
+  flex-direction: row-reverse;
+}
+
+.detailSectionMedia {
+  min-width: 0;
+}
+
+.detailSection--slider.detailSection--right
+  .detailSectionMedia,
+.detailSection--slider.detailSection--left
+  .detailSectionMedia {
+  flex: 1 1 auto;
+  max-width: 680px;
+}
+
+.detailSectionSide {
+  flex: 0 0 320px;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ================= PAIR / IPHONE (section 4) ================= */
+
+.detailSection--pair .detailSectionMedia {
+  flex: 0 0 auto;
+}
+
+.detailSection--pair .detailSectionSide {
+  flex: 1 1 260px;
+  max-width: 340px;
+}
+
+.detailPair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.detailPairItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailPairFrame {
+  position: relative;
+  width: 300px;
+  flex: 0 0 auto;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
+.detailPairImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+.detailPairFrame.is-active .detailPairImage {
+  animation: pairReveal var(--motion-duration)
+    var(--motion-ease) forwards;
+}
+
+.detailPairItem:nth-child(2) .detailPairFrame.is-active
+  .detailPairImage {
+  animation-delay: var(--motion-stagger);
+}
+
+@keyframes pairReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Caption di bawah tiap gambar HP — sedikit lebih terlihat */
+.detailPairCaption {
+  margin-top: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-black);
+  opacity: 0.65;
+}
+
+/* ================= FIGMA PILL (sekarang berdiri sendiri) ================= */
+
+.detailFigmaWrap {
+  margin: 0 0 56px;
+}
+
+.detailFigmaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 11px 22px;
+  border: 1px solid #1e1e1e;
+  border-radius: 999px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  color: #1e1e1e;
+  text-decoration: none;
+  transition:
+    background var(--motion-duration-fast)
+      var(--motion-ease),
+    color var(--motion-duration-fast)
+      var(--motion-ease);
+}
+
+.detailFigmaPill:hover {
+  background: #1e1e1e;
+  color: #f2f2f2;
+}
+
+/* ================= SLIDER ================= */
+
+.detailSlider {
+  width: 100%;
+}
+
+.detailSliderFrame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e2e2e2;
+}
+
+.detailSliderImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+}
+
+/* Transisi sederhana: fade polos untuk semua perpindahan gambar */
+.detailSliderFrame.is-active .detailSliderImage {
+  animation: sliderFade var(--motion-duration-fast)
+    var(--motion-ease) forwards;
+}
+
+@keyframes sliderFade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Baris meta di bawah frame: caption (kiri) + prev/counter/next (kanan) */
+.detailSliderMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.detailSliderCaption {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-black);
+  opacity: 0.65;
+}
+
+.detailSliderControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.detailSliderCount {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+}
+
+/* Panah simpel — tanpa bulatan/border, hover ringan */
+.detailSliderArrow {
+  background: none;
+  border: none;
+  padding: 2px;
+  font-size: 17px;
+  line-height: 1;
+  color: #1e1e1e;
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease),
+    transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+.detailSliderArrow:hover {
+  opacity: 1;
+}
+
+.detailSliderArrow--prev:hover {
+  transform: translateX(-2px);
+}
+
+.detailSliderArrow--next:hover {
+  transform: translateX(2px);
+}
+
+/* ================= CLOSING ================= */
+
+.detailClosing {
+  margin-top: 96px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.detailParagraph {
+  font-family: Arial, sans-serif;
+  color: var(--color-black);
+  max-width: 860px;
+}
+
+.detailClosingText {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.6;
+  letter-spacing: -0.5px;
+  margin-bottom: 0;
+}
+
+/* ================= NEXT PROJECT ================= */
+
+.detailNext {
+  display: block;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: 80px;
+  padding: 0 0 160px;
+  background: #1e1e1e;
+  text-decoration: none;
+  color: var(--color-white);
+}
+
+.detailNextInner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 6vw 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.detailNextLabel {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.detailNextTitle {
+  display: inline-block;
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  font-size: 4vw;
+  letter-spacing: -1px;
+  color: var(--color-white);
+  transition: color var(--motion-duration-fast)
+    var(--motion-ease);
+}
+
+.detailNext:hover .detailNextTitle {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--color-white);
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .detailIntro {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .detailHero {
+    height: 60vh;
+    min-height: 320px;
+  }
+
+  /* body sections */
+
+  .detailSection {
+    margin: 88px 0;
+  }
+
+  .detailSectionRow,
+  .detailSection--left .detailSectionRow {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .detailSection--slider.detailSection--right
+    .detailSectionMedia,
+  .detailSection--slider.detailSection--left
+    .detailSectionMedia {
+    max-width: 100%;
+  }
+
+  .detailSectionSide,
+  .detailSection--pair .detailSectionSide {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  .detailPairFrame {
+    width: min(150px, 44%);
+    background: transparent;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .detailPair {
+    gap: 16px;
+  }
+
+  .detailSliderMeta {
+    flex-wrap: wrap;
+  }
+}
+
+/* ============ PAGE-SPECIFIC ============ */
+
+body.page-project {
+  background: #F2F2F2;
+}
+
+/* Hero */
+
+body.page-project .detailHero {
+  background: #1e1e1e;
+}
+
+body.page-project .detailHeroImage,
+body.page-project .detailHeroOverlay {
+  display: none;
+}
+
+/* Corner & nav */
+
+body.page-project .corner,
+body.page-project .navWordmark,
+body.page-project .navLinks {
+  color: var(--color-black);
+}
+
+body.page-project .corner .num,
+body.page-project .corner a,
+body.page-project .corner span.label,
+body.page-project .navLinks .label {
+  color: var(--color-black);
+}
+
+body.page-project .wordmark,
+body.page-project .sub {
+  color: #1e1e1e;
+}
+
+body.page-project .activeDash {
+  background: var(--color-black);
+}
+
+body.page-project .wordmarkLink:hover .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #1e1e1e;
+}
+
+/* ==== About terbuka di halaman project ==== */
+
+body.page-project .navWordmark.nav--open .wordmark,
+body.page-project .navWordmark.nav--open .sub {
+  color: var(--color-white);
+}
+
+body.page-project .navLinks.nav--open .label {
+  color: var(--color-white);
+}
+
+body.page-project .navLinks.nav--open .activeDash {
+  background: var(--color-white);
+}
+
+body.page-project
+  .navWordmark.nav--open
+  .wordmarkLink:hover
+  .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-white);
+}
+
+/* ==== Corner ATAS putih saat hero gelap ==== */
+
+body.page-project.on-hero .navLinks,
+body.page-project.on-hero .corner.tr {
+  color: var(--color-white);
+}
+
+body.page-project.on-hero .navLinks .label,
+body.page-project.on-hero .corner.tr .num,
+body.page-project.on-hero .corner.tr a,
+body.page-project.on-hero .corner.tr span.label {
+  color: var(--color-white);
+}
+
+body.page-project.on-hero .navLinks .activeDash {
+  background: var(--color-white);
+}
+
+/* ==== Corner BAWAH putih saat zona footer hitam ==== */
+
+body.page-project.on-footer .navWordmark,
+body.page-project.on-footer .corner.br {
+  color: var(--color-white);
+}
+
+body.page-project.on-footer .wordmark,
+body.page-project.on-footer .sub,
+body.page-project.on-footer .corner.br span.label {
+  color: var(--color-white);
+}
+
+body.page-project.on-footer
+  .wordmarkLink:hover
+  .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-white);
+}
+
+/* Transisi corner */
+
+body.page-project .navLinks,
+body.page-project .navLinks .label,
+body.page-project .corner.tr,
+body.page-project .corner.tr .num,
+body.page-project .corner.tr a,
+body.page-project .corner.tr span.label,
+body.page-project .navWordmark,
+body.page-project .wordmark,
+body.page-project .sub,
+body.page-project .corner.br,
+body.page-project .corner.br span.label {
+  transition: color 0.3s ease;
+}
+
+body.page-project .navLinks .activeDash {
+  transition: background 0.3s ease;
+}

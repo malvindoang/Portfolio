@@ -1,0 +1,197 @@
+/* ===== Wrapper overlay: fixed, TIDAK scroll ===== */
+.aboutOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: color-mix(in srgb, var(--color-bg) 95%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  overflow: hidden;
+}
+.aboutOverlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ===== Tema mono (Hub PKP) — overlay pakai warna hero (#1e1e1e),
+   transparansi & mask sama persis dengan Home ===== */
+body.theme-mono .aboutOverlay {
+  background: color-mix(in srgb, #1e1e1e 95%, transparent);
+}
+
+/* ===== Tombol close di zona header — ring bulat sempurna, fade-in pelan ===== */
+.aboutClose {
+  position: fixed;
+  top: 32px;
+  right: 40px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 26;
+  font-family: Arial, sans-serif;
+}
+.aboutClose::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--color-white);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  pointer-events: none;
+}
+.aboutClose:hover {
+  opacity: 1;
+}
+.aboutClose:hover::before {
+  opacity: 0.6;
+}
+
+/* ===== Kotak scroll: top disesuaikan supaya body mendarat di y=220px
+   (SLOT_BASE Home), fade 48px pas habis tepat saat teks mulai ===== */
+.aboutScroll {
+  position: absolute;
+  top: 172px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 6vw 120px 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+}
+
+/* ===== Konten: statement kiri + kolom info kanan. marginLeft di-set inline
+   via prop bodyLeft (Corners) supaya sejajar dengan label 01/02/03 Home ===== */
+.aboutContent {
+  display: flex;
+  gap: 8vw;
+  flex-wrap: wrap;
+  padding-top: 48px;
+}
+
+/* Kolom paragraf: lebar 620px supaya tidak terlalu memanjang ke bawah */
+.aboutStatement {
+  flex: 0 1 620px;
+  max-width: 620px;
+}
+.aboutStatement p {
+  font-family: Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-white);
+  margin-bottom: 26px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.aboutOverlay--open .aboutStatement p {
+  opacity: 0.92;
+  transform: translateY(0);
+}
+.aboutLead {
+  font-family: 'Arial Black', sans-serif !important;
+  font-weight: 900;
+  font-size: 26px !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.5px;
+}
+.aboutOverlay--open .aboutLead {
+  opacity: 1 !important;
+}
+.aboutStatement p:nth-child(1) { transition-delay: 0.05s; }
+.aboutStatement p:nth-child(2) { transition-delay: 0.12s; }
+.aboutStatement p:nth-child(3) { transition-delay: 0.19s; }
+.aboutStatement p:nth-child(4) { transition-delay: 0.26s; }
+.aboutStatement p:nth-child(5) { transition-delay: 0.33s; }
+
+/* Paragraf kontak + link (email/LinkedIn/GitHub/Instagram) — abu-abu,
+   hover jadi putih penuh + underline tipis */
+.aboutLink {
+  color: #b8b8b8;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.aboutLink:hover {
+  color: var(--color-white);
+  border-bottom-color: var(--color-white);
+}
+
+/* Kolom info: bertumpukan vertikal, berdiri tepat 8vw setelah statement
+   (pola gambar acuan — BUKAN menempel tepi kanan) */
+.aboutInfo {
+  flex: 0 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  align-items: flex-start;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.aboutOverlay--open .aboutInfo {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.15s;
+}
+
+.aboutInfoBlock h3 {
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--color-white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+.aboutInfoBlock ul {
+  list-style: none;
+}
+.aboutInfoBlock li {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  color: var(--color-white);
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+.aboutEdu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.aboutEdu strong {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 15px;
+  color: var(--color-white);
+}
+.aboutEdu span {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: var(--color-white);
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  .aboutScroll {
+    top: 152px;
+    padding: 0 24px 100px;
+  }
+  .aboutContent {
+    gap: 48px;
+    padding-top: 48px;
+    margin-left: 24px !important;
+  }
+}

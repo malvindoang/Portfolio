@@ -1,0 +1,148 @@
+.corner {
+  position: fixed;
+  z-index: 20;
+  font-size: 13px;
+  color: var(--color-white);
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.3px;
+}
+.tr { top: 36px; right: 40px; text-align: right; font-size: 14px; }
+.br { bottom: 36px; right: 40px; text-align: right; } /* font ikut base 13px — TIDAK di-16px-kan */
+
+/* Gap antar baris nav — seragam untuk corner maupun navLinks */
+.corner .row,
+.navLinks .row {
+  margin-bottom: 6px;
+}
+
+.corner .num { color: var(--color-white); opacity: 0.6; font-size: 11px; margin-right: 6px; }
+.corner a, .corner span.label { color: var(--color-white); text-decoration: none; }
+
+/* Angka kanan-atas: putih penuh + ukuran disamakan 16px (mirip section label) */
+.tr .num {
+  opacity: 1;
+  font-size: 14px;
+}
+
+.wordmark {
+  font-family: 'Arial Black', sans-serif;
+  font-weight: 900;
+  font-size: 34px;
+  line-height: 0.95;
+  color: var(--color-white);
+  letter-spacing: -0.5px;
+  transition: color 0.3s ease;
+}
+.wordmarkLink {
+  text-decoration: none;
+}
+.wordmarkLink:hover .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-white);
+}
+.sub {
+  font-size: 13px;
+  color: var(--color-white);
+  opacity: 0.75;
+  margin-top: 14px;
+}
+
+.aboutTrigger {
+  cursor: pointer;
+}
+.worksTrigger {
+  cursor: pointer;
+}
+.activeDash {
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--color-white);
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
+/* Section nav kanan-atas — 3 baris selalu tampil utuh, aktif = bold */
+.sectionNavItem {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.tr .label.sectionNavItem--active {
+  font-weight: bold;
+}
+
+/* Section BUKAN pemilik project ini — dicoret & tidak bisa diklik.
+   top:50% + translateY(-50%) memastikan garis benar-benar center
+   terhadap teks, terlepas dari tinggi baris; hanya scaleX yang animasi. */
+.sectionNavItem--disabled {
+  cursor: default;
+  pointer-events: none;
+}
+.sectionNavItem--disabled::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left;
+  animation: sectionNavStrike var(--motion-duration) var(--motion-ease) forwards;
+  animation-delay: calc(var(--motion-duration) * 1.5);
+}
+@keyframes sectionNavStrike {
+  to {
+    transform: translateY(-50%) scaleX(1);
+  }
+}
+
+/* ==== MALVIN wordmark — gerak VERTIKAL (bawah <-> atas), X tetap left:40px ==== */
+.navWordmark {
+  position: fixed;
+  left: 40px;
+  z-index: 30;
+  transition:
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity var(--motion-duration) var(--motion-ease);
+}
+.navWordmark.nav--closed {
+  top: calc(100vh - 118px);
+}
+.navWordmark.nav--open {
+  top: 36px;
+}
+
+/* Hero halaman project menutupi zona wordmark bawah — sembunyikan MALVIN
+   & sub (fade), TIDAK memengaruhi corner bawah (Jakarta/jam) karena itu
+   elemen terpisah (.corner.br) */
+body.wordmark-hidden .navWordmark {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==== Nav about / work(s) — idle di kiri, saat about buka pindah ke samping wordmark ==== */
+.navLinks {
+  position: fixed;
+  top: 36px;
+  z-index: 30;
+  width: 160px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  color: var(--color-white);
+  text-align: left;
+  transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.navLinks .label {
+  color: var(--color-white);
+  text-decoration: none;
+}
+.navLinks.nav--closed {
+  left: 40px;
+  top: 36px;
+}
+.navLinks.nav--open {
+  left: 220px;
+  top: 46px;
+}
