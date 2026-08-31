@@ -1,35 +1,68 @@
-.stage {
-  padding: 220px 0 260px;
-  overflow: clip; /* clip (bukan hidden) supaya position: sticky tetap hidup */
+/* ===== FIXED-STAGE VIRTUAL SCROLL ===== */
+
+html,
+body {
+  overflow-x: hidden;
 }
+
+.stageSpace {
+  position: relative;
+  width: 100%;
+}
+
+.stageFixed {
+  position: fixed;
+  inset: 0;
+  perspective-origin: 50% 50%;
+  overflow: clip;
+  pointer-events: none;
+}
+
 .list {
+  margin: 150px 0 120px;
   display: flex;
   flex-direction: column;
+  transform-style: preserve-3d;
+  pointer-events: none;
 }
 
 .sectionGroup {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  transform-style: preserve-3d;
+  pointer-events: none;
 }
 
-/* Skew dipasang DI SINI (per block judul), bukan di .list —
-   supaya label 01/02/03 tetap lurus. */
 .sectionBlock {
   display: flex;
   flex-direction: column;
   margin-bottom: 6vw;
-  transform-origin: left center;
-  transition: transform 0.15s ease-out;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.sectionAnchor {
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+.labelLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
 }
 
 .sectionLabel {
-  position: sticky;
-  z-index: 15;
+  position: fixed;
+  pointer-events: auto;
   font-family: Arial, sans-serif;
   font-size: 20px;
   color: var(--color-white);
   opacity: 0.85;
   letter-spacing: 1px;
-  margin-bottom: 24px;
   transition: opacity 0.3s ease;
 }
 .sectionLabel--active {
@@ -37,21 +70,30 @@
   text-decoration: underline;
 }
 
+/* FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
+   SELURUH pohon .projectGroup dst pointer-events:none permanen;
+   klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect.
+   <Link> asli hanya untuk a11y/SEO. */
 .projectGroup {
+  position: relative;
   display: flex;
   flex-direction: column;
-  cursor: pointer;
   text-decoration: none;
   color: inherit;
+  pointer-events: none;
+  transform-origin: calc(100% - 40px) center;
+  transform-style: preserve-3d;
 }
 
 .projectRow {
+  position: relative;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 20px;
-  padding: 0.3vw 6vw;
+  gap: 45px;
+  padding: 0.3vw 40px 0.3vw 6vw;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .meta {
@@ -60,6 +102,9 @@
   gap: 4px;
   flex-shrink: 0;
   min-width: 40px;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
 }
 .metaSpacer {
   width: 40px;
@@ -83,17 +128,16 @@
   white-space: nowrap;
 }
 
+/* Judul project: SOLID BOLD saja — semua efek hover/outline DIHAPUS
+   permanen (keputusan final). Tidak ada stroke, tidak ada transisi. */
 .title {
-  font-family: 'Arial Black', sans-serif;
+  position: relative;
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
-  line-height: 0.92;
+  line-height: 0.9;
   color: var(--color-black);
-  letter-spacing: -2px;
+  letter-spacing: 0.02em;
   text-align: right;
   white-space: nowrap;
-  transition: color 0.3s ease;
-}
-.projectGroup:hover .title {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--color-black);
+  pointer-events: none;
 }
