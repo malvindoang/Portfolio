@@ -8,6 +8,7 @@
   visibility: hidden;
   transition: opacity 0.4s ease, visibility 0.4s ease;
   overflow: hidden;
+  touch-action: none; /* block gesture scroll di area kosong overlay */
 }
 .aboutOverlay--open {
   opacity: 1;
