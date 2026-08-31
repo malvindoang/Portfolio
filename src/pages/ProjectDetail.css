@@ -49,24 +49,18 @@
   z-index: 2;
   right: 4vw;
   bottom: 6%;
-  font-family: 'Arial Black', sans-serif;
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
   font-size: clamp(3.5rem, 9vw, 9rem);
   line-height: 0.9;
-  letter-spacing: -2px;
+  letter-spacing: 0.02em;
   text-align: right;
-  color: transparent;
-  -webkit-text-stroke: 2px var(--color-white);
+  white-space: nowrap;
+  color: var(--color-white);
   opacity: 0;
   animation: heroTitleReveal var(--motion-duration)
     var(--motion-ease) forwards;
   animation-delay: calc(var(--motion-duration) * 0.4);
-  transition: color var(--motion-duration-fast)
-    var(--motion-ease);
-}
-
-.detailHeroTitle:hover {
-  color: var(--color-white);
 }
 
 @keyframes heroImageReveal {
@@ -179,7 +173,7 @@
 }
 
 .detailSectionTitle {
-  font-family: 'Arial Black', sans-serif;
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
   font-size: clamp(1.3rem, 2vw, 1.9rem);
   line-height: 1.2;
@@ -196,15 +190,12 @@
   opacity: 0.85;
 }
 
-/* -------- baris: media + teks berdampingan, zigzag -------- */
-
 .detailSectionRow {
   display: flex;
   align-items: flex-start;
   gap: 32px;
 }
 
-/* 'left' = teks di kiri / gambar di kanan → DOM dibalik */
 .detailSection--left .detailSectionRow {
   flex-direction: row-reverse;
 }
@@ -227,8 +218,6 @@
   display: flex;
   flex-direction: column;
 }
-
-/* ================= PAIR / IPHONE (section 4) ================= */
 
 .detailSection--pair .detailSectionMedia {
   flex: 0 0 auto;
@@ -287,7 +276,6 @@
   }
 }
 
-/* Caption di bawah tiap gambar HP — sedikit lebih terlihat */
 .detailPairCaption {
   margin-top: 10px;
   font-family: Arial, sans-serif;
@@ -296,8 +284,6 @@
   color: var(--color-black);
   opacity: 0.65;
 }
-
-/* ================= FIGMA PILL (sekarang berdiri sendiri) ================= */
 
 .detailFigmaWrap {
   margin: 0 0 56px;
@@ -329,8 +315,6 @@
   color: #f2f2f2;
 }
 
-/* ================= SLIDER ================= */
-
 .detailSlider {
   width: 100%;
 }
@@ -353,7 +337,6 @@
   opacity: 0;
 }
 
-/* Transisi sederhana: fade polos untuk semua perpindahan gambar */
 .detailSliderFrame.is-active .detailSliderImage {
   animation: sliderFade var(--motion-duration-fast)
     var(--motion-ease) forwards;
@@ -365,7 +348,6 @@
   }
 }
 
-/* Baris meta di bawah frame: caption (kiri) + prev/counter/next (kanan) */
 .detailSliderMeta {
   display: flex;
   align-items: center;
@@ -396,7 +378,6 @@
   opacity: 0.6;
 }
 
-/* Panah simpel — tanpa bulatan/border, hover ringan */
 .detailSliderArrow {
   background: none;
   border: none;
@@ -423,8 +404,6 @@
   transform: translateX(2px);
 }
 
-/* ================= CLOSING ================= */
-
 .detailClosing {
   margin-top: 96px;
   padding-top: 40px;
@@ -445,8 +424,6 @@
   letter-spacing: -0.5px;
   margin-bottom: 0;
 }
-
-/* ================= NEXT PROJECT ================= */
 
 .detailNext {
   display: block;
@@ -482,16 +459,7 @@
   font-size: 4vw;
   letter-spacing: -1px;
   color: var(--color-white);
-  transition: color var(--motion-duration-fast)
-    var(--motion-ease);
 }
-
-.detailNext:hover .detailNextTitle {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--color-white);
-}
-
-/* ================= RESPONSIVE ================= */
 
 @media (max-width: 768px) {
   .detailIntro {
@@ -503,8 +471,6 @@
     height: 60vh;
     min-height: 320px;
   }
-
-  /* body sections */
 
   .detailSection {
     margin: 88px 0;
@@ -551,8 +517,6 @@ body.page-project {
   background: #F2F2F2;
 }
 
-/* Hero */
-
 body.page-project .detailHero {
   background: #1e1e1e;
 }
@@ -577,7 +541,12 @@ body.page-project .navLinks .label {
   color: var(--color-black);
 }
 
-body.page-project .wordmark,
+/* Page project default — wordmark hitam, stroke 1px hitam konstan
+   (sewarna fill) supaya hover outline tetap halus & tidak "ngembang". */
+body.page-project .wordmark {
+  color: #1e1e1e;
+  -webkit-text-stroke: 1px #1e1e1e;
+}
 body.page-project .sub {
   color: #1e1e1e;
 }
@@ -586,16 +555,24 @@ body.page-project .activeDash {
   background: var(--color-black);
 }
 
-body.page-project .wordmarkLink:hover .wordmark {
-  color: transparent;
-  -webkit-text-stroke: 1.5px #1e1e1e;
+/* ==== About terbuka — wordmark kembali putih ==== */
+body.page-project .navWordmark.nav--open .wordmark {
+  color: var(--color-white);
+  -webkit-text-stroke: 1px var(--color-white);
 }
-
-/* ==== About terbuka di halaman project ==== */
-
-body.page-project .navWordmark.nav--open .wordmark,
 body.page-project .navWordmark.nav--open .sub {
   color: var(--color-white);
+}
+
+/* ==== About terbuka + hover — specificity harus ≥ state biasa ====
+   Rule state biasa punya specificity (0,3,1): body.page-project +
+   .navWordmark + .nav--open + .wordmark.
+   Rule hover di Corners.css (.wordmarkLink:hover .wordmark) punya
+   specificity (0,2,1) — lebih rendah, jadi tidak pernah menang.
+   Rule ini (0,4,1): + .wordmarkLink — MENANG dari state biasa.
+   Stroke 1px putih dari state biasa TETAP ada → outline muncul halus. */
+body.page-project .navWordmark.nav--open .wordmarkLink:hover .wordmark {
+  color: transparent;
 }
 
 body.page-project .navLinks.nav--open .label {
@@ -604,14 +581,6 @@ body.page-project .navLinks.nav--open .label {
 
 body.page-project .navLinks.nav--open .activeDash {
   background: var(--color-white);
-}
-
-body.page-project
-  .navWordmark.nav--open
-  .wordmarkLink:hover
-  .wordmark {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--color-white);
 }
 
 /* ==== Corner ATAS putih saat hero gelap ==== */
@@ -639,20 +608,16 @@ body.page-project.on-footer .corner.br {
   color: var(--color-white);
 }
 
-body.page-project.on-footer .wordmark,
+body.page-project.on-footer .wordmark {
+  color: var(--color-white);
+  -webkit-text-stroke: 1px var(--color-white);
+}
 body.page-project.on-footer .sub,
 body.page-project.on-footer .corner.br span.label {
   color: var(--color-white);
 }
 
-body.page-project.on-footer
-  .wordmarkLink:hover
-  .wordmark {
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--color-white);
-}
-
-/* Transisi corner */
+/* Transisi corner (pergantian warna saat scroll — BUKAN efek hover) */
 
 body.page-project .navLinks,
 body.page-project .navLinks .label,

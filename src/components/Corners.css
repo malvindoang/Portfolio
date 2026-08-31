@@ -7,7 +7,7 @@
   letter-spacing: 0.3px;
 }
 .tr { top: 36px; right: 40px; text-align: right; font-size: 14px; }
-.br { bottom: 36px; right: 40px; text-align: right; } /* font ikut base 13px — TIDAK di-16px-kan */
+.br { bottom: 36px; right: 40px; text-align: right; }
 
 /* Gap antar baris nav — seragam untuk corner maupun navLinks */
 .corner .row,
@@ -18,12 +18,20 @@
 .corner .num { color: var(--color-white); opacity: 0.6; font-size: 11px; margin-right: 6px; }
 .corner a, .corner span.label { color: var(--color-white); text-decoration: none; }
 
-/* Angka kanan-atas: putih penuh + ukuran disamakan 16px (mirip section label) */
+/* Angka kanan-atas: putih penuh + ukuran disamakan 16px */
 .tr .num {
   opacity: 1;
   font-size: 14px;
 }
 
+/* WORDMARK FINAL cross-browser:
+   - Stroke KONSTAN 1px sewarna fill default (putih). Tidak terlihat
+     saat state biasa → tidak menambah ukuran visual (tidak "ngembang").
+   - Hover hanya set color: transparent (lihat .wordmarkLink:hover di
+     bawah) → stroke tetap ada, outline 1px muncul halus.
+   - Transisi HANYA color 0.3s → mouse-in/out smooth, TIDAK BERKEDIP.
+   Stroke sendiri tidak di-transisi (value statis), jadi tidak ada
+   flicker saat color kembali dari transparent. */
 .wordmark {
   font-family: 'Arial Black', sans-serif;
   font-weight: 900;
@@ -31,6 +39,7 @@
   line-height: 0.95;
   color: var(--color-white);
   letter-spacing: -0.5px;
+  -webkit-text-stroke: 1px var(--color-white);
   transition: color 0.3s ease;
 }
 .wordmarkLink {
@@ -38,7 +47,7 @@
 }
 .wordmarkLink:hover .wordmark {
   color: transparent;
-  -webkit-text-stroke: 1.5px var(--color-white);
+  /* stroke putih 1px dari rule di atas TETAP — outline halus */
 }
 .sub {
   font-size: 13px;
@@ -72,9 +81,7 @@
   font-weight: bold;
 }
 
-/* Section BUKAN pemilik project ini — dicoret & tidak bisa diklik.
-   top:50% + translateY(-50%) memastikan garis benar-benar center
-   terhadap teks, terlepas dari tinggi baris; hanya scaleX yang animasi. */
+/* Section BUKAN pemilik project ini — dicoret & tidak bisa diklik */
 .sectionNavItem--disabled {
   cursor: default;
   pointer-events: none;
@@ -114,15 +121,13 @@
   top: 36px;
 }
 
-/* Hero halaman project menutupi zona wordmark bawah — sembunyikan MALVIN
-   & sub (fade), TIDAK memengaruhi corner bawah (Jakarta/jam) karena itu
-   elemen terpisah (.corner.br) */
+/* Hero halaman project menutupi zona wordmark bawah */
 body.wordmark-hidden .navWordmark {
   opacity: 0;
   pointer-events: none;
 }
 
-/* ==== Nav about / work(s) — idle di kiri, saat about buka pindah ke samping wordmark ==== */
+/* ==== Nav about / work(s) ==== */
 .navLinks {
   position: fixed;
   top: 36px;
