@@ -59,15 +59,23 @@ body {
   position: fixed;
   pointer-events: auto;
   font-family: Arial, sans-serif;
-  font-size: 20px;
+  font-size: 16px; /* inactive: 20% lebih kecil dari aktif */
+  font-weight: 400;
   color: var(--color-white);
-  opacity: 0.85;
+  opacity: 0.55;
   letter-spacing: 1px;
-  transition: opacity 0.3s ease;
+  transform: translateX(10px);
+  transition:
+    font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .sectionLabel--active {
+  font-size: 20px;
+  font-weight: 700;
   opacity: 1;
-  text-decoration: underline;
+  transform: translateX(0);
 }
 
 /* FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
