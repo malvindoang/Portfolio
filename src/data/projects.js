@@ -25,3 +25,10 @@ export const SECTIONS = [
 ]
 
 export const DETAIL_ORDER = ['hub-pkp']
+
+// Dipakai Home.jsx & ProjectDetail.jsx untuk membangun sectionNav —
+// label penuh ("01 — UI/UX") dipendekkan jadi bagian setelah em-dash
+// ("UI/UX") kalau ada; kalau tidak ada em-dash, label dipakai apa adanya.
+export function getSectionShortLabel(label) {
+  return label.includes('—') ? label.split('—')[1].trim() : label
+}

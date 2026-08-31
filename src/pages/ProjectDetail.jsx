@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import Corners from '../components/Corners'
 import { PROJECT_CONTENT } from '../data/projectContent'
-import { SECTIONS } from '../data/projects'
+import { SECTIONS, getSectionShortLabel } from '../data/projects'
 import { useInView } from '../hooks/useInView'
 import './ProjectDetail.css'
 
@@ -43,6 +43,8 @@ function ProjectDetail() {
   // Corner ATAS putih saat hero gelap mengapit zona corner;
   // corner BAWAH putih saat zona footer hitam mencapai corner bawah;
   // MALVIN (wordmark bawah) disembunyikan selama hero masih menutupinya.
+  // Satu scroll listener, satu rAF, satu ticking flag — pola sama persis
+  // dengan Effect utama Home.jsx (READ rects → WRITE class toggles).
   useEffect(() => {
     const update = () => {
       const vh = window.innerHeight
@@ -61,11 +63,22 @@ function ProjectDetail() {
     }
 
     update()
-    window.addEventListener('scroll', update, { passive: true })
+
+    let ticking = false
+    const handleScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        update()
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('resize', update)
 
     return () => {
-      window.removeEventListener('scroll', update)
+      window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', update)
       document.body.classList.remove('on-hero')
       document.body.classList.remove('on-footer')
@@ -91,9 +104,7 @@ function ProjectDetail() {
   // yang bold & bisa diklik = section yang memiliki project ini,
   // section lain diberi coretan & tidak bisa diklik (lihat Corners.jsx)
   const sectionNav = SECTIONS.map((section) => ({
-    label: section.label.includes('—')
-      ? section.label.split('—')[1].trim()
-      : section.label,
+    label: getSectionShortLabel(section.label),
     active: section.projects.some((p) => p.slug === slug),
     onClick: () => navigate('/'),
   }))
