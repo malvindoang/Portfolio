@@ -1,9 +1,12 @@
 import { useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
+import { CustomEase } from 'gsap/CustomEase'
 import Corners from '../components/Corners'
 import { SECTIONS, getSectionShortLabel } from '../data/projects'
 import './Home.css'
+
+gsap.registerPlugin(CustomEase)
 
 const CHAR_LIMIT = 8
 const IDEAL_CHARS = 14
@@ -17,28 +20,15 @@ const PARK_BUFFER = 60
 
 const ANCHOR_OFFSET = 263
 
-// ============ FIXED-STAGE VIRTUAL SCROLL ============
-// perspective & perspective-origin di .stageFixed STATIS (lihat Home.css),
-// TIDAK PERNAH di-update via JS lagi. Kemiringan baris = rotationY konstan
-// per baris (Effect utama, tetap sama). Scroll digerakkan lewat translate3d
-// pada .list — kerja compositor, bukan reflow/re-proyeksi 3D main thread.
-// ANGKA KUNCI — JANGAN DIUBAH tanpa instruksi eksplisit.
 const PERSPECTIVE_VW = 75
 const ROTATE_Y_DEG = -42
 
-// FIX ALIGNMENT: jarak axis rotasi dari tepi kanan .projectGroup.
-// HARUS SAMA PERSIS dengan `right: 40px` di .tr/.br (Corners.css) DAN
-// dengan `padding-right` di .projectRow (Home.css). Titik yang tepat
-// berada di axis rotasi (x = origin, z = 0) TIDAK bergerak sama sekali
-// berapa pun ROTATE_Y_DEG-nya — jadi kalau ketiga angka ini identik,
-// tepi kanan teks selalu jatuh persis di garis corner.
 const RIGHT_ANCHOR_PX = 40
 
-// ============ SKEW ON-SCROLL (desain asli Malvin) =====================
-// KONSTANTA disimpan — efeknya DIMATIKAN via comment di Effect 3.
-const SKEW_FACTOR = 0.06
-const SKEW_MAX_DEG = 5
-const SKEW_SETTLE_DELAY = 120
+const HOVER_ROT_DEG = -24
+const HOVER_DURATION = 0.7
+const HOVER_EASE_NAME = 'vanholtzPop'
+CustomEase.create(HOVER_EASE_NAME, 'M0,0 C0.075,0.82 0.165,1 1,1')
 
 function getLines(title) {
   const words = title.split(' ')
@@ -85,9 +75,11 @@ function Home() {
   const anchorRefs = useRef([])
   const labelRefs = useRef([])
   const labelDocTopRef = useRef([])
-  const projectRefs = useRef([])
-  const projectSlugsRef = useRef([]) // paralel index dgn projectRefs — slug per project (atau null)
-  const contentRefs = useRef([]) // .sectionBlock — calon pemilik skewY (nonaktif)
+  const projectRowRefs = useRef([])
+  const lineToProjectIndexRef = useRef([])
+  const projectSlugsRef = useRef([])
+  const contentRefs = useRef([])
+  const hoveredIndexRef = useRef(-1)
 
   const [activeSection, setActiveSection] = useState(0)
   const [gridLeft, setGridLeft] = useState(220)
@@ -96,10 +88,6 @@ function Home() {
     setGridLeft(40 + width + GRID_GAP)
   }, [])
 
-  // Fungsi murni — dipakai untuk hitung awal DAN di dalam scroll handler
-  // gabungan di bawah. Tidak melakukan state update di sini (READ only).
-  // Tetap valid: anchor adalah node DOM nyata yang ikut translate3d
-  // .list, jadi getBoundingClientRect()-nya selalu benar terhadap scroll.
   const computeActiveSection = useCallback(() => {
     let current = 0
     anchorRefs.current.forEach((el, i) => {
@@ -122,24 +110,29 @@ function Home() {
     window.scrollTo({ top: targetY, behavior: 'smooth' })
   }
 
-  // ============ EFFECT UTAMA — TRANSLATE3D VIRTUAL SCROLL ============
-  // Tidak ada lagi write ke perspective-origin per frame (akar lag lama).
-  // Satu scroll listener, satu rAF, urutan tegas READ → WRITE:
-  // 1) READ scrollY + hitung activeSection dari anchor rects
-  // 2) WRITE translate3d(.list) + top setiap label (.labelLayer) + state
+  const getRowsForProject = (projectIndex) => {
+    const rows = projectRowRefs.current
+    const mapping = lineToProjectIndexRef.current
+    const out = []
+    for (let i = 0; i < rows.length; i++) {
+      if (mapping[i] === projectIndex && rows[i]) out.push(rows[i])
+    }
+    return out
+  }
+
   useLayoutEffect(() => {
     const space = spaceRef.current
     const list = listRef.current
     if (!space || !list) return undefined
 
-    // --- rotationY + origin per baris (sekali saat mount, ulang saat
-    //     resize). Bukan bagian dari loop scroll. ---
     const applyRowTransforms = () => {
-      const rows = projectRefs.current.filter(Boolean)
-      rows.forEach((row) => {
+      const mapping = lineToProjectIndexRef.current
+      projectRowRefs.current.forEach((row, i) => {
+        if (!row) return
         const originX = row.offsetWidth - RIGHT_ANCHOR_PX
+        const isHovered = mapping[i] === hoveredIndexRef.current
         gsap.set(row, {
-          rotationY: ROTATE_Y_DEG,
+          rotationY: isHovered ? HOVER_ROT_DEG : ROTATE_Y_DEG,
           transformOrigin: `${originX}px center`,
         })
       })
@@ -165,14 +158,8 @@ function Home() {
       })
     }
 
-    // measure() = spacer height + labelDocTop, dibaca SEKALI (mount) dan
-    // ULANG hanya saat resize — bukan per frame scroll.
     const measure = () => {
       space.style.height = `${150 + list.scrollHeight + 120}px`
-
-      // translate harus sinkron dengan scrollY saat ini SEBELUM membaca
-      // rect anchor, supaya labelDocTop yang dihitung benar-benar
-      // posisi dokumen (rect.top + scrollY), bukan posisi ter-translate.
       writeTranslate(window.scrollY)
 
       anchorRefs.current.forEach((el, i) => {
@@ -191,11 +178,9 @@ function Home() {
       if (ticking) return
       ticking = true
       requestAnimationFrame(() => {
-        // ---- FASE READ ----
         const scrollY = window.scrollY
         const nextActive = computeActiveSection()
 
-        // ---- FASE WRITE ----
         writeTranslate(scrollY)
         writeLabels(scrollY)
         setActiveSection((prev) => (prev !== nextActive ? nextActive : prev))
@@ -219,42 +204,64 @@ function Home() {
     }
   }, [computeActiveSection])
 
-  // ============ EFFECT HIT-TEST 3D — LEVEL 3 (JS FALLBACK) ============
-  // Chrome tidak akurat melakukan native hit-test untuk elemen di dalam
-  // preserve-3d bertingkat → hit-test manual via getBoundingClientRect()
-  // (selalu akurat mengikuti proyeksi 3D final).
-  // EFEK HOVER VISUAL DIHAPUS TOTAL (keputusan final) — effect ini kini
-  // HANYA mengurus: cursor pointer saat di atas project ber-slug, dan
-  // navigasi klik via navigate(). Seluruh pohon tetap pointer-events:none;
-  // <Link> asli hanya untuk a11y/SEO.
   useLayoutEffect(() => {
     let ticking = false
     let lastX = 0
     let lastY = 0
 
-    // Elemen UI lain yang punya pointer-events sendiri (nav, corner,
-    // overlay about) — jangan ditimpa cursor project.
     const isOtherUiTarget = (target) =>
       !!target?.closest?.(
         '.corner, .navLinks, .navWordmark, .aboutOverlay, .aboutClose'
       )
 
     const findHitIndex = (x, y) => {
-      const groups = projectRefs.current
-      for (let i = groups.length - 1; i >= 0; i--) {
-        const el = groups[i]
+      const rows = projectRowRefs.current
+      const mapping = lineToProjectIndexRef.current
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const el = rows[i]
         if (!el) continue
         const rect = el.getBoundingClientRect()
         if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          return i
+          return mapping[i]
         }
       }
       return -1
     }
 
-    const applyCursor = (index) => {
-      const hasSlug = index >= 0 && !!projectSlugsRef.current[index]
+    const setRowHoverState = (projectIndex) => {
+      if (hoveredIndexRef.current === projectIndex) return
+      const prevIndex = hoveredIndexRef.current
+      hoveredIndexRef.current = projectIndex
+
+      if (prevIndex >= 0) {
+        const prevRows = getRowsForProject(prevIndex)
+        if (prevRows.length) {
+          gsap.to(prevRows, {
+            rotationY: ROTATE_Y_DEG,
+            duration: HOVER_DURATION,
+            ease: HOVER_EASE_NAME,
+            overwrite: 'auto',
+          })
+        }
+      }
+
+      if (projectIndex >= 0) {
+        const rows = getRowsForProject(projectIndex)
+        if (rows.length) {
+          gsap.to(rows, {
+            rotationY: HOVER_ROT_DEG,
+            duration: HOVER_DURATION,
+            ease: HOVER_EASE_NAME,
+            overwrite: 'auto',
+          })
+        }
+      }
+    }
+
+    const applyCursor = (projectIndex) => {
+      const hasSlug = projectIndex >= 0 && !!projectSlugsRef.current[projectIndex]
       document.body.style.cursor = hasSlug ? 'pointer' : ''
+      setRowHoverState(projectIndex)
     }
 
     const handleMouseMove = (e) => {
@@ -274,8 +281,8 @@ function Home() {
 
     const handleClick = (e) => {
       if (isOtherUiTarget(e.target)) return
-      const index = findHitIndex(e.clientX, e.clientY)
-      const slug = index >= 0 ? projectSlugsRef.current[index] : null
+      const projectIndex = findHitIndex(e.clientX, e.clientY)
+      const slug = projectIndex >= 0 ? projectSlugsRef.current[projectIndex] : null
       if (slug) navigate(`/project/${slug}`)
     }
 
@@ -286,55 +293,10 @@ function Home() {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('click', handleClick)
       document.body.style.cursor = ''
+      gsap.killTweensOf(projectRowRefs.current.filter(Boolean))
+      hoveredIndexRef.current = -1
     }
   }, [navigate])
-
-  /* ==== EFFECT 3 — SKEW ON-SCROLL: DIMATIKAN (di-comment, bukan dihapus) ====
-  useLayoutEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches
-    if (prefersReducedMotion) return undefined
-
-    const blocks = contentRefs.current.filter(Boolean)
-    if (!blocks.length) return undefined
-
-    const setters = blocks.map((el) =>
-      gsap.quickTo(el, 'skewY', { duration: 0.25, ease: 'power2.out' })
-    )
-
-    let lastY = window.scrollY
-    let ticking = false
-    let settleTimer = null
-
-    const onScroll = () => {
-      if (!ticking) {
-        ticking = true
-        requestAnimationFrame(() => {
-          const y = window.scrollY
-          const v = y - lastY
-          const skew = Math.max(
-            -SKEW_MAX_DEG,
-            Math.min(SKEW_MAX_DEG, -v * SKEW_FACTOR)
-          )
-          setters.forEach((s) => s(skew))
-          lastY = y
-          ticking = false
-        })
-      }
-      clearTimeout(settleTimer)
-      settleTimer = setTimeout(() => {
-        setters.forEach((s) => s(0))
-      }, SKEW_SETTLE_DELAY)
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      clearTimeout(settleTimer)
-    }
-  }, [])
-  ==== AKHIR EFFECT 3 (nonaktif) ==== */
 
   const sectionNav = SECTIONS.map((section, i) => ({
     label: getSectionShortLabel(section.label),
@@ -342,8 +304,10 @@ function Home() {
     onClick: () => handleSectionNavClick(i),
   }))
 
-  let rowCounter = 0
-  const nextProjectSlugs = [] // dibangun ulang tiap render, disinkronkan ke ref setelah loop
+  let projectCounter = 0
+  let lineCounter = 0
+  const nextProjectSlugs = []
+  const nextLineToProjectIndex = []
 
   return (
     <>
@@ -370,46 +334,45 @@ function Home() {
                   {section.projects.map((p, i) => {
                     const lines = getLines(p.title)
                     const fontSize = getFontSize(lines)
-                    const rowIndex = rowCounter++
-                    nextProjectSlugs[rowIndex] = p.slug || null
+                    const projectIndex = projectCounter++
+                    nextProjectSlugs[projectIndex] = p.slug || null
 
-                    const rows = lines.map((line, li) => (
-                      <div className="projectRow" key={li}>
-                        <div className="meta">
-                          {li === 0 ? (
-                            <>
-                              <div className="year">{p.year}</div>
-                              {/* Slash proporsional: 70% dari fontSize
-                                  title baris ini. */}
-                              <div
-                                className="slash"
-                                style={{ height: `calc(${fontSize} * 0.70)` }}
-                              />
-                            </>
-                          ) : (
-                            <div className="metaSpacer" />
-                          )}
+                    const rows = lines.map((line, li) => {
+                      const globalLineIndex = lineCounter++
+                      nextLineToProjectIndex[globalLineIndex] = projectIndex
+
+                      return (
+                        <div
+                          className="projectRow"
+                          key={li}
+                          ref={(el) => (projectRowRefs.current[globalLineIndex] = el)}
+                        >
+                          <div className="meta">
+                            {li === 0 ? (
+                              <>
+                                <div className="year">{p.year}</div>
+                                <div
+                                  className="slash"
+                                  style={{ height: `calc(${fontSize} * 0.70)` }}
+                                />
+                              </>
+                            ) : (
+                              <div className="metaSpacer" />
+                            )}
+                          </div>
+                          <div className="title" style={{ fontSize }}>
+                            {line}
+                          </div>
                         </div>
-                        <div className="title" style={{ fontSize }}>
-                          {line}
-                        </div>
-                      </div>
-                    ))
+                      )
+                    })
 
-                    const rowProps = {
-                      ref: (el) => (projectRefs.current[rowIndex] = el),
-                    }
-
-                    // <Link>/div TETAP dirender untuk a11y & SEO; navigasi
-                    // sesungguhnya via Effect hit-test JS (pointer-events
-                    // seluruh pohon = none, lihat Home.css).
                     if (p.slug) {
                       return (
                         <Link
                           to={`/project/${p.slug}`}
                           className="projectGroup"
                           key={p.title + i}
-                          {...rowProps}
                         >
                           {rows}
                         </Link>
@@ -417,7 +380,7 @@ function Home() {
                     }
 
                     return (
-                      <div className="projectGroup" key={p.title + i} {...rowProps}>
+                      <div className="projectGroup" key={p.title + i}>
                         {rows}
                       </div>
                     )
@@ -430,6 +393,7 @@ function Home() {
       </div>
 
       {(projectSlugsRef.current = nextProjectSlugs) && null}
+      {(lineToProjectIndexRef.current = nextLineToProjectIndex) && null}
 
       <div className="labelLayer">
         {SECTIONS.map((section, sIdx) => (
