@@ -6,7 +6,7 @@
   font-family: Arial, sans-serif;
   letter-spacing: 0.3px;
 }
-.tr { top: 36px; right: 40px; text-align: right; font-size: 14px; }
+.tr { top: 36px; right: 40px; text-align: right; font-size: 14px; z-index: 30; }
 .br { bottom: 36px; right: 40px; text-align: right; }
 
 /* Gap antar baris nav — seragam untuk corner maupun navLinks */
@@ -27,11 +27,8 @@
 /* WORDMARK FINAL cross-browser:
    - Stroke KONSTAN 1px sewarna fill default (putih). Tidak terlihat
      saat state biasa → tidak menambah ukuran visual (tidak "ngembang").
-   - Hover hanya set color: transparent (lihat .wordmarkLink:hover di
-     bawah) → stroke tetap ada, outline 1px muncul halus.
-   - Transisi HANYA color 0.3s → mouse-in/out smooth, TIDAK BERKEDIP.
-   Stroke sendiri tidak di-transisi (value statis), jadi tidak ada
-   flicker saat color kembali dari transparent. */
+   - Hover hanya set color: transparent → stroke tetap ada, outline 1px
+     muncul halus. Transisi HANYA color 0.3s → smooth, TIDAK BERKEDIP. */
 .wordmark {
   font-family: 'Arial Black', sans-serif;
   font-weight: 900;
@@ -47,7 +44,6 @@
 }
 .wordmarkLink:hover .wordmark {
   color: transparent;
-  /* stroke putih 1px dari rule di atas TETAP — outline halus */
 }
 .sub {
   font-size: 13px;
@@ -103,6 +99,144 @@
   to {
     transform: translateY(-50%) scaleX(1);
   }
+}
+
+/* ==== Tombol back (←) / close (×) — UKURAN & POSISI PERSIS VANHOLTZ ====
+   - Box 50x50 (ring ::before = 50px, sama dengan .btn-box vanholtz)
+   - margin-right: 20px → efektif right: 60px (vanholtz: right:60px),
+     jadi tombol AGAK KE KIRI tanpa menggeser teks corner / sectionNav
+   - Icon digambar via CSS (bukan glyph teks) — geometri identik:
+     bar 25px, tinggi 2px, radius 1px, kepala ±45° scaleX(.6)
+   - Warna ikut context via currentColor (page-project #1e1e1e,
+     home putih, on-hero/on-footer otomatis) */
+.cornerIconBtn {
+  position: relative;
+  top: -10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  margin-right: 73px; /* geser agak ke kiri (40px gutter + 20px = 60px) */
+  vertical-align: middle;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  overflow: visible;
+}
+
+/* Ring lingkaran 50px — default invisible (border transparent + scale .9),
+   muncul saat hover persis seperti video (masuk .25s, keluar .25s). */
+.cornerIconBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  transform: scale(0.9);
+  transition: transform 0.25s, border-color 0.25s;
+  pointer-events: none;
+}
+.cornerIconBtn:hover::before {
+  border-color: currentColor;
+  transform: scale(1);
+}
+
+/* Wrapper icon — dipisah dari button supaya bisa di-loop tanpa
+   menggeser ring. Flex center → icon presisi di tengah lingkaran. */
+.cornerIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Panah BACK — geometri persis .icon-back vanholtz */
+.cornerIconBack {
+  position: relative;
+  width: 25px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: currentColor;
+}
+.cornerIconBack::before,
+.cornerIconBack::after {
+  content: '';
+  position: absolute;
+  width: 25px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: currentColor;
+  display: block;
+}
+.cornerIconBack::before {
+  top: -7px;
+  transform: translate3d(-7px, 2px, 0) rotate(-45deg) scaleX(0.6);
+}
+.cornerIconBack::after {
+  bottom: -7px;
+  transform: translate3d(-7px, -2px, 0) rotate(45deg) scaleX(0.6);
+}
+
+/* Close × — dua bar 25px bersilangan, persis .icon-close vanholtz */
+.cornerIconClose {
+  position: relative;
+  display: block;
+  width: 2px;
+  height: 2px;
+}
+.cornerIconClose::before,
+.cornerIconClose::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 25px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: currentColor;
+}
+.cornerIconClose::before {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.cornerIconClose::after {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Loop HORIZONTAL (back): shrink → keluar kiri fade → teleport kanan →
+   masuk center fade → grow. 2s infinite, delay .25s. Bezier persis
+   vanholtz app.css @keyframes a. */
+.cornerIconBtn:hover .cornerIconBox--x {
+  animation: cornerIconLoopX 2s cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.25s infinite forwards;
+}
+@keyframes cornerIconLoopX {
+  0%     { transform: translateX(0) scale(1);        opacity: 1; }
+  5%     { transform: translateX(0) scale(0.75);     opacity: 1; }
+  19.99% { transform: translateX(-50%) scale(0.75);  opacity: 0; }
+  20%    { transform: translateX(50%) scale(0.75);   opacity: 0;
+           animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
+  30%    { transform: translateX(0) scale(0.75);     opacity: 1; }
+  40%    { transform: translateX(0) scale(1);        opacity: 1; }
+  100%   { transform: translateX(0) scale(1);        opacity: 1; }
+}
+
+/* Loop VERTIKAL (close): keluar bawah, masuk atas — persis vanholtz
+   @keyframes b (dipakai .about .btn-back). */
+.cornerIconBtn:hover .cornerIconBox--y {
+  animation: cornerIconLoopY 2s cubic-bezier(0.55, 0.055, 0.675, 0.19) 0.25s infinite forwards;
+}
+@keyframes cornerIconLoopY {
+  0%     { transform: translateY(0) scale(1);        opacity: 1; }
+  5%     { transform: translateY(0) scale(0.75);     opacity: 1; }
+  24.99% { transform: translateY(50%) scale(0.75);   opacity: 0; }
+  25%    { transform: translateY(-50%) scale(0.75);  opacity: 0;
+           animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
+  40%    { transform: translateY(0) scale(0.75);     opacity: 1; }
+  50%    { transform: translateY(0) scale(1);        opacity: 1; }
+  100%   { transform: translateY(0) scale(1);        opacity: 1; }
 }
 
 /* ==== MALVIN wordmark — gerak VERTIKAL (bawah <-> atas), X tetap left:40px ==== */

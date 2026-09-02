@@ -63,6 +63,19 @@
   animation-delay: calc(var(--motion-duration) * 0.4);
 }
 
+/* Judul hero multi-baris (field heroLines di projectContent.js).
+   Setiap baris = block sendiri; baris TERAKHIR tanpa padding →
+   posisinya persis sama seperti judul 1 baris sebelumnya. */
+.detailHeroTitleLine {
+  display: block;
+}
+
+/* Baris atas (mis. "Garbage") — padding kanan membuat stagger
+   relatif terhadap baris bawah yang tetap flush kanan. */
+.detailHeroTitleLine--top {
+  padding-right: 0.35em; /* KNOB: 0 = rata kanan; perbesar = geser ke kiri */
+}
+
 @keyframes heroImageReveal {
   to {
     opacity: 1;
@@ -404,6 +417,80 @@
   transform: translateX(2px);
 }
 
+/* ================= LAYOUT: long-image-two-col-text ================= */
+/* Gambar panjang di kiri (media), teks (judul + 2 blok copy)
+   di sidebar kanan yang sticky. */
+
+.detailSection--longimage .detailSectionMedia {
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+.detailSection--longimage .detailSectionSide {
+  flex: 0 0 360px;
+  max-width: 380px;
+}
+
+.detailSectionSide--sticky {
+  position: sticky;
+  top: 160px;
+}
+
+.longImageWrap {
+  width: 100%;
+}
+
+.longImageFrame {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e2e2e2;
+}
+
+.longImageImg {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+.longImageFrame.is-active .longImageImg {
+  animation: pairReveal var(--motion-duration)
+    var(--motion-ease) forwards;
+}
+
+.longImageCaption {
+  margin-top: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-black);
+  opacity: 0.65;
+}
+
+.longImageTextStack {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Kalau description tidak ada (title langsung diikuti text stack),
+   rapatkan gap supaya sama dengan rhythm section lain — hanya
+   14px dari margin-bottom title. */
+.detailSectionTitle + .longImageTextStack {
+  margin-top: 0;
+}
+
+.longImageTextBlock {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-black);
+  opacity: 0.85;
+}
+
 .detailClosing {
   margin-top: 96px;
   padding-top: 40px;
@@ -509,6 +596,21 @@
   .detailSliderMeta {
     flex-wrap: wrap;
   }
+
+  .detailSectionSide--sticky {
+    position: static;
+    top: auto;
+  }
+
+  .detailSection--longimage .detailSectionSide {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  .longImageTextStack {
+    margin-top: 20px;
+    gap: 18px;
+  }
 }
 
 /* ============ PAGE-SPECIFIC ============ */
@@ -521,6 +623,9 @@ body.page-project .detailHero {
   background: #1e1e1e;
 }
 
+/* Gambar + overlay hero disembunyikan sementara (hero jadi kotak
+   #1e1e1e + judul). Hapus 2 baris ini nanti kalau content.hero
+   sudah diisi gambar asli di projectContent.js. */
 body.page-project .detailHeroImage,
 body.page-project .detailHeroOverlay {
   display: none;

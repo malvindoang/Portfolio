@@ -1,18 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
+import { useParams, Navigate, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Corners from '../components/Corners'
 import { PROJECT_CONTENT } from '../data/projectContent'
-import { SECTIONS, getSectionShortLabel } from '../data/projects'
+import { SECTIONS } from '../data/projects'
 import { useInView } from '../hooks/useInView'
 import './ProjectDetail.css'
 
-// Semua project sesuai urutan tampil di Home (punya slug atau belum) —
-// dipakai supaya "next project" SELALU ada seperti referensi (vanholtz).
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
 
-// Layout zigzag kiri-kanan-kiri-kanan.
-// 'left'  = teks di kiri, gambar di kanan
-// 'right' = gambar di kiri, teks di kanan (section 4 WAJIB ini)
 const PLACEMENT_BY_INDEX = ['left', 'right', 'left', 'right']
 
 function ProjectDetail() {
@@ -22,8 +18,6 @@ function ProjectDetail() {
   const heroRef = useRef(null)
   const footerRef = useRef(null)
 
-  // Tema per project (field `theme` di projects.js) — default 'red' bila
-  // project belum punya tema sendiri. Home (tanpa class tema) tetap merah.
   const ownerProject = ALL_PROJECTS.find((p) => p.slug === slug)
   const projectTheme = ownerProject?.theme || 'red'
 
@@ -31,8 +25,6 @@ function ProjectDetail() {
     window.scrollTo(0, 0)
   }, [slug])
 
-  // Background terang + corner hitam hanya di halaman project, plus class
-  // tema (theme-<nama>) supaya About & elemen lain bisa di-scope per tema.
   useEffect(() => {
     document.body.classList.add('page-project', `theme-${projectTheme}`)
     return () => {
@@ -40,11 +32,6 @@ function ProjectDetail() {
     }
   }, [projectTheme])
 
-  // Corner ATAS putih saat hero gelap mengapit zona corner;
-  // corner BAWAH putih saat zona footer hitam mencapai corner bawah;
-  // MALVIN (wordmark bawah) disembunyikan selama hero masih menutupinya.
-  // Satu scroll listener, satu rAF, satu ticking flag — pola sama persis
-  // dengan Effect utama Home.jsx (READ rects → WRITE class toggles).
   useEffect(() => {
     const update = () => {
       const vh = window.innerHeight
@@ -53,7 +40,6 @@ function ProjectDetail() {
       const overHero = r ? r.top < 90 && r.bottom > 90 : false
       document.body.classList.toggle('on-hero', overHero)
 
-      // 118 = jarak wordmark dari dasar layar saat idle (rule nav--closed)
       const heroCoversWordmark = r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
@@ -96,37 +82,48 @@ function ProjectDetail() {
   const nextProject = ALL_PROJECTS[(currentIndex + 1) % ALL_PROJECTS.length]
   const nextTo = nextProject?.slug ? `/project/${nextProject.slug}` : '/'
 
-  // Hero PUNYA field sendiri (content.hero) — tidak lagi bergantung ke
-  // sections[0], karena skema sections sekarang pakai "images" (array).
   const heroImage = content.hero
-
-  // Corner kanan-atas: section nav seperti Home;
-  // yang bold & bisa diklik = section yang memiliki project ini,
-  // section lain diberi coretan & tidak bisa diklik (lihat Corners.jsx)
-  const sectionNav = SECTIONS.map((section) => ({
-    label: getSectionShortLabel(section.label),
-    active: section.projects.some((p) => p.slug === slug),
-    onClick: () => navigate('/'),
-  }))
 
   return (
     <>
-      <Corners sectionNav={sectionNav} />
+      {/* sectionNav (01/02/03) DIHAPUS khusus halaman project — diganti
+          tombol back (←) via prop onBack. Home.jsx TIDAK terpengaruh. */}
+      <Corners onBack={() => navigate('/')} />
 
       <article className="detail">
-        {heroImage && (
-          <section ref={heroRef} className="detailHero">
-            <img
-              className="detailHeroImage"
-              src={heroImage}
-              alt={content.title}
-            />
+        {/* HERO SELALU DIRENDER: kotak #1e1e1e + judul besar, persis HUB PKP.
+            Gambar OPSIONAL — nanti tinggal isi content.hero di
+            projectContent.js, <img> + overlay otomatis ikut muncul. */}
+        <section ref={heroRef} className="detailHero">
+          {heroImage && (
+            <>
+              <img
+                className="detailHeroImage"
+                src={heroImage}
+                alt={content.title}
+              />
 
-            <div className="detailHeroOverlay" aria-hidden="true" />
+              <div className="detailHeroOverlay" aria-hidden="true" />
+            </>
+          )}
 
-            <h1 className="detailHeroTitle">{content.title}</h1>
-          </section>
-        )}
+          <h1 className="detailHeroTitle">
+            {content.heroLines
+              ? content.heroLines.map((line, i) => (
+                  <span
+                    key={line}
+                    className={
+                      i < content.heroLines.length - 1
+                        ? 'detailHeroTitleLine detailHeroTitleLine--top'
+                        : 'detailHeroTitleLine'
+                    }
+                  >
+                    {line}
+                  </span>
+                ))
+              : content.title}
+          </h1>
+        </section>
 
         <section ref={introRef} className="detailIntro">
           <div
@@ -145,7 +142,6 @@ function ProjectDetail() {
             {content.approach}
           </div>
 
-          {/* ROLE + TOOLS + YEAR + DURATION + TEAM — tidak diubah */}
           <div
             className={`detailIntroCol detailIntroSidebar reveal ${
               introInView ? 'inView' : ''
@@ -186,7 +182,6 @@ function ProjectDetail() {
           />
         ))}
 
-        {/* Figma pill — sekarang berdiri sendiri di bawah section terakhir */}
         {content.figma && (
           <div
             ref={figmaRef}
@@ -223,11 +218,50 @@ function ProjectDetail() {
   )
 }
 
-// ================= BODY SECTION (slider / pair, zigzag) =================
-
 function ProjectSection({ section, index }) {
   const [ref, inView] = useInView()
   const placement = PLACEMENT_BY_INDEX[index] || 'left'
+  const countLabel = String(index + 1).padStart(2, '0')
+
+  // ---- Layout: long-image-two-col-text ----
+  if (section.layout === 'long-image-two-col-text') {
+    return (
+      <div
+        ref={ref}
+        className={`detailSection detailSection--longimage reveal ${
+          inView ? 'inView' : ''
+        }`}
+      >
+        <span className="detailSectionCount">{countLabel}</span>
+
+        <div className="detailSectionRow">
+          <div className="detailSectionMedia">
+            <LongImage
+              image={section.image}
+              title={section.title}
+              aspectRatio={section.aspectRatio}
+              active={inView}
+            />
+          </div>
+
+          <div className="detailSectionSide detailSectionSide--sticky">
+            <h3 className="detailSectionTitle">{section.title}</h3>
+
+            <div className="longImageTextStack">
+              <p className="longImageTextBlock">
+                {section.twoColText.left}
+              </p>
+              <p className="longImageTextBlock">
+                {section.twoColText.right}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ---- Layout existing: slider / pair (persis pola HUB PKP) ----
   const isPair = section.layout === 'pair'
 
   return (
@@ -237,9 +271,7 @@ function ProjectSection({ section, index }) {
         isPair ? 'detailSection--pair' : 'detailSection--slider'
       } reveal ${inView ? 'inView' : ''}`}
     >
-      <span className="detailSectionCount">
-        {String(index + 1).padStart(2, '0')}
-      </span>
+      <span className="detailSectionCount">{countLabel}</span>
 
       <div className="detailSectionRow">
         <div className="detailSectionMedia">
@@ -262,14 +294,15 @@ function ProjectSection({ section, index }) {
 
         <div className={`detailSectionSide detailSectionSide--${placement}`}>
           <h3 className="detailSectionTitle">{section.title}</h3>
-          <p className="detailSectionText">{section.description}</p>
+          {section.description && (
+            <p className="detailSectionText">{section.description}</p>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-// images: [{ src, caption }] — caption dipakai juga sebagai alt text.
 function SliderGallery({ images, title, aspectRatio, active }) {
   const [index, setIndex] = useState(0)
   const total = images.length
@@ -327,7 +360,6 @@ function SliderGallery({ images, title, aspectRatio, active }) {
   )
 }
 
-// images: [{ src, caption }] — caption dipakai juga sebagai alt text.
 function PairGallery({ images, title, aspectRatio, active }) {
   return (
     <div className="detailPair">
@@ -349,6 +381,25 @@ function PairGallery({ images, title, aspectRatio, active }) {
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+function LongImage({ image, title, aspectRatio, active }) {
+  return (
+    <div className="longImageWrap">
+      <div
+        className={`longImageFrame ${active ? 'is-active' : ''}`}
+        style={aspectRatio ? { aspectRatio } : undefined}
+      >
+        <img
+          className="longImageImg"
+          src={image.src}
+          alt={image.caption || title}
+        />
+      </div>
+
+      {image.caption && <p className="longImageCaption">{image.caption}</p>}
     </div>
   )
 }

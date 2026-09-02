@@ -3,7 +3,7 @@ import './About.css'
 
 const SPECIALTIES = ['Front-end Development', 'UI/UX Design', 'Interactive Multimedia']
 
-function About({ isOpen, onClose, bodyLeft }) {
+function About({ isOpen, bodyLeft }) {
   // SOLUSI GLOBAL — SATU LISTENER UNTUK BLOKIR SEMUA SCROLL KE BODY
   //
   // Kenapa listener di WINDOW (bukan di .aboutOverlay)?
@@ -16,8 +16,8 @@ function About({ isOpen, onClose, bodyLeft }) {
   //   - target di dalam .aboutScroll + di ujung → preventDefault
   //   - target di dalam .aboutScroll + bisa scroll → biarkan
   //
-  // Ini berlaku untuk corner, close button, area kosong overlay, dll
-  // — tanpa perlu patch per-elemen.
+  // Ini berlaku untuk corner, tombol close (skrg di Corners.jsx), area
+  // kosong overlay, dll — tanpa perlu patch per-elemen.
   useEffect(() => {
     if (!isOpen) return
 
@@ -31,7 +31,7 @@ function About({ isOpen, onClose, bodyLeft }) {
     const handleWheel = (e) => {
       const scrollContainer = e.target.closest?.('.aboutScroll')
       if (!scrollContainer) {
-        // Target di LUAR .aboutScroll (corners, close btn, area kosong, dll)
+        // Target di LUAR .aboutScroll (corners, tombol close, area kosong, dll)
         // → BLOCK total, jangan sampai ke body
         e.preventDefault()
         return
@@ -83,8 +83,6 @@ function About({ isOpen, onClose, bodyLeft }) {
 
   return (
     <div className={`aboutOverlay${isOpen ? ' aboutOverlay--open' : ''}`}>
-      <button className="aboutClose" onClick={onClose} aria-label="Close about">×</button>
-
       <div className="aboutScroll">
         <div className="aboutContent" style={{ marginLeft: bodyLeft }}>
           <div className="aboutStatement">

@@ -15,47 +15,16 @@
   visibility: visible;
 }
 
-/* ===== Tema mono (Hub PKP) — overlay pakai warna hero (#1e1e1e),
+/* ===== Page project (semua tema, termasuk mono/Hub PKP) — overlay PUTIH,
    transparansi & mask sama persis dengan Home ===== */
-body.theme-mono .aboutOverlay {
-  background: color-mix(in srgb, #1e1e1e 95%, transparent);
+body.page-project .aboutOverlay {
+  background: color-mix(in srgb, #F2F2F2 95%, transparent);
 }
 
-/* ===== Tombol close di zona header — ring bulat sempurna, fade-in pelan ===== */
-.aboutClose {
-  position: fixed;
-  top: 32px;
-  right: 40px;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--color-white);
-  font-size: 34px;
-  line-height: 1;
-  cursor: pointer;
-  z-index: 26;
-  font-family: Arial, sans-serif;
-}
-.aboutClose::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid var(--color-white);
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.55s ease;
-  pointer-events: none;
-}
-.aboutClose:hover {
-  opacity: 1;
-}
-.aboutClose:hover::before {
-  opacity: 0.6;
-}
+/* Catatan: tombol close (×) TIDAK lagi di sini — sudah dipindah ke
+   Corners.jsx (.cornerIconBtn) supaya posisinya bisa disamakan persis
+   dengan tombol back. Warnanya otomatis ikut aturan warna corner yang
+   sudah ada di ProjectDetail.css (body.page-project / on-hero / on-footer). */
 
 /* ===== Kotak scroll: top disesuaikan supaya body mendarat di y=220px
    (SLOT_BASE Home), fade 48px pas habis tepat saat teks mulai ===== */
@@ -116,6 +85,11 @@ body.theme-mono .aboutOverlay {
 .aboutStatement p:nth-child(4) { transition-delay: 0.26s; }
 .aboutStatement p:nth-child(5) { transition-delay: 0.33s; }
 
+/* Page project — semua paragraf statement jadi hitam page-project */
+body.page-project .aboutStatement p {
+  color: var(--color-black);
+}
+
 /* Paragraf kontak + link (email/LinkedIn/GitHub/Instagram) — abu-abu,
    hover jadi putih penuh + underline tipis */
 .aboutLink {
@@ -128,6 +102,15 @@ body.theme-mono .aboutOverlay {
 .aboutLink:hover {
   color: var(--color-white);
   border-bottom-color: var(--color-white);
+}
+
+/* Page project — link abu gelap, hover ke hitam page-project */
+body.page-project .aboutLink {
+  color: #555555;
+}
+body.page-project .aboutLink:hover {
+  color: var(--color-black);
+  border-bottom-color: var(--color-black);
 }
 
 /* Kolom info: bertumpukan vertikal, berdiri tepat 8vw setelah statement
@@ -183,6 +166,14 @@ body.theme-mono .aboutOverlay {
   font-size: 14px;
   color: var(--color-white);
   opacity: 0.75;
+}
+
+/* Page project — kolom info (Specialties/Education/Experience) jadi hitam page-project */
+body.page-project .aboutInfoBlock h3,
+body.page-project .aboutInfoBlock li,
+body.page-project .aboutEdu strong,
+body.page-project .aboutEdu span {
+  color: var(--color-black);
 }
 
 @media (max-width: 768px) {

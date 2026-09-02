@@ -6,11 +6,7 @@ export const PROJECT_CONTENT = {
     year: 2026,
     duration: '6 months',
     team: '11 people',
-    // Figma pill sekarang tampil sebagai elemen tunggal di bawah section
-    // terakhir (bukan lagi menempel di satu section tertentu).
     figma: true,
-    // Gambar hero — terpisah dari sections (sections dipakai untuk body).
-    // Ganti path ini kalau file landing-page.png kamu ada di lokasi lain.
     hero: '/images/hub-pkp/landing-page.png',
     intro:
       "In Indonesia, more than 8 out of 10 homes are built by the people themselves — often without professional guidance, transparent pricing, or anyone to hold accountable. HUB Layanan Rumah Swadaya Layak Huni is the Ministry of Housing and Settlement Areas (PKP)'s digital answer to that reality.",
@@ -96,5 +92,62 @@ export const PROJECT_CONTENT = {
     ],
     closing:
       'This project taught me that designing for government is, at its core, designing for trust — between citizens and workers, and between people and their government. It was a valuable experience in shaping a complex, multi-role system, and in seeing firsthand how thoughtful digital design can support a national-scale program.',
+  },
+
+  'garbage-classification': {
+    title: 'Garbage Classification',
+    role: 'UI/UX Designer & Website Designer',
+    tools: 'Figma, Photoshop',
+    year: 2026,
+    duration: '5 days',
+    team: 'Individual',
+    figma: false,
+    hero: null,
+    // Judul hero dipecah 2 baris: baris terakhir tetap flush kanan
+    // (posisi tidak berubah), baris atas diberi padding kanan via CSS.
+    heroLines: ['Garbage', 'Classification'],
+    intro:
+      'An accurate model is useless if nobody can use it. Garbage Classification is the interface I designed for my undergraduate thesis — a machine-learning model that recognizes six types of waste from a single photo — built so that anyone, not just researchers, can sort waste correctly in seconds.',
+    approach:
+      'In just five days, I prototyped the entire experience in Figma: a friendly, illustration-driven web app in Bahasa Indonesia that explains itself before asking anything. The prototype later became the blueprint for the deployed web application (Web Development section), while the model and the research paper live in the Research section.',
+    sections: [
+      {
+        title: 'Explaining a model in everyday language',
+        image: {
+          src: '/images/garbage-classification/home.png',
+          caption: 'Home page',
+        },
+        twoColText: {
+          left:
+            "The home page explains before it asks. In plain Bahasa Indonesia, with illustrations of waste bins, leaf-trucks, and clouds that feel more like a poster than a dashboard, it answers the only question a first-time visitor has — what is this tool, and why does it matter. The eco-green palette quietly signals what the project cares about, so anyone, from students to grandparents, feels the tool was made for them.",
+          right:
+            'Below the fold, the six categories the model understands are laid out plainly — cardboard, glass, metal, paper, plastic, and trash — just the everyday names people already use. Before asking anyone to upload a photo, the design shows exactly what the model can and cannot see, so users arrive at the next step already knowing the boundaries. That quiet confidence makes the first upload feel less like a test and more like a conversation.',
+        },
+        layout: 'long-image-two-col-text',
+      },
+      {
+        title: 'One upload, one honest answer',
+        description:
+          'The three screens that follow are as light as the model itself. The detection page asks for a single photo with clear rules — JPG or PNG, maximum 10MB — so there is never any guesswork. Once uploaded, the screen quietly confirms what you picked — name, size, format, the moment it arrived — before the model looks at anything. Then comes the honest answer: the label it chose, the confidence behind it, and the alternatives it considered. No oracle, no black box — just a voice that estimates openly, so people can judge for themselves.',
+        images: [
+          {
+            src: '/images/garbage-classification/detection.png',
+            caption: 'Detection: one photo, clear rules',
+          },
+          {
+            src: '/images/garbage-classification/after-upload.png',
+            caption: 'Confirm before the model looks',
+          },
+          {
+            src: '/images/garbage-classification/result.png',
+            caption: 'An honest answer: label, confidence, alternatives',
+          },
+        ],
+        layout: 'slider',
+        aspectRatio: '480 / 360',
+      },
+    ],
+    closing:
+      'Five days of prototyping taught me that the hardest part of designing for machine learning is not the screens — it is translating a model\'s output into something people can understand and trust. This prototype became the blueprint for the deployed web application, and together with the model and the research paper, it completes the three outputs of my thesis.',
   },
 }
