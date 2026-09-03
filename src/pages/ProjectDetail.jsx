@@ -50,12 +50,11 @@ function ProjectDetail() {
       // ==== READING MODE (State B/C) ====
       // B aktif: garis bawah section opening (intro) sudah lewat slot
       // wordmark idle (vh - 118, KNOB sama dengan threshold wordmark-hidden
-      // di atas). C: balik ke A begitu elemen NEXT PROJECT masuk viewport
-      // (dipindah dari closing paragraph — requirement 2).
-      // closingRef TETAP dipakai untuk reveal animation paragraf closing
-      // (lihat closingInView di bawah), hanya dilepas dari logic ini.
-      // Fallback ke closingRect kalau next project tidak dirender (mis.
-      // cuma ada 1 project) — supaya reading-mode tidak nyangkut permanen.
+      // di atas). C: balik ke A begitu elemen NEXT PROJECT masuk viewport.
+      // closingRef TETAP dipakai untuk reveal animation paragraf closing,
+      // hanya dilepas dari logic ini.
+      // Fallback ke closingRect kalau next project tidak dirender —
+      // supaya reading-mode tidak nyangkut permanen.
       const introRect = introRef.current?.getBoundingClientRect()
       const nextRect = nextRef.current?.getBoundingClientRect()
       const closingRect = closingRef.current?.getBoundingClientRect()
@@ -107,7 +106,7 @@ function ProjectDetail() {
       <Corners onBack={() => navigate('/')} />
 
       <article className="detail">
-        {/* HERO SELALU DIRENDER: kotak #1e1e1e + judul besar, persis HUB PKP.
+        {/* HERO SELALU DIRENDER: kotak #1e1e1e + judul besar outline CAPS.
             Gambar OPSIONAL — nanti tinggal isi content.hero di
             projectContent.js, <img> + overlay otomatis ikut muncul. */}
         <section ref={heroRef} className="detailHero">
@@ -205,7 +204,14 @@ function ProjectDetail() {
               figmaInView ? 'inView' : ''
             }`}
           >
-            <a href="#" className="detailFigmaPill">
+            {/* figmaUrl kosong → href "#" (persis kondisi HUB PKP sekarang).
+                Begitu diisi string URL → otomatis buka tab baru. */}
+            <a
+              href={content.figmaUrl || '#'}
+              target={content.figmaUrl ? '_blank' : undefined}
+              rel={content.figmaUrl ? 'noreferrer' : undefined}
+              className="detailFigmaPill"
+            >
               View Figma prototype →
             </a>
           </div>
@@ -326,10 +332,9 @@ function SliderGallery({ images, title, aspectRatio, active }) {
 
   // Kalau section TIDAK mengirim aspectRatio (mis. Garbage Classification
   // section 02): frame beralih ke mode "natural" — tinggi frame dihitung
-  // manual dari rasio asli gambar (bukan CSS height:auto polos), supaya
-  // transisi tinggi antar-slide bisa di-animasikan halus (requirement 4).
-  // HUB PKP selalu kirim aspectRatio, tetap lewat jalur lama, TIDAK
-  // terpengaruh sama sekali.
+  // manual dari rasio asli gambar, supaya transisi tinggi antar-slide
+  // bisa di-animasikan halus. HUB PKP selalu kirim aspectRatio, tetap
+  // lewat jalur lama, TIDAK terpengaruh sama sekali.
   const hasAspectRatio = Boolean(aspectRatio)
 
   const frameRef = useRef(null)

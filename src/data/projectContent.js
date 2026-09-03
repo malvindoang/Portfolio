@@ -7,6 +7,7 @@ export const PROJECT_CONTENT = {
     duration: '6 months',
     team: '11 people',
     figma: true,
+    figmaUrl: '', // TODO: isi link Figma prototype di sini (string URL)
     hero: '/images/hub-pkp/landing-page.png',
     intro:
       "In Indonesia, more than 8 out of 10 homes are built by the people themselves — often without professional guidance, transparent pricing, or anyone to hold accountable. HUB Layanan Rumah Swadaya Layak Huni is the Ministry of Housing and Settlement Areas (PKP)'s digital answer to that reality.",
@@ -101,7 +102,8 @@ export const PROJECT_CONTENT = {
     year: 2026,
     duration: '5 days',
     team: 'Individual',
-    figma: false,
+    figma: true, // pill "View Figma prototype" tampil (persis HUB PKP)
+    figmaUrl: '', // TODO: isi link Figma prototype di sini (string URL)
     hero: null,
     // Judul hero dipecah 2 baris: baris terakhir tetap flush kanan
     // (posisi tidak berubah), baris atas diberi padding kanan via CSS.

@@ -550,8 +550,7 @@
    hanya 1100px: kata terpanjang "Classification" (±9.8em) di 88px
    = ±860px → muat tanpa overlap.
    Padding-bottom tidak dipasang di sini — dipindah ke .detail
-   (parent) supaya berlaku konsisten di semua project, termasuk
-   yang tidak render footer ini. */
+   (parent) supaya berlaku konsisten di semua project. */
 
 .detailNextSection {
   margin-top: 80px;
@@ -792,7 +791,16 @@ body.page-project.reading-mode .wordmarkLink:hover .wordmark {
 
 /* Transisi corner (pergantian warna saat scroll — BUKAN efek hover) */
 
-body.page-project .navLinks,
+/* navLinks dipisah: butuh transisi LEFT supaya saat About ditutup di
+   page project, about/work(s) bergeser kiri mulus — durasi & bezier
+   identik dengan .navLinks di Corners.css (homepage). */
+body.page-project .navLinks {
+  transition:
+    color 0.3s ease,
+    left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 body.page-project .navLinks .label,
 body.page-project .corner.tr,
 body.page-project .corner.tr .num,
@@ -804,15 +812,6 @@ body.page-project .navWordmark {
     top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity var(--motion-duration) var(--motion-ease);
-}
-body.page-project .wordmark,
-body.page-project .sub,
-body.page-project .corner.br,
-body.page-project .corner.br span.label {
-  transition:
-    color 0.3s ease,
-    -webkit-text-stroke-width 0.3s ease,
-    -webkit-text-stroke-color 0.3s ease;
 }
 
 body.page-project .navLinks .activeDash {
