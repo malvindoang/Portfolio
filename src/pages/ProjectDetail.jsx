@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, Navigate, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import Corners from '../components/Corners'
@@ -16,7 +16,7 @@ function ProjectDetail() {
   const navigate = useNavigate()
   const content = PROJECT_CONTENT[slug]
   const heroRef = useRef(null)
-  const footerRef = useRef(null)
+  const nextRef = useRef(null)
 
   const ownerProject = ALL_PROJECTS.find((p) => p.slug === slug)
   const projectTheme = ownerProject?.theme || 'red'
@@ -32,6 +32,10 @@ function ProjectDetail() {
     }
   }, [projectTheme])
 
+  const [introRef, introInView] = useInView()
+  const [figmaRef, figmaInView] = useInView()
+  const [closingRef, closingInView] = useInView()
+
   useEffect(() => {
     const update = () => {
       const vh = window.innerHeight
@@ -43,9 +47,25 @@ function ProjectDetail() {
       const heroCoversWordmark = r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
-      const f = footerRef.current?.getBoundingClientRect()
-      const overFooter = f ? f.top < vh - 110 : false
-      document.body.classList.toggle('on-footer', overFooter)
+      // ==== READING MODE (State B/C) ====
+      // B aktif: garis bawah section opening (intro) sudah lewat slot
+      // wordmark idle (vh - 118, KNOB sama dengan threshold wordmark-hidden
+      // di atas). C: balik ke A begitu elemen NEXT PROJECT masuk viewport
+      // (dipindah dari closing paragraph — requirement 2).
+      // closingRef TETAP dipakai untuk reveal animation paragraf closing
+      // (lihat closingInView di bawah), hanya dilepas dari logic ini.
+      // Fallback ke closingRect kalau next project tidak dirender (mis.
+      // cuma ada 1 project) — supaya reading-mode tidak nyangkut permanen.
+      const introRect = introRef.current?.getBoundingClientRect()
+      const nextRect = nextRef.current?.getBoundingClientRect()
+      const closingRect = closingRef.current?.getBoundingClientRect()
+      const pastIntro = introRect ? introRect.bottom < vh - 118 : false
+      const reachedNext = nextRect
+        ? nextRect.top < vh
+        : closingRect
+        ? closingRect.top < vh
+        : false
+      document.body.classList.toggle('reading-mode', pastIntro && !reachedNext)
     }
 
     update()
@@ -67,14 +87,10 @@ function ProjectDetail() {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', update)
       document.body.classList.remove('on-hero')
-      document.body.classList.remove('on-footer')
       document.body.classList.remove('wordmark-hidden')
+      document.body.classList.remove('reading-mode') // cleanup saat unmount
     }
   }, [])
-
-  const [introRef, introInView] = useInView()
-  const [figmaRef, figmaInView] = useInView()
-  const [closingRef, closingInView] = useInView()
 
   if (!content) return <Navigate to="/" replace />
 
@@ -206,12 +222,12 @@ function ProjectDetail() {
         </section>
 
         {nextProject && nextProject.title !== content.title && (
-          <Link ref={footerRef} to={nextTo} className="detailNext">
-            <div className="detailNextInner">
-              <span className="detailNextLabel">Next project</span>
+          <div ref={nextRef} className="detailNextSection">
+            <span className="detailNextLabel">Next project</span>
+            <Link to={nextTo} className="detailNextPerspective">
               <span className="detailNextTitle">{nextProject.title}</span>
-            </div>
-          </Link>
+            </Link>
+          </div>
         )}
       </article>
     </>
@@ -309,12 +325,41 @@ function SliderGallery({ images, title, aspectRatio, active }) {
   const current = images[index]
 
   // Kalau section TIDAK mengirim aspectRatio (mis. Garbage Classification
-  // section 02): frame beralih ke mode "natural" — height:auto, gambar
-  // ikut alur normal (bukan position:absolute) supaya tinggi mengikuti
-  // rasio asli foto dan tidak ter-crop. HUB PKP selalu kirim aspectRatio,
-  // jadi tetap lewat jalur lama (position:absolute + object-fit:cover),
-  // TIDAK terpengaruh sama sekali.
+  // section 02): frame beralih ke mode "natural" — tinggi frame dihitung
+  // manual dari rasio asli gambar (bukan CSS height:auto polos), supaya
+  // transisi tinggi antar-slide bisa di-animasikan halus (requirement 4).
+  // HUB PKP selalu kirim aspectRatio, tetap lewat jalur lama, TIDAK
+  // terpengaruh sama sekali.
   const hasAspectRatio = Boolean(aspectRatio)
+
+  const frameRef = useRef(null)
+  const imgRef = useRef(null)
+  const [naturalHeight, setNaturalHeight] = useState(null)
+
+  // Hitung tinggi frame dari rasio natural gambar x lebar frame saat ini.
+  const measureHeight = useCallback(() => {
+    const img = imgRef.current
+    const frame = frameRef.current
+    if (!img || !frame || !img.naturalWidth) return
+    const w = frame.offsetWidth
+    setNaturalHeight((img.naturalHeight / img.naturalWidth) * w)
+  }, [])
+
+  // Kalau gambar sudah ada di cache browser, event onLoad TIDAK pernah
+  // fire (img.complete langsung true saat mount), jadi dicek manual
+  // tiap ganti slide.
+  useEffect(() => {
+    if (hasAspectRatio) return
+    if (imgRef.current?.complete) measureHeight()
+  }, [index, hasAspectRatio, measureHeight])
+
+  // Recompute saat window resize (lebar frame berubah → tinggi
+  // proporsional ikut berubah).
+  useEffect(() => {
+    if (hasAspectRatio) return
+    window.addEventListener('resize', measureHeight)
+    return () => window.removeEventListener('resize', measureHeight)
+  }, [hasAspectRatio, measureHeight])
 
   const goNext = () => setIndex((i) => (i + 1) % total)
   const goPrev = () => setIndex((i) => (i - 1 + total) % total)
@@ -322,16 +367,25 @@ function SliderGallery({ images, title, aspectRatio, active }) {
   return (
     <div className="detailSlider">
       <div
+        ref={frameRef}
         className={`detailSliderFrame ${active ? 'is-active' : ''} ${
           hasAspectRatio ? '' : 'detailSliderFrame--natural'
         }`}
-        style={hasAspectRatio ? { aspectRatio } : undefined}
+        style={
+          hasAspectRatio
+            ? { aspectRatio }
+            : naturalHeight
+            ? { height: naturalHeight }
+            : undefined
+        }
       >
         <img
+          ref={imgRef}
           key={index}
           className="detailSliderImage"
           src={current.src}
           alt={current.caption || `${title} — ${index + 1}`}
+          onLoad={measureHeight}
         />
       </div>
 

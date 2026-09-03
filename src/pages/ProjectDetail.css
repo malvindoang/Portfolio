@@ -118,8 +118,6 @@
   grid-template-columns: 1.2fr 1fr 0.8fr;
   gap: 48px;
   margin-bottom: 96px;
-  padding-bottom: 40px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .detailIntroCol {
@@ -340,6 +338,30 @@
   background: #e2e2e2;
 }
 
+/* ==== Frame slider TANPA aspectRatio (mis. Garbage Classification
+   section 02) — tinggi frame dihitung manual dari rasio natural gambar
+   via JS (lihat SliderGallery di ProjectDetail.jsx), height diberi
+   transition supaya pergantian slide bergerak MULUS (requirement 4).
+   HUB PKP (selalu kirim aspectRatio) TIDAK memakai class ini sama
+   sekali, jadi tidak terpengaruh. ==== */
+.detailSliderFrame.detailSliderFrame--natural {
+  height: auto; /* fallback sebelum JS sempat mengukur (render pertama) */
+  background: none; /* placeholder abu-abu tak perlu, tinggi = tinggi gambar */
+  transition: height var(--motion-duration) var(--motion-ease); /* KNOB durasi */
+  overflow: hidden;
+}
+
+/* Gambar mode natural TIDAK absolute — ikut alur normal, tinggi = tinggi
+   asli gambar (dikonfirmasi lewat height:auto di parent). Tanpa rule ini
+   gambar akan tetap position:absolute (warisan .detailSliderImage) →
+   frame height 0 sampai img selesai load → jumpy. */
+.detailSliderFrame--natural .detailSliderImage {
+  position: static;
+  height: auto;
+  inset: auto;
+  object-fit: contain;
+}
+
 .detailSliderImage {
   position: absolute;
   inset: 0;
@@ -359,24 +381,6 @@
   to {
     opacity: 1;
   }
-}
-
-/* ==== Frame slider TANPA aspectRatio (mis. Garbage Classification
-   section 02) — gambar ikut alur normal, tinggi mengikuti rasio ASLI
-   foto, TIDAK ada crop. Rule ini punya specificity lebih tinggi
-   (2 class) dari .detailSliderFrame/.detailSliderImage (1 class),
-   jadi otomatis menang tanpa mengubah rule default di atas — HUB PKP
-   (yang selalu kirim aspectRatio & tidak dapat class ini) sama sekali
-   tidak terpengaruh. ==== */
-.detailSliderFrame.detailSliderFrame--natural {
-  height: auto;
-  background: none; /* placeholder abu-abu tak perlu, tinggi = tinggi gambar */
-}
-.detailSliderFrame.detailSliderFrame--natural .detailSliderImage {
-  position: static;
-  width: 100%;
-  height: auto;
-  object-fit: unset; /* tidak relevan lagi karena box = ukuran natural gambar */
 }
 
 .detailSliderMeta {
@@ -511,8 +515,6 @@
 
 .detailClosing {
   margin-top: 96px;
-  padding-top: 40px;
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .detailParagraph {
@@ -530,40 +532,53 @@
   margin-bottom: 0;
 }
 
-.detailNext {
-  display: block;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+/* ==== FOOTER NEXT PROJECT ala vanholtz — SOLID (BUKAN outline) ====
+   Rotate resting sama sistem seperti list homepage (ROTATE_Y_DEG di
+   Home.jsx) tapi sudut & perspective dikurangi — depth effect lebih
+   landai/nyaman, tidak "menjorok ke dalam" terlalu jauh.
+   Karena teks solid (bukan stroke), sudut miring tidak menimbulkan
+   efek echo/banding. */
+.detailNextSection {
   margin-top: 80px;
-  padding: 0 0 160px;
-  background: #1e1e1e;
-  text-decoration: none;
-  color: var(--color-white);
-}
-
-.detailNextInner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 6vw 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .detailNextLabel {
   display: block;
   font-family: Arial, sans-serif;
+  font-weight: bold;
   font-size: 13px;
-  opacity: 0.6;
-  margin-bottom: 8px;
+  color: #1e1e1e;
+  margin-bottom: 24px;
+}
+
+.detailNextPerspective {
+  display: block;
+  text-decoration: none;
+  perspective: 90vw;
+  perspective-origin: 100% 50%;
 }
 
 .detailNextTitle {
   display: inline-block;
-  font-family: 'Arial Black', sans-serif;
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
-  font-size: 4vw;
+  font-size: clamp(2rem, 6vw, 5rem);
+  line-height: 0.9;
   letter-spacing: -1px;
-  color: var(--color-white);
+  text-align: right;
+  color: #1e1e1e; /* SOLID fill */
+  transform-origin: 100% center;
+  transform: rotateY(-32deg);
+  transition: transform var(--motion-duration) var(--motion-ease);
+  will-change: transform;
+}
+
+.detailNextPerspective:hover .detailNextTitle {
+  transform: rotateY(0deg); /* rata layar 100% flat saat hover */
 }
 
 @media (max-width: 768px) {
@@ -721,20 +736,36 @@ body.page-project.on-hero .navLinks .activeDash {
   background: var(--color-white);
 }
 
-/* ==== Corner BAWAH putih saat zona footer hitam ==== */
-
-body.page-project.on-footer .navWordmark,
-body.page-project.on-footer .corner.br {
-  color: var(--color-white);
+/* ==== READING MODE (State B/C) — SEMUA di-scope body.page-project
+   supaya homepage sama sekali tidak tersentuh. ==== */
+:root {
+  --reading-shift: 34px; /* KNOB: kira-kira tinggi .sub (font+margin), tuning manual */
 }
 
-body.page-project.on-footer .wordmark {
-  color: var(--color-white);
-  -webkit-text-stroke: 1px var(--color-white);
+body.page-project.reading-mode .navWordmark.nav--closed {
+  transform: translateY(var(--reading-shift));
 }
-body.page-project.on-footer .sub,
-body.page-project.on-footer .corner.br span.label {
-  color: var(--color-white);
+
+body.page-project.reading-mode .sub {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.page-project.reading-mode .corner.br {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Wordmark jadi stroke SUBTLE — lebih tipis (0.75px) + abu-abu (#999),
+   BUKAN hitam solid seperti base rule, supaya tidak mencolok saat
+   user sedang membaca (requirement 1). Hover tetap dimatikan
+   (static outline, no-op). */
+body.page-project.reading-mode .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 0.75px #999; /* KNOB: naikkan opacity dgn ganti ke #888 kalau masih kurang terlihat */
+}
+body.page-project.reading-mode .wordmarkLink:hover .wordmark {
+  color: transparent; /* no-op — override hover default */
 }
 
 /* Transisi corner (pergantian warna saat scroll — BUKAN efek hover) */
@@ -745,12 +776,21 @@ body.page-project .corner.tr,
 body.page-project .corner.tr .num,
 body.page-project .corner.tr a,
 body.page-project .corner.tr span.label,
-body.page-project .navWordmark,
+body.page-project .navWordmark {
+  transition:
+    color 0.3s ease,
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity var(--motion-duration) var(--motion-ease);
+}
 body.page-project .wordmark,
 body.page-project .sub,
 body.page-project .corner.br,
 body.page-project .corner.br span.label {
-  transition: color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    -webkit-text-stroke-width 0.3s ease,
+    -webkit-text-stroke-color 0.3s ease;
 }
 
 body.page-project .navLinks .activeDash {
@@ -760,14 +800,14 @@ body.page-project .navLinks .activeDash {
 /* ============ ABOUT OPEN OVERRIDE (page project) ============
    BUG FIX: saat About dibuka di halaman project, overlay-nya sekarang
    PUTIH (#F2F2F2), jadi wordmark/nav/tombol close WAJIB hitam dan
-   WAJIB terlihat — apa pun posisi scroll (hero/footer) atau status
-   wordmark-hidden sebelumnya.
+   WAJIB terlihat — apa pun posisi scroll (hero/footer/reading-mode)
+   atau status wordmark-hidden sebelumnya.
 
    Setiap selector di bawah ini SENGAJA dibuat lebih spesifik
    (5 class + 1 type = (0,5,1)) dari SEMUA rule pesaing di atas:
    - body.wordmark-hidden .navWordmark            → (0,2,1)
    - body.page-project.on-hero .navLinks .label   → (0,4,1)
-   - body.page-project.on-footer .corner.br       → (0,3,1)
+   - body.page-project.reading-mode .navWordmark  → (0,3,1)
    - body.page-project .navWordmark.nav--open .wordmark → (0,4,1)
    Karena (0,5,1) > semuanya, rule ini PASTI menang tanpa bergantung
    urutan baris di file — aman dari regresi kalau file di-refactor. */
@@ -801,7 +841,18 @@ body.page-project.about-open .navLinks.nav--open .activeDash {
 
 /* Tombol close (×) di corner kanan atas — target langsung ke tombolnya
    (bukan container .corner.tr) supaya specificity pasti unggul dari
-   .on-hero/.on-footer yang menyasar .corner.tr. */
+   .on-hero yang menyasar .corner.tr. */
 body.page-project.about-open .corner.tr .cornerIconBtn {
   color: var(--color-black);
+}
+
+/* Kalau about dibuka saat masih di reading-mode, wordmark harus naik
+   BERSIH (tanpa sisa translateY) dan sub harus terlihat lagi. */
+body.page-project.about-open .navWordmark.nav--open {
+  transform: none;
+}
+
+body.page-project.about-open .navWordmark.nav--open .sub {
+  opacity: 0.75;
+  pointer-events: auto;
 }

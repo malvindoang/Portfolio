@@ -108,7 +108,7 @@
    - Icon digambar via CSS (bukan glyph teks) — geometri identik:
      bar 25px, tinggi 2px, radius 1px, kepala ±45° scaleX(.6)
    - Warna ikut context via currentColor (page-project #1e1e1e,
-     home putih, on-hero/on-footer otomatis) */
+     home putih, on-hero otomatis) */
 .cornerIconBtn {
   position: relative;
   top: -45px;
@@ -246,6 +246,7 @@
   z-index: 30;
   transition:
     top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity var(--motion-duration) var(--motion-ease);
 }
 .navWordmark.nav--closed {
