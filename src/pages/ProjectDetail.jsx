@@ -308,14 +308,24 @@ function SliderGallery({ images, title, aspectRatio, active }) {
   const total = images.length
   const current = images[index]
 
+  // Kalau section TIDAK mengirim aspectRatio (mis. Garbage Classification
+  // section 02): frame beralih ke mode "natural" — height:auto, gambar
+  // ikut alur normal (bukan position:absolute) supaya tinggi mengikuti
+  // rasio asli foto dan tidak ter-crop. HUB PKP selalu kirim aspectRatio,
+  // jadi tetap lewat jalur lama (position:absolute + object-fit:cover),
+  // TIDAK terpengaruh sama sekali.
+  const hasAspectRatio = Boolean(aspectRatio)
+
   const goNext = () => setIndex((i) => (i + 1) % total)
   const goPrev = () => setIndex((i) => (i - 1 + total) % total)
 
   return (
     <div className="detailSlider">
       <div
-        className={`detailSliderFrame ${active ? 'is-active' : ''}`}
-        style={{ aspectRatio }}
+        className={`detailSliderFrame ${active ? 'is-active' : ''} ${
+          hasAspectRatio ? '' : 'detailSliderFrame--natural'
+        }`}
+        style={hasAspectRatio ? { aspectRatio } : undefined}
       >
         <img
           key={index}

@@ -144,7 +144,10 @@ export const PROJECT_CONTENT = {
           },
         ],
         layout: 'slider',
-        aspectRatio: '480 / 360',
+        // aspectRatio SENGAJA dihapus — gambar detection/after-upload/result
+        // punya rasio native berbeda-beda, tidak boleh dipaksa crop.
+        // Frame otomatis pakai height:auto via .detailSliderFrame--natural
+        // (lihat SliderGallery di ProjectDetail.jsx + ProjectDetail.css).
       },
     ],
     closing:

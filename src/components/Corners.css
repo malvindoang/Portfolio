@@ -111,13 +111,13 @@
      home putih, on-hero/on-footer otomatis) */
 .cornerIconBtn {
   position: relative;
-  top: -10px;
+  top: -45px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 50px;
   height: 50px;
-  margin-right: 73px; /* geser agak ke kiri (40px gutter + 20px = 60px) */
+  margin-right: 10px; /* geser agak ke kiri (40px gutter + 20px = 60px) */
   vertical-align: middle;
   background: none;
   border: none;

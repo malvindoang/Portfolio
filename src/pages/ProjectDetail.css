@@ -361,6 +361,24 @@
   }
 }
 
+/* ==== Frame slider TANPA aspectRatio (mis. Garbage Classification
+   section 02) — gambar ikut alur normal, tinggi mengikuti rasio ASLI
+   foto, TIDAK ada crop. Rule ini punya specificity lebih tinggi
+   (2 class) dari .detailSliderFrame/.detailSliderImage (1 class),
+   jadi otomatis menang tanpa mengubah rule default di atas — HUB PKP
+   (yang selalu kirim aspectRatio & tidak dapat class ini) sama sekali
+   tidak terpengaruh. ==== */
+.detailSliderFrame.detailSliderFrame--natural {
+  height: auto;
+  background: none; /* placeholder abu-abu tak perlu, tinggi = tinggi gambar */
+}
+.detailSliderFrame.detailSliderFrame--natural .detailSliderImage {
+  position: static;
+  width: 100%;
+  height: auto;
+  object-fit: unset; /* tidak relevan lagi karena box = ukuran natural gambar */
+}
+
 .detailSliderMeta {
   display: flex;
   align-items: center;
@@ -660,7 +678,11 @@ body.page-project .activeDash {
   background: var(--color-black);
 }
 
-/* ==== About terbuka — wordmark kembali putih ==== */
+/* ==== About terbuka (rule LAMA — peninggalan fase About gelap) ====
+   Sudah TIDAK relevan lagi (About sekarang selalu putih di page
+   project), tapi tetap dibiarkan karena blok "ABOUT OPEN OVERRIDE"
+   di paling bawah file ini punya specificity lebih tinggi dan akan
+   SELALU menang menggantikannya — lihat penjelasan di sana. */
 body.page-project .navWordmark.nav--open .wordmark {
   color: var(--color-white);
   -webkit-text-stroke: 1px var(--color-white);
@@ -669,13 +691,6 @@ body.page-project .navWordmark.nav--open .sub {
   color: var(--color-white);
 }
 
-/* ==== About terbuka + hover — specificity harus ≥ state biasa ====
-   Rule state biasa punya specificity (0,3,1): body.page-project +
-   .navWordmark + .nav--open + .wordmark.
-   Rule hover di Corners.css (.wordmarkLink:hover .wordmark) punya
-   specificity (0,2,1) — lebih rendah, jadi tidak pernah menang.
-   Rule ini (0,4,1): + .wordmarkLink — MENANG dari state biasa.
-   Stroke 1px putih dari state biasa TETAP ada → outline muncul halus. */
 body.page-project .navWordmark.nav--open .wordmarkLink:hover .wordmark {
   color: transparent;
 }
@@ -740,4 +755,53 @@ body.page-project .corner.br span.label {
 
 body.page-project .navLinks .activeDash {
   transition: background 0.3s ease;
+}
+
+/* ============ ABOUT OPEN OVERRIDE (page project) ============
+   BUG FIX: saat About dibuka di halaman project, overlay-nya sekarang
+   PUTIH (#F2F2F2), jadi wordmark/nav/tombol close WAJIB hitam dan
+   WAJIB terlihat — apa pun posisi scroll (hero/footer) atau status
+   wordmark-hidden sebelumnya.
+
+   Setiap selector di bawah ini SENGAJA dibuat lebih spesifik
+   (5 class + 1 type = (0,5,1)) dari SEMUA rule pesaing di atas:
+   - body.wordmark-hidden .navWordmark            → (0,2,1)
+   - body.page-project.on-hero .navLinks .label   → (0,4,1)
+   - body.page-project.on-footer .corner.br       → (0,3,1)
+   - body.page-project .navWordmark.nav--open .wordmark → (0,4,1)
+   Karena (0,5,1) > semuanya, rule ini PASTI menang tanpa bergantung
+   urutan baris di file — aman dari regresi kalau file di-refactor. */
+
+body.page-project.about-open .navWordmark.nav--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.page-project.about-open .navWordmark.nav--open .wordmark {
+  color: var(--color-black);
+  -webkit-text-stroke: 1px var(--color-black);
+}
+
+body.page-project.about-open .navWordmark.nav--open .wordmarkLink:hover .wordmark {
+  color: transparent;
+}
+
+body.page-project.about-open .navWordmark.nav--open .sub {
+  color: var(--color-black);
+  opacity: 0.75;
+}
+
+body.page-project.about-open .navLinks.nav--open .label {
+  color: var(--color-black);
+}
+
+body.page-project.about-open .navLinks.nav--open .activeDash {
+  background: var(--color-black);
+}
+
+/* Tombol close (×) di corner kanan atas — target langsung ke tombolnya
+   (bukan container .corner.tr) supaya specificity pasti unggul dari
+   .on-hero/.on-footer yang menyasar .corner.tr. */
+body.page-project.about-open .corner.tr .cornerIconBtn {
+  color: var(--color-black);
 }

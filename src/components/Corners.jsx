@@ -80,6 +80,19 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
     }
   }, [onGridWidth])
 
+  // Sync aboutOpen ke body.about-open — dipakai ProjectDetail.css untuk
+  // memaksa wordmark/nav/close jadi hitam & terlihat di halaman project,
+  // MENGALAHKAN rule wordmark-hidden/on-hero/on-footer lewat specificity
+  // (lihat blok "ABOUT OPEN OVERRIDE" di ProjectDetail.css).
+  // Cleanup membersihkan class saat about ditutup ATAU saat Corners
+  // unmount (pindah route), supaya tidak ada sisa class nyangkut.
+  useEffect(() => {
+    document.body.classList.toggle('about-open', aboutOpen)
+    return () => {
+      document.body.classList.remove('about-open')
+    }
+  }, [aboutOpen])
+
   const handleWorksClick = () => {
     setAboutOpen(false)
     navigate('/')
