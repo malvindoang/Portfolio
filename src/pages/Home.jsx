@@ -228,6 +228,10 @@ function Home() {
       return -1
     }
 
+    /* Outline system (lihat Home.css): class .is-hovered mengubah judul
+       dari fill solid ke outline saat hover masuk, dan mengembalikannya
+       ke fill saat hover keluar. Ditumpangkan di handler rotasi GSAP
+       yang sama supaya kedua efek selalu sinkron. */
     const setRowHoverState = (projectIndex) => {
       if (hoveredIndexRef.current === projectIndex) return
       const prevIndex = hoveredIndexRef.current
@@ -242,6 +246,7 @@ function Home() {
             ease: HOVER_EASE_NAME,
             overwrite: 'auto',
           })
+          prevRows.forEach((row) => row.classList.remove('is-hovered'))
         }
       }
 
@@ -254,6 +259,7 @@ function Home() {
             ease: HOVER_EASE_NAME,
             overwrite: 'auto',
           })
+          rows.forEach((row) => row.classList.add('is-hovered'))
         }
       }
     }

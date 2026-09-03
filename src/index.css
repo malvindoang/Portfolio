@@ -25,3 +25,11 @@ body.page-project {
   background: #F2F2F2;
   --color-black: #1e1e1e;
 }
+
+@font-face {
+  font-family: 'Archivo Black NoOverlap';
+  src: url('/fonts/ArchivoBlack-NoOverlap.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

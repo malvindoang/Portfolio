@@ -44,19 +44,25 @@
   opacity: 0.75;
 }
 
+/* Judul hero — OUTLINE STATIS putih di atas kotak #1e1e1e,
+   CAPS semua (sama seperti list homepage).
+   Font NoOverlap dipakai supaya glyph outline konsisten dengan
+   home & footer (dan aman kalau nanti hero kena efek 3D). */
 .detailHeroTitle {
   position: absolute;
   z-index: 2;
   right: 4vw;
   bottom: 6%;
-  font-family: 'Archivo Black', 'Arial Black', sans-serif;
+  font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
   font-size: clamp(3.5rem, 9vw, 9rem);
   line-height: 0.9;
   letter-spacing: 0.02em;
+  text-transform: uppercase; /* caps semua, sama seperti list homepage */
   text-align: right;
   white-space: nowrap;
-  color: var(--color-white);
+  color: transparent;
+  -webkit-text-stroke: 2px var(--color-white);
   opacity: 0;
   animation: heroTitleReveal var(--motion-duration)
     var(--motion-ease) forwards;
@@ -341,7 +347,7 @@
 /* ==== Frame slider TANPA aspectRatio (mis. Garbage Classification
    section 02) — tinggi frame dihitung manual dari rasio natural gambar
    via JS (lihat SliderGallery di ProjectDetail.jsx), height diberi
-   transition supaya pergantian slide bergerak MULUS (requirement 4).
+   transition supaya pergantian slide bergerak MULUS.
    HUB PKP (selalu kirim aspectRatio) TIDAK memakai class ini sama
    sekali, jadi tidak terpengaruh. ==== */
 .detailSliderFrame.detailSliderFrame--natural {
@@ -352,9 +358,9 @@
 }
 
 /* Gambar mode natural TIDAK absolute — ikut alur normal, tinggi = tinggi
-   asli gambar (dikonfirmasi lewat height:auto di parent). Tanpa rule ini
-   gambar akan tetap position:absolute (warisan .detailSliderImage) →
-   frame height 0 sampai img selesai load → jumpy. */
+   asli gambar. Tanpa rule ini gambar akan tetap position:absolute
+   (warisan .detailSliderImage) → frame height 0 sampai img selesai
+   load → jumpy. */
 .detailSliderFrame--natural .detailSliderImage {
   position: static;
   height: auto;
@@ -532,15 +538,21 @@
   margin-bottom: 0;
 }
 
-/* ==== FOOTER NEXT PROJECT ala vanholtz — SOLID (BUKAN outline) ====
-   Rotate resting sama sistem seperti list homepage (ROTATE_Y_DEG di
-   Home.jsx) tapi sudut & perspective dikurangi — depth effect lebih
-   landai/nyaman, tidak "menjorok ke dalam" terlalu jauh.
-   Karena teks solid (bukan stroke), sudut miring tidak menimbulkan
-   efek echo/banding. */
+/* ==== FOOTER NEXT PROJECT — OUTLINE SYSTEM (mirror hero) ====
+   Resting : outline (fill transparent + stroke 2px) + rotateY -24°.
+   Hover   : fill solid + rata layar (rotateY 0).
+   Font 'Archivo Black NoOverlap' WAJIB di sini karena judul
+   di-rotasi 3D — tanpa remove-overlap, stroke akan menampilkan
+   garis internal (banding).
+   Depth sengaja landai (perspective 120vw + sudut -24°) supaya
+   tidak "menjorok ke dalam" terlalu ekstrem.
+   Ukuran di-cap 5.5rem (bukan 9rem seperti hero) karena container
+   hanya 1100px: kata terpanjang "Classification" (±9.8em) di 88px
+   = ±860px → muat tanpa overlap. */
+
 .detailNextSection {
   margin-top: 80px;
-  padding-bottom: 160px;
+  padding-bottom: 220px; /* KNOB: panjang napas ujung bawah page */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -550,35 +562,40 @@
   display: block;
   font-family: Arial, sans-serif;
   font-weight: bold;
-  font-size: 13px;
-  color: #1e1e1e;
+  font-size: clamp(0.9rem, 1.5vw, 1.25rem); /* KNOB — proporsional dgn judul */
+  color: var(--color-black);
   margin-bottom: 24px;
 }
 
 .detailNextPerspective {
   display: block;
   text-decoration: none;
-  perspective: 90vw;
+  perspective: 120vw; /* KNOB: makin besar = makin dangkal/flat */
   perspective-origin: 100% 50%;
 }
 
 .detailNextTitle {
   display: inline-block;
-  font-family: 'Archivo Black', 'Arial Black', sans-serif;
+  font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
-  font-size: clamp(2rem, 6vw, 5rem);
+  font-size: clamp(2.5rem, 6vw, 5.5rem); /* KNOB */
   line-height: 0.9;
   letter-spacing: -1px;
   text-align: right;
-  color: #1e1e1e; /* SOLID fill */
+  color: transparent;
+  -webkit-text-stroke: 2px var(--color-black);
   transform-origin: 100% center;
-  transform: rotateY(-32deg);
-  transition: transform var(--motion-duration) var(--motion-ease);
+  transform: rotateY(-24deg); /* KNOB: sudut resting lebih landai */
+  transition:
+    transform var(--motion-duration) var(--motion-ease),
+    color 0.3s ease;
   will-change: transform;
 }
 
+/* Hover — fill solid menutup stroke + judul rata layar */
 .detailNextPerspective:hover .detailNextTitle {
-  transform: rotateY(0deg); /* rata layar 100% flat saat hover */
+  transform: rotateY(0deg);
+  color: var(--color-black);
 }
 
 @media (max-width: 768px) {
@@ -657,7 +674,7 @@ body.page-project .detailHero {
 }
 
 /* Gambar + overlay hero disembunyikan sementara (hero jadi kotak
-   #1e1e1e + judul). Hapus 2 baris ini nanti kalau content.hero
+   #1e1e1e + judul outline). Hapus 2 baris ini nanti kalau content.hero
    sudah diisi gambar asli di projectContent.js. */
 body.page-project .detailHeroImage,
 body.page-project .detailHeroOverlay {
@@ -758,11 +775,10 @@ body.page-project.reading-mode .corner.br {
 
 /* Wordmark jadi stroke SUBTLE — lebih tipis (0.75px) + abu-abu (#999),
    BUKAN hitam solid seperti base rule, supaya tidak mencolok saat
-   user sedang membaca (requirement 1). Hover tetap dimatikan
-   (static outline, no-op). */
+   user sedang membaca. Hover tetap dimatikan (static outline, no-op). */
 body.page-project.reading-mode .wordmark {
   color: transparent;
-  -webkit-text-stroke: 0.75px #999; /* KNOB: naikkan opacity dgn ganti ke #888 kalau masih kurang terlihat */
+  -webkit-text-stroke: 0.75px #999; /* KNOB: ganti ke #888 kalau kurang terlihat */
 }
 body.page-project.reading-mode .wordmarkLink:hover .wordmark {
   color: transparent; /* no-op — override hover default */
@@ -804,13 +820,8 @@ body.page-project .navLinks .activeDash {
    atau status wordmark-hidden sebelumnya.
 
    Setiap selector di bawah ini SENGAJA dibuat lebih spesifik
-   (5 class + 1 type = (0,5,1)) dari SEMUA rule pesaing di atas:
-   - body.wordmark-hidden .navWordmark            → (0,2,1)
-   - body.page-project.on-hero .navLinks .label   → (0,4,1)
-   - body.page-project.reading-mode .navWordmark  → (0,3,1)
-   - body.page-project .navWordmark.nav--open .wordmark → (0,4,1)
-   Karena (0,5,1) > semuanya, rule ini PASTI menang tanpa bergantung
-   urutan baris di file — aman dari regresi kalau file di-refactor. */
+   (5 class + 1 type = (0,5,1)) dari SEMUA rule pesaing di atas,
+   jadi PASTI menang tanpa bergantung urutan baris di file. */
 
 body.page-project.about-open .navWordmark.nav--open {
   opacity: 1;

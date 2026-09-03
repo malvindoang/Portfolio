@@ -48,6 +48,8 @@ body {
   height: 0;
 }
 
+/* ===== SECTION LABELS (KIRI) ===== */
+
 .labelLayer {
   position: fixed;
   inset: 0;
@@ -78,10 +80,12 @@ body {
   transform: translateX(0);
 }
 
-/* FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
+/* ===== PROJECT ROWS (3D) =====
+   FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
    SELURUH pohon .projectGroup dst pointer-events:none permanen;
    klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect.
    <Link> asli hanya untuk a11y/SEO. */
+
 .projectGroup {
   position: relative;
   display: flex;
@@ -114,6 +118,7 @@ body {
   z-index: 2;
   pointer-events: none;
 }
+
 .metaSpacer {
   width: 40px;
 }
@@ -136,16 +141,32 @@ body {
   white-space: nowrap;
 }
 
-/* Judul project: SOLID BOLD saja — semua efek hover/outline DIHAPUS
-   permanen (keputusan final). Tidak ada stroke, tidak ada transisi. */
+/* ===== JUDUL — OUTLINE SYSTEM (bahasa visual permanen) =====
+   Pola constant-stroke (sama seperti wordmark MALVIN):
+   stroke 2px SELALU ada sewarna fill → tidak menambah ukuran visual.
+   - Resting : fill solid (stroke tertutup fill, tak terlihat)
+   - Hover   : fill transparent → outline muncul
+               (class .is-hovered di-toggle JS di Home.jsx, diperlukan
+               karena seluruh pohon 3D pointer-events:none)
+   Font 'Archivo Black NoOverlap' (hasil FontForge remove-overlap)
+   dipakai supaya outline TIDAK menampilkan garis internal saat
+   elemen di-rotasi 3D. */
+
 .title {
   position: relative;
-  font-family: 'Archivo Black', 'Arial Black', sans-serif;
+  font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
   line-height: 0.9;
-  color: var(--color-black);
   letter-spacing: 0.02em;
   text-align: right;
   white-space: nowrap;
+  color: var(--color-black);
+  -webkit-text-stroke: 2px var(--color-black);
+  transition: color 0.3s ease;
   pointer-events: none;
+}
+
+/* Hover — fill dilepas, outline 2px terlihat */
+.projectRow.is-hovered .title {
+  color: transparent;
 }
