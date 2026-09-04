@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import LiveClock from './LiveClock'
 import About from './About'
 import { SECTIONS } from '../data/projects'
 import './Corners.css'
 
+// Gap antara kolom kiri (wordmark/nav) dan konten About —
+// bodyLeft = 40 (gutter) + lebar kolom kiri + gap ini.
 const GRID_GAP = 14
 
 // Jumlah baris spacer tak-terlihat sebelum baris icon (back/close), supaya
@@ -54,6 +56,8 @@ function CornerIconRows({ spacerCount, icon, onClick, ariaLabel }) {
 
 function Corners({ sectionNav, onGridWidth, onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
+  // bodyLeft: margin kiri konten About. Default 220 = perkiraan masuk akal
+  // sebelum pengukuran pertama selesai.
   const [bodyLeft, setBodyLeft] = useState(220)
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
@@ -61,7 +65,10 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
   const navigate = useNavigate()
   const isHome = location.pathname === '/'
 
-  useEffect(() => {
+  // FIX POINT 3 — useLayoutEffect (bukan useEffect): pengukuran + setBodyLeft
+  // di-flush SEBELUM browser paint, jadi tidak ada "lompat" 1 frame saat
+  // About dibuka. Hasil akhir sama: 40 + maxW + 14.
+  useLayoutEffect(() => {
     const measure = () => {
       const w1 = wordmarkRef.current?.getBoundingClientRect().width || 0
       const w2 = navLinksRef.current?.getBoundingClientRect().width || 0
@@ -81,11 +88,7 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
   }, [onGridWidth])
 
   // Sync aboutOpen ke body.about-open — dipakai ProjectDetail.css untuk
-  // memaksa wordmark/nav/close jadi hitam & terlihat di halaman project,
-  // MENGALAHKAN rule wordmark-hidden/on-hero/on-footer lewat specificity
-  // (lihat blok "ABOUT OPEN OVERRIDE" di ProjectDetail.css).
-  // Cleanup membersihkan class saat about ditutup ATAU saat Corners
-  // unmount (pindah route), supaya tidak ada sisa class nyangkut.
+  // memaksa wordmark/nav/close jadi hitam & terlihat di halaman project.
   useEffect(() => {
     document.body.classList.toggle('about-open', aboutOpen)
     return () => {
@@ -116,7 +119,8 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
         <div className="sub">Front-end Developer<br />UI/UX Designer</div>
       </div>
 
-      {/* Nav about / work(s) — tanpa nomor urut */}
+      {/* Nav about / work(s) — tanpa nomor urut. Efek hover 3D perspective
+          (anchor kiri) diterapkan murni via CSS — lihat Corners.css. */}
       <div
         ref={navLinksRef}
         className={`navLinks ${aboutOpen ? 'nav--open' : 'nav--closed'}`}
@@ -194,6 +198,7 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
         </div>
       )}
 
+      {/* bodyLeft dikirim ke About → margin-left inline (sejajar label Home) */}
       <About isOpen={aboutOpen} bodyLeft={bodyLeft} />
     </>
   )

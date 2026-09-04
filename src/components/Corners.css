@@ -24,11 +24,7 @@
   font-size: 14px;
 }
 
-/* WORDMARK FINAL cross-browser:
-   - Stroke KONSTAN 1px sewarna fill default (putih). Tidak terlihat
-     saat state biasa → tidak menambah ukuran visual (tidak "ngembang").
-   - Hover hanya set color: transparent → stroke tetap ada, outline 1px
-     muncul halus. Transisi HANYA color 0.3s → smooth, TIDAK BERKEDIP. */
+/* WORDMARK FINAL cross-browser — TIDAK disentuh */
 .wordmark {
   font-family: 'Arial Black', sans-serif;
   font-weight: 900;
@@ -67,7 +63,51 @@
   vertical-align: middle;
 }
 
-/* Section nav kanan-atas — 3 baris selalu tampil utuh, aktif = bold */
+/* NAV HOVER: perspective 3D di parent .row supaya .label punya "ruang 3D"
+   untuk rotateY. Diterapkan HANYA di .navLinks .row (tidak menyentuh
+   .corner .row yang dipakai sectionNav/linkedin-github-email — constraint
+   "jangan sentuh elemen lain" tetap aman). KNOB: makin kecil nilainya,
+   makin dramatis efek perspektifnya. */
+.navLinks .row {
+  perspective: 300px; /* NAV HOVER KNOB */
+}
+
+/* NAV HOVER: base state label about/work(s) — transform-origin di KIRI
+   (0% center) supaya rotasi "berengsel" dari sisi kiri (sesuai posisi nav
+   Anda yang menempel kiri, kebalikan dari .detailNextTitle vanholtz-style
+   yang anchor kanan). display:inline-block WAJIB supaya transform 3D
+   berlaku presisi (elemen inline murni punya keterbatasan render transform
+   di beberapa browser).
+   Selector sengaja 4-class (.navLinks .row .label.aboutTrigger) supaya
+   SELALU menang specificity dari rule kompetitor di ProjectDetail.css
+   (body.page-project .navLinks .label, dst — 3 class + 1 type), tanpa
+   perlu mengubah ProjectDetail.css sama sekali. transition mencakup
+   "color" juga supaya tidak menghapus/mengganti perilaku transisi warna
+   yang sudah ada di berbagai state (home/page-project/on-hero/reading-mode/
+   about-open — semua state warna itu diatur via `color` property di rule
+   lain, bukan lewat rule ini, jadi tetap aman & tetap menang sesuai
+   specificity masing-masing). */
+.navLinks .row .label.aboutTrigger,
+.navLinks .row .label.worksTrigger {
+  display: inline-block;
+  transform-origin: 0% center; /* NAV HOVER: anchor KIRI */
+  transform: rotateY(0deg);
+  transition: color 0.3s ease, transform var(--motion-duration) var(--motion-ease); /* NAV HOVER */
+  will-change: transform;
+}
+
+/* NAV HOVER: efek hover — rotateY negatif dari anchor kiri membuat sisi
+   KANAN label "masuk" menjauhi viewer (perspective flip berengsel kiri),
+   mirror dari .detailNextTitle (anchor kanan, rotateY di kiri) yang
+   sudah terbukti jadi signature vanholtz di kode Anda sendiri. Resting
+   TETAP flat (rotateY 0deg) — efek CUMA muncul saat hover, sesuai
+   requirement no. 3. */
+.navLinks .row .label.aboutTrigger:hover,
+.navLinks .row .label.worksTrigger:hover {
+  transform: rotateY(-20deg); /* NAV HOVER KNOB: sudut hover, adjust kalau kurang/terlalu dramatis */
+}
+
+/* Section nav kanan-atas — TIDAK disentuh */
 .sectionNavItem {
   position: relative;
   display: inline-block;
@@ -77,7 +117,6 @@
   font-weight: bold;
 }
 
-/* Section BUKAN pemilik project ini — dicoret & tidak bisa diklik */
 .sectionNavItem--disabled {
   cursor: default;
   pointer-events: none;
@@ -101,14 +140,7 @@
   }
 }
 
-/* ==== Tombol back (←) / close (×) — UKURAN & POSISI PERSIS VANHOLTZ ====
-   - Box 50x50 (ring ::before = 50px, sama dengan .btn-box vanholtz)
-   - margin-right: 20px → efektif right: 60px (vanholtz: right:60px),
-     jadi tombol AGAK KE KIRI tanpa menggeser teks corner / sectionNav
-   - Icon digambar via CSS (bukan glyph teks) — geometri identik:
-     bar 25px, tinggi 2px, radius 1px, kepala ±45° scaleX(.6)
-   - Warna ikut context via currentColor (page-project #1e1e1e,
-     home putih, on-hero otomatis) */
+/* ==== Tombol back (←) / close (×) — TIDAK disentuh ==== */
 .cornerIconBtn {
   position: relative;
   top: -45px;
@@ -117,7 +149,7 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  margin-right: 10px; /* geser agak ke kiri (40px gutter + 20px = 60px) */
+  margin-right: 10px;
   vertical-align: middle;
   background: none;
   border: none;
@@ -127,8 +159,6 @@
   overflow: visible;
 }
 
-/* Ring lingkaran 50px — default invisible (border transparent + scale .9),
-   muncul saat hover persis seperti video (masuk .25s, keluar .25s). */
 .cornerIconBtn::before {
   content: '';
   position: absolute;
@@ -144,8 +174,6 @@
   transform: scale(1);
 }
 
-/* Wrapper icon — dipisah dari button supaya bisa di-loop tanpa
-   menggeser ring. Flex center → icon presisi di tengah lingkaran. */
 .cornerIconBox {
   display: flex;
   align-items: center;
@@ -154,7 +182,6 @@
   height: 100%;
 }
 
-/* Panah BACK — geometri persis .icon-back vanholtz */
 .cornerIconBack {
   position: relative;
   width: 25px;
@@ -181,7 +208,6 @@
   transform: translate3d(-7px, -2px, 0) rotate(45deg) scaleX(0.6);
 }
 
-/* Close × — dua bar 25px bersilangan, persis .icon-close vanholtz */
 .cornerIconClose {
   position: relative;
   display: block;
@@ -206,9 +232,6 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* Loop HORIZONTAL (back): shrink → keluar kiri fade → teleport kanan →
-   masuk center fade → grow. 2s infinite, delay .25s. Bezier persis
-   vanholtz app.css @keyframes a. */
 .cornerIconBtn:hover .cornerIconBox--x {
   animation: cornerIconLoopX 2s cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.25s infinite forwards;
 }
@@ -223,8 +246,6 @@
   100%   { transform: translateX(0) scale(1);        opacity: 1; }
 }
 
-/* Loop VERTIKAL (close): keluar bawah, masuk atas — persis vanholtz
-   @keyframes b (dipakai .about .btn-back). */
 .cornerIconBtn:hover .cornerIconBox--y {
   animation: cornerIconLoopY 2s cubic-bezier(0.55, 0.055, 0.675, 0.19) 0.25s infinite forwards;
 }
@@ -239,7 +260,7 @@
   100%   { transform: translateY(0) scale(1);        opacity: 1; }
 }
 
-/* ==== MALVIN wordmark — gerak VERTIKAL (bawah <-> atas), X tetap left:40px ==== */
+/* ==== MALVIN wordmark — TIDAK disentuh ==== */
 .navWordmark {
   position: fixed;
   left: 40px;
@@ -256,13 +277,12 @@
   top: 36px;
 }
 
-/* Hero halaman project menutupi zona wordmark bawah */
 body.wordmark-hidden .navWordmark {
   opacity: 0;
   pointer-events: none;
 }
 
-/* ==== Nav about / work(s) ==== */
+/* ==== Nav about / work(s) — container TIDAK disentuh (posisi/left/top) ==== */
 .navLinks {
   position: fixed;
   top: 36px;
