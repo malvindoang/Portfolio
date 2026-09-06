@@ -1,11 +1,9 @@
 .detail {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 220px 6vw 220px; /* top/bottom simetris, panjang napas ujung bawah page konsisten di semua project */
+  padding: 220px 0 220px; /* horizontal dipindah ke .editorialContainer */
   color: var(--color-black);
 }
 
-/* ================= HERO ================= */
+/* ================= HERO — TIDAK DISENTUH ================= */
 
 .detailHero {
   position: relative;
@@ -35,19 +33,11 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    135deg,
-    var(--color-bg),
-    #000 85%
-  );
+  background: linear-gradient(135deg, var(--color-bg), #000 85%);
   mix-blend-mode: multiply;
   opacity: 0.75;
 }
 
-/* Judul hero — OUTLINE STATIS putih di atas kotak #1e1e1e,
-   CAPS semua (sama seperti list homepage).
-   Font NoOverlap dipakai supaya glyph outline konsisten dengan
-   home & footer (dan aman kalau nanti hero kena efek 3D). */
 .detailHeroTitle {
   position: absolute;
   z-index: 2;
@@ -58,7 +48,7 @@
   font-size: clamp(3.5rem, 9vw, 9rem);
   line-height: 0.9;
   letter-spacing: 0.02em;
-  text-transform: uppercase; /* caps semua, sama seperti list homepage */
+  text-transform: uppercase;
   text-align: right;
   white-space: nowrap;
   color: transparent;
@@ -69,17 +59,12 @@
   animation-delay: calc(var(--motion-duration) * 0.4);
 }
 
-/* Judul hero multi-baris (field heroLines di projectContent.js).
-   Setiap baris = block sendiri; baris TERAKHIR tanpa padding →
-   posisinya persis sama seperti judul 1 baris sebelumnya. */
 .detailHeroTitleLine {
   display: block;
 }
 
-/* Baris atas (mis. "Garbage") — padding kanan membuat stagger
-   relatif terhadap baris bawah yang tetap flush kanan. */
 .detailHeroTitleLine--top {
-  padding-right: 0.35em; /* KNOB: 0 = rata kanan; perbesar = geser ke kiri */
+  padding-right: 0.35em;
 }
 
 @keyframes heroImageReveal {
@@ -94,14 +79,13 @@
     opacity: 0;
     transform: translateY(24px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* ================= REVEAL ON SCROLL ================= */
+/* ================= REVEAL ON SCROLL — TIDAK DISENTUH ================= */
 
 .reveal {
   opacity: 0;
@@ -116,32 +100,28 @@
   transform: translateY(0);
 }
 
-/* ================= CREDIT + INTRO ================= */
+/* ================= EDITORIAL CONTAINER (A) =================
+   1140px, di-center. Di layar 1440 margin auto otomatis
+   menghasilkan ±150px kiri-kanan — sengaja menimpa wordmark. */
 
-.detailIntro {
-  position: relative;
+.editorialContainer {
+  width: min(1140px, 94vw);
+  margin: 0 auto;
+}
+
+/* ================= INTRO ROW (C) =================
+   lead(455) + body(455) + rail facts(170), gap 30. */
+
+.editorialIntroRow {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 0.8fr;
-  gap: 48px;
+  grid-template-columns: 455px 455px 170px;
+  grid-template-areas: 'lead body rail';
+  column-gap: 30px;
   margin-bottom: 96px;
 }
 
-.detailIntroCol {
-  position: relative;
-  z-index: 1;
-}
-
-.detailIntroCol:nth-child(2) {
-  transition-delay: var(--motion-stagger);
-}
-
-.detailIntroCol:nth-child(3) {
-  transition-delay: calc(
-    var(--motion-stagger) * 2
-  );
-}
-
-.detailIntroHeading {
+.editorialIntroLead {
+  grid-area: lead;
   font-family: Arial, sans-serif;
   font-weight: bold;
   font-size: 20px;
@@ -149,37 +129,46 @@
   letter-spacing: -0.5px;
 }
 
-.detailIntroBody {
+.editorialIntroBody {
+  grid-area: body;
   font-family: Arial, sans-serif;
   font-size: 15px;
   line-height: 1.7;
   opacity: 0.85;
 }
 
-.detailIntroSidebar {
-  font-family: Arial, sans-serif;
-  font-size: 15px;
+.editorialRail {
+  grid-area: rail;
+}
+
+.editorialFacts {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.detailCreditsLabel {
-  display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0.6;
-  margin-bottom: 4px;
+.factRow {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: #1e1e1e;
 }
 
-/* ================= BODY SECTIONS (zigzag) ================= */
-
-.detailSection {
-  margin: 128px 0;
+.factLabel {
+  font-weight: bold;
 }
 
-.detailSectionCount {
+.factValue {
+  font-weight: normal;
+}
+
+/* ================= SECTIONS (D) =================
+   media(940) + rail(170) atas, text(940, 2 kolom) di bawah. */
+
+.editorialSection {
+  margin: 0 0 107px;
+}
+
+.editorialSectionCount {
   display: block;
   font-family: Arial, sans-serif;
   font-size: 12px;
@@ -189,17 +178,43 @@
   margin-bottom: 18px;
 }
 
-.detailSectionTitle {
-  font-family: 'Archivo Black', 'Arial Black', sans-serif;
-  font-weight: 900;
-  font-size: clamp(1.3rem, 2vw, 1.9rem);
+.editorialSectionRow {
+  display: grid;
+  grid-template-columns: 940px 170px;
+  grid-template-areas:
+    'media rail'
+    'text  rail';
+  column-gap: 30px;
+  align-items: start;
+}
+
+.editorialMedia {
+  grid-area: media;
+  min-width: 0;
+}
+
+.editorialTextRow {
+  grid-area: text;
+  display: flex;
+  gap: 30px;
+  margin-top: 35px;
+}
+
+.editorialCol {
+  flex: 0 0 455px;
+  max-width: 455px;
+}
+
+.editorialSectionTitle {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 28px;
   line-height: 1.2;
-  letter-spacing: -0.5px;
   color: #1e1e1e;
   margin: 0 0 14px;
 }
 
-.detailSectionText {
+.editorialDescText {
   font-family: Arial, sans-serif;
   font-size: 15px;
   line-height: 1.7;
@@ -207,43 +222,248 @@
   opacity: 0.85;
 }
 
-.detailSectionRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
-}
+/* ================= RAIL: KONTROL / CAPTION / NOTE (E) ================= */
 
-.detailSection--left .detailSectionRow {
-  flex-direction: row-reverse;
-}
-
-.detailSectionMedia {
-  min-width: 0;
-}
-
-.detailSection--slider.detailSection--right
-  .detailSectionMedia,
-.detailSection--slider.detailSection--left
-  .detailSectionMedia {
-  flex: 1 1 auto;
-  max-width: 680px;
-}
-
-.detailSectionSide {
-  flex: 0 0 320px;
-  padding-top: 6px;
+.railSliderMeta {
   display: flex;
   flex-direction: column;
+  gap: 14px;
 }
 
-.detailSection--pair .detailSectionMedia {
-  flex: 0 0 auto;
+.railControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.detailSection--pair .detailSectionSide {
-  flex: 1 1 260px;
-  max-width: 340px;
+.detailSliderArrow {
+  background: none;
+  border: none;
+  padding: 2px;
+  font-size: 15px;
+  line-height: 1;
+  color: #1e1e1e;
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease),
+    transform var(--motion-duration-fast) var(--motion-ease);
 }
+
+.detailSliderArrow:hover {
+  opacity: 1;
+}
+
+.detailSliderArrow--prev:hover {
+  transform: translateX(-2px);
+}
+
+.detailSliderArrow--next:hover {
+  transform: translateX(2px);
+}
+
+.detailSliderCount {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  perspective: 200px;
+}
+
+.detailSliderCount.is-flipping {
+  animation: countFlip 0.3s var(--motion-ease);
+}
+
+@keyframes countFlip {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.detailSliderCaptionWrap {
+  display: block;
+  perspective: 400px;
+}
+
+.detailSliderCaption {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-black);
+  opacity: 0.75;
+  transform-origin: 50% 100%;
+}
+
+.detailSliderCaption.is-flipping {
+  animation: captionFlip 0.4s var(--motion-ease);
+}
+
+@keyframes captionFlip {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.railNote {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-black);
+  opacity: 0.6;
+}
+
+/* ================= SLIDER MEDIA (I) =================
+   Semua slide di-preload sekali (hidden layer). Transisi current/
+   outgoing murni transform+opacity, tidak ada fetch ulang. */
+
+.detailSlider {
+  width: 100%;
+}
+
+.detailSliderFrame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e2e2e2;
+}
+
+.detailSliderFrame.detailSliderFrame--natural {
+  height: auto;
+  background: none;
+  transition: height var(--motion-duration) var(--motion-ease);
+}
+
+/* FIX: preload yang benar-benar bekerja.
+   Versi Claude sebelumnya pakai width:0 + 1px — browser sering skip
+   fetch, sehingga preload tidak jalan. Versi ini menaruh gambar di
+   luar viewport tapi dengan ukuran wajar, browser pasti download. */
+.detailSliderPreload {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.detailSliderPreload img {
+  display: block;
+  width: 100px;
+  height: auto;
+}
+
+.detailSliderImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detailSliderImage--natural {
+  object-fit: contain;
+}
+
+/* Reveal pertama kali section masuk viewport — fade saja */
+.detailSliderImage.is-current {
+  opacity: 0;
+}
+
+.detailSliderImage.is-current.fade-in {
+  animation: sliderFadeIn var(--motion-duration-fast) var(--motion-ease) forwards;
+}
+
+@keyframes sliderFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Next/prev — slide direction-aware, TANPA fade */
+.detailSliderImage.is-current.slide-in-next {
+  opacity: 1;
+  animation: slideInFromRight 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.detailSliderImage.is-current.slide-in-prev {
+  opacity: 1;
+  animation: slideInFromLeft 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.detailSliderImage.is-outgoing {
+  opacity: 1;
+}
+
+.detailSliderImage.is-outgoing.slide-out-next {
+  animation: slideOutToLeft 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.detailSliderImage.is-outgoing.slide-out-prev {
+  animation: slideOutToRight 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ================= PAIR GALLERY — TIDAK DISENTUH ================= */
 
 .detailPair {
   display: flex;
@@ -277,12 +497,10 @@
 }
 
 .detailPairFrame.is-active .detailPairImage {
-  animation: pairReveal var(--motion-duration)
-    var(--motion-ease) forwards;
+  animation: pairReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
-.detailPairItem:nth-child(2) .detailPairFrame.is-active
-  .detailPairImage {
+.detailPairItem:nth-child(2) .detailPairFrame.is-active .detailPairImage {
   animation-delay: var(--motion-stagger);
 }
 
@@ -301,6 +519,8 @@
   color: var(--color-black);
   opacity: 0.65;
 }
+
+/* ================= FIGMA PILL — TIDAK DISENTUH ================= */
 
 .detailFigmaWrap {
   margin: 0 0 56px;
@@ -321,10 +541,8 @@
   color: #1e1e1e;
   text-decoration: none;
   transition:
-    background var(--motion-duration-fast)
-      var(--motion-ease),
-    color var(--motion-duration-fast)
-      var(--motion-ease);
+    background var(--motion-duration-fast) var(--motion-ease),
+    color var(--motion-duration-fast) var(--motion-ease);
 }
 
 .detailFigmaPill:hover {
@@ -332,137 +550,7 @@
   color: #f2f2f2;
 }
 
-.detailSlider {
-  width: 100%;
-}
-
-.detailSliderFrame {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  border-radius: 4px;
-  background: #e2e2e2;
-}
-
-/* ==== Frame slider TANPA aspectRatio (mis. Garbage Classification
-   section 02) — tinggi frame dihitung manual dari rasio natural gambar
-   via JS (lihat SliderGallery di ProjectDetail.jsx), height diberi
-   transition supaya pergantian slide bergerak MULUS.
-   HUB PKP (selalu kirim aspectRatio) TIDAK memakai class ini sama
-   sekali, jadi tidak terpengaruh. ==== */
-.detailSliderFrame.detailSliderFrame--natural {
-  height: auto; /* fallback sebelum JS sempat mengukur (render pertama) */
-  background: none; /* placeholder abu-abu tak perlu, tinggi = tinggi gambar */
-  transition: height var(--motion-duration) var(--motion-ease); /* KNOB durasi */
-  overflow: hidden;
-}
-
-/* Gambar mode natural TIDAK absolute — ikut alur normal, tinggi = tinggi
-   asli gambar. Tanpa rule ini gambar akan tetap position:absolute
-   (warisan .detailSliderImage) → frame height 0 sampai img selesai
-   load → jumpy. */
-.detailSliderFrame--natural .detailSliderImage {
-  position: static;
-  height: auto;
-  inset: auto;
-  object-fit: contain;
-}
-
-.detailSliderImage {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  opacity: 0;
-}
-
-.detailSliderFrame.is-active .detailSliderImage {
-  animation: sliderFade var(--motion-duration-fast)
-    var(--motion-ease) forwards;
-}
-
-@keyframes sliderFade {
-  to {
-    opacity: 1;
-  }
-}
-
-.detailSliderMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.detailSliderCaption {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--color-black);
-  opacity: 0.65;
-}
-
-.detailSliderControls {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-left: auto;
-}
-
-.detailSliderCount {
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  opacity: 0.6;
-}
-
-.detailSliderArrow {
-  background: none;
-  border: none;
-  padding: 2px;
-  font-size: 17px;
-  line-height: 1;
-  color: #1e1e1e;
-  opacity: 0.55;
-  cursor: pointer;
-  transition:
-    opacity var(--motion-duration-fast) var(--motion-ease),
-    transform var(--motion-duration-fast) var(--motion-ease);
-}
-
-.detailSliderArrow:hover {
-  opacity: 1;
-}
-
-.detailSliderArrow--prev:hover {
-  transform: translateX(-2px);
-}
-
-.detailSliderArrow--next:hover {
-  transform: translateX(2px);
-}
-
-/* ================= LAYOUT: long-image-two-col-text ================= */
-/* Gambar panjang di kiri (media), teks (judul + 2 blok copy)
-   di sidebar kanan yang sticky. */
-
-.detailSection--longimage .detailSectionMedia {
-  flex: 1 1 auto;
-  max-width: none;
-}
-
-.detailSection--longimage .detailSectionSide {
-  flex: 0 0 360px;
-  max-width: 380px;
-}
-
-.detailSectionSide--sticky {
-  position: sticky;
-  top: 160px;
-}
+/* ================= LONG IMAGE — TIDAK DISENTUH ================= */
 
 .longImageWrap {
   width: 100%;
@@ -484,8 +572,7 @@
 }
 
 .longImageFrame.is-active .longImageImg {
-  animation: pairReveal var(--motion-duration)
-    var(--motion-ease) forwards;
+  animation: pairReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
 .longImageCaption {
@@ -497,27 +584,7 @@
   opacity: 0.65;
 }
 
-.longImageTextStack {
-  margin-top: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* Kalau description tidak ada (title langsung diikuti text stack),
-   rapatkan gap supaya sama dengan rhythm section lain — hanya
-   14px dari margin-bottom title. */
-.detailSectionTitle + .longImageTextStack {
-  margin-top: 0;
-}
-
-.longImageTextBlock {
-  font-family: Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--color-black);
-  opacity: 0.85;
-}
+/* ================= CLOSING — TIDAK DISENTUH ================= */
 
 .detailClosing {
   margin-top: 96px;
@@ -538,19 +605,9 @@
   margin-bottom: 0;
 }
 
-/* ==== FOOTER NEXT PROJECT — OUTLINE SYSTEM (mirror hero) ====
-   Resting : outline (fill transparent + stroke 2px) + rotateY -24°.
-   Hover   : fill solid + rata layar (rotateY 0).
-   Font 'Archivo Black NoOverlap' WAJIB di sini karena judul
-   di-rotasi 3D — tanpa remove-overlap, stroke akan menampilkan
-   garis internal (banding).
-   Depth sengaja landai (perspective 120vw + sudut -24°) supaya
-   tidak "menjorok ke dalam" terlalu ekstrem.
-   Ukuran di-cap 5.5rem (bukan 9rem seperti hero) karena container
-   hanya 1100px: kata terpanjang "Classification" (±9.8em) di 88px
-   = ±860px → muat tanpa overlap.
-   Padding-bottom tidak dipasang di sini — dipindah ke .detail
-   (parent) supaya berlaku konsisten di semua project. */
+/* ================= NEXT PROJECT (F) =================
+   Posisi berubah: rata kanan container 1140 (editorialContainer),
+   BUKAN tepi layar. Spesifikasi visual lain TIDAK disentuh. */
 
 .detailNextSection {
   margin-top: 80px;
@@ -563,7 +620,7 @@
   display: block;
   font-family: Arial, sans-serif;
   font-weight: bold;
-  font-size: clamp(0.9rem, 1.5vw, 1.25rem); /* KNOB — proporsional dgn judul */
+  font-size: clamp(0.9rem, 1.5vw, 1.25rem);
   color: var(--color-black);
   margin-bottom: 24px;
 }
@@ -571,7 +628,7 @@
 .detailNextPerspective {
   display: block;
   text-decoration: none;
-  perspective: 120vw; /* KNOB: makin besar = makin dangkal/flat */
+  perspective: 120vw;
   perspective-origin: 100% 50%;
 }
 
@@ -579,62 +636,67 @@
   display: inline-block;
   font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
-  font-size: clamp(2.5rem, 6vw, 5.5rem); /* KNOB */
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
   line-height: 0.9;
   letter-spacing: -1px;
   text-align: right;
   color: transparent;
   -webkit-text-stroke: 2px var(--color-black);
   transform-origin: 100% center;
-  transform: rotateY(-24deg); /* KNOB: sudut resting lebih landai */
+  transform: rotateY(-24deg);
   transition:
     transform var(--motion-duration) var(--motion-ease),
     color 0.3s ease;
   will-change: transform;
 }
 
-/* Hover — fill solid menutup stroke + judul rata layar */
 .detailNextPerspective:hover .detailNextTitle {
   transform: rotateY(0deg);
   color: var(--color-black);
 }
 
+/* ================= MOBILE (G) — ≤768px, 1 kolom ================= */
+
 @media (max-width: 768px) {
   .detail {
-    padding: 180px 5vw 180px; /* KNOB: padding simetris di mobile */
+    padding: 180px 0 180px;
   }
 
-  .detailIntro {
+  .editorialContainer {
+    width: 92vw;
+  }
+
+  .editorialIntroRow {
     grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-areas: 'rail' 'lead' 'body';
+    row-gap: 24px;
+    margin-bottom: 56px;
+  }
+
+  .editorialSection {
+    margin: 0 0 72px;
+  }
+
+  .editorialSectionRow {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'media' 'rail' 'text';
+    row-gap: 16px;
+  }
+
+  .editorialTextRow {
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 0;
+  }
+
+  .editorialCol {
+    max-width: 100%;
+    flex: 1 1 auto;
   }
 
   .detailHero {
     height: 60vh;
     min-height: 320px;
-  }
-
-  .detailSection {
-    margin: 88px 0;
-  }
-
-  .detailSectionRow,
-  .detailSection--left .detailSectionRow {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .detailSection--slider.detailSection--right
-    .detailSectionMedia,
-  .detailSection--slider.detailSection--left
-    .detailSectionMedia {
-    max-width: 100%;
-  }
-
-  .detailSectionSide,
-  .detailSection--pair .detailSectionSide {
-    flex: 1 1 auto;
-    max-width: 100%;
   }
 
   .detailPairFrame {
@@ -647,28 +709,9 @@
   .detailPair {
     gap: 16px;
   }
-
-  .detailSliderMeta {
-    flex-wrap: wrap;
-  }
-
-  .detailSectionSide--sticky {
-    position: static;
-    top: auto;
-  }
-
-  .detailSection--longimage .detailSectionSide {
-    flex: 1 1 auto;
-    max-width: 100%;
-  }
-
-  .longImageTextStack {
-    margin-top: 20px;
-    gap: 18px;
-  }
 }
 
-/* ============ PAGE-SPECIFIC ============ */
+/* ============ PAGE-SPECIFIC — TIDAK DISENTUH ============ */
 
 body.page-project {
   background: #F2F2F2;
@@ -678,15 +721,10 @@ body.page-project .detailHero {
   background: #1e1e1e;
 }
 
-/* Gambar + overlay hero disembunyikan sementara (hero jadi kotak
-   #1e1e1e + judul outline). Hapus 2 baris ini nanti kalau content.hero
-   sudah diisi gambar asli di projectContent.js. */
 body.page-project .detailHeroImage,
 body.page-project .detailHeroOverlay {
   display: none;
 }
-
-/* Corner & nav */
 
 body.page-project .corner,
 body.page-project .navWordmark,
@@ -701,8 +739,6 @@ body.page-project .navLinks .label {
   color: var(--color-black);
 }
 
-/* Page project default — wordmark hitam, stroke 1px hitam konstan
-   (sewarna fill) supaya hover outline tetap halus & tidak "ngembang". */
 body.page-project .wordmark {
   color: #1e1e1e;
   -webkit-text-stroke: 1px #1e1e1e;
@@ -715,11 +751,6 @@ body.page-project .activeDash {
   background: var(--color-black);
 }
 
-/* ==== About terbuka (rule LAMA — peninggalan fase About gelap) ====
-   Sudah TIDAK relevan lagi (About sekarang selalu putih di page
-   project), tapi tetap dibiarkan karena blok "ABOUT OPEN OVERRIDE"
-   di paling bawah file ini punya specificity lebih tinggi dan akan
-   SELALU menang menggantikannya — lihat penjelasan di sana. */
 body.page-project .navWordmark.nav--open .wordmark {
   color: var(--color-white);
   -webkit-text-stroke: 1px var(--color-white);
@@ -740,8 +771,6 @@ body.page-project .navLinks.nav--open .activeDash {
   background: var(--color-white);
 }
 
-/* ==== Corner ATAS putih saat hero gelap ==== */
-
 body.page-project.on-hero .navLinks,
 body.page-project.on-hero .corner.tr {
   color: var(--color-white);
@@ -758,10 +787,8 @@ body.page-project.on-hero .navLinks .activeDash {
   background: var(--color-white);
 }
 
-/* ==== READING MODE (State B/C) — SEMUA di-scope body.page-project
-   supaya homepage sama sekali tidak tersentuh. ==== */
 :root {
-  --reading-shift: 34px; /* KNOB: kira-kira tinggi .sub (font+margin), tuning manual */
+  --reading-shift: 34px;
 }
 
 body.page-project.reading-mode .navWordmark.nav--closed {
@@ -778,22 +805,14 @@ body.page-project.reading-mode .corner.br {
   pointer-events: none;
 }
 
-/* Wordmark jadi stroke SUBTLE — lebih tipis (0.75px) + abu-abu (#999),
-   BUKAN hitam solid seperti base rule, supaya tidak mencolok saat
-   user sedang membaca. Hover tetap dimatikan (static outline, no-op). */
 body.page-project.reading-mode .wordmark {
   color: transparent;
-  -webkit-text-stroke: 0.75px #999; /* KNOB: ganti ke #888 kalau kurang terlihat */
+  -webkit-text-stroke: 0.75px #999;
 }
 body.page-project.reading-mode .wordmarkLink:hover .wordmark {
-  color: transparent; /* no-op — override hover default */
+  color: transparent;
 }
 
-/* Transisi corner (pergantian warna saat scroll — BUKAN efek hover) */
-
-/* navLinks dipisah: butuh transisi LEFT supaya saat About ditutup di
-   page project, about/work(s) bergeser kiri mulus — durasi & bezier
-   identik dengan .navLinks di Corners.css (homepage). */
 body.page-project .navLinks {
   transition:
     color 0.3s ease,
@@ -817,16 +836,6 @@ body.page-project .navWordmark {
 body.page-project .navLinks .activeDash {
   transition: background 0.3s ease;
 }
-
-/* ============ ABOUT OPEN OVERRIDE (page project) ============
-   BUG FIX: saat About dibuka di halaman project, overlay-nya sekarang
-   PUTIH (#F2F2F2), jadi wordmark/nav/tombol close WAJIB hitam dan
-   WAJIB terlihat — apa pun posisi scroll (hero/footer/reading-mode)
-   atau status wordmark-hidden sebelumnya.
-
-   Setiap selector di bawah ini SENGAJA dibuat lebih spesifik
-   (5 class + 1 type = (0,5,1)) dari SEMUA rule pesaing di atas,
-   jadi PASTI menang tanpa bergantung urutan baris di file. */
 
 body.page-project.about-open .navWordmark.nav--open {
   opacity: 1;
@@ -855,15 +864,10 @@ body.page-project.about-open .navLinks.nav--open .activeDash {
   background: var(--color-black);
 }
 
-/* Tombol close (×) di corner kanan atas — target langsung ke tombolnya
-   (bukan container .corner.tr) supaya specificity pasti unggul dari
-   .on-hero yang menyasar .corner.tr. */
 body.page-project.about-open .corner.tr .cornerIconBtn {
   color: var(--color-black);
 }
 
-/* Kalau about dibuka saat masih di reading-mode, wordmark harus naik
-   BERSIH (tanpa sisa translateY) dan sub harus terlihat lagi. */
 body.page-project.about-open .navWordmark.nav--open {
   transform: none;
 }

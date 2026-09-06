@@ -9,8 +9,6 @@ import './ProjectDetail.css'
 
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
 
-const PLACEMENT_BY_INDEX = ['left', 'right', 'left', 'right']
-
 function ProjectDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -47,14 +45,7 @@ function ProjectDetail() {
       const heroCoversWordmark = r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
-      // ==== READING MODE (State B/C) ====
-      // B aktif: garis bawah section opening (intro) sudah lewat slot
-      // wordmark idle (vh - 118, KNOB sama dengan threshold wordmark-hidden
-      // di atas). C: balik ke A begitu elemen NEXT PROJECT masuk viewport.
-      // closingRef TETAP dipakai untuk reveal animation paragraf closing,
-      // hanya dilepas dari logic ini.
-      // Fallback ke closingRect kalau next project tidak dirender —
-      // supaya reading-mode tidak nyangkut permanen.
+      // ==== READING MODE (State B/C) — TIDAK DIUBAH ====
       const introRect = introRef.current?.getBoundingClientRect()
       const nextRect = nextRef.current?.getBoundingClientRect()
       const closingRect = closingRef.current?.getBoundingClientRect()
@@ -87,7 +78,7 @@ function ProjectDetail() {
       window.removeEventListener('resize', update)
       document.body.classList.remove('on-hero')
       document.body.classList.remove('wordmark-hidden')
-      document.body.classList.remove('reading-mode') // cleanup saat unmount
+      document.body.classList.remove('reading-mode')
     }
   }, [])
 
@@ -101,14 +92,10 @@ function ProjectDetail() {
 
   return (
     <>
-      {/* sectionNav (01/02/03) DIHAPUS khusus halaman project — diganti
-          tombol back (←) via prop onBack. Home.jsx TIDAK terpengaruh. */}
       <Corners onBack={() => navigate('/')} />
 
       <article className="detail">
-        {/* HERO SELALU DIRENDER: kotak #1e1e1e + judul besar outline CAPS.
-            Gambar OPSIONAL — nanti tinggal isi content.hero di
-            projectContent.js, <img> + overlay otomatis ikut muncul. */}
+        {/* HERO — TIDAK DISENTUH (B) */}
         <section ref={heroRef} className="detailHero">
           {heroImage && (
             <>
@@ -117,7 +104,6 @@ function ProjectDetail() {
                 src={heroImage}
                 alt={content.title}
               />
-
               <div className="detailHeroOverlay" aria-hidden="true" />
             </>
           )}
@@ -140,101 +126,99 @@ function ProjectDetail() {
           </h1>
         </section>
 
-        <section ref={introRef} className="detailIntro">
-          <div
-            className={`detailIntroCol detailIntroHeading reveal ${
-              introInView ? 'inView' : ''
-            }`}
-          >
-            {content.intro}
-          </div>
-
-          <div
-            className={`detailIntroCol detailIntroBody reveal ${
-              introInView ? 'inView' : ''
-            }`}
-          >
-            {content.approach}
-          </div>
-
-          <div
-            className={`detailIntroCol detailIntroSidebar reveal ${
-              introInView ? 'inView' : ''
-            }`}
-          >
-            <div>
-              <span className="detailCreditsLabel">Role</span>
-              {content.role}
-            </div>
-
-            <div>
-              <span className="detailCreditsLabel">Tools</span>
-              {content.tools}
-            </div>
-
-            <div>
-              <span className="detailCreditsLabel">Year</span>
-              {content.year}
-            </div>
-
-            <div>
-              <span className="detailCreditsLabel">Duration</span>
-              {content.duration}
-            </div>
-
-            <div>
-              <span className="detailCreditsLabel">Team</span>
-              {content.team}
-            </div>
-          </div>
-        </section>
-
-        {content.sections.map((section, index) => (
-          <ProjectSection
-            key={section.title}
-            section={section}
-            index={index}
-          />
-        ))}
-
-        {content.figma && (
-          <div
-            ref={figmaRef}
-            className={`detailFigmaWrap reveal ${
-              figmaInView ? 'inView' : ''
-            }`}
-          >
-            {/* figmaUrl kosong → href "#" (persis kondisi HUB PKP sekarang).
-                Begitu diisi string URL → otomatis buka tab baru. */}
-            <a
-              href={content.figmaUrl || '#'}
-              target={content.figmaUrl ? '_blank' : undefined}
-              rel={content.figmaUrl ? 'noreferrer' : undefined}
-              className="detailFigmaPill"
+        {/* ==== EDITORIAL CONTAINER — 1140px center (A) ==== */}
+        <div className="editorialContainer">
+          {/* ==== INTRO (C) — lead(455) + body(455) + rail facts(170) ==== */}
+          <section ref={introRef} className="editorialIntroRow">
+            <div
+              className={`editorialIntroLead reveal ${
+                introInView ? 'inView' : ''
+              }`}
             >
-              View Figma prototype →
-            </a>
-          </div>
-        )}
+              {content.intro}
+            </div>
 
-        <section ref={closingRef} className="detailClosing">
-          <p
-            className={`detailParagraph detailClosingText reveal ${
-              closingInView ? 'inView' : ''
-            }`}
-          >
-            {content.closing}
-          </p>
-        </section>
+            <div
+              className={`editorialIntroBody reveal ${
+                introInView ? 'inView' : ''
+              }`}
+            >
+              {content.approach}
+            </div>
 
-        {nextProject && nextProject.title !== content.title && (
-          <div ref={nextRef} className="detailNextSection">
-            <span className="detailNextLabel">Next project</span>
-            <Link to={nextTo} className="detailNextPerspective">
-              <span className="detailNextTitle">{nextProject.title}</span>
-            </Link>
-          </div>
-        )}
+            <div
+              className={`editorialRail editorialFacts reveal ${
+                introInView ? 'inView' : ''
+              }`}
+            >
+              <div className="factRow">
+                <span className="factLabel">Role:</span>{' '}
+                <span className="factValue">{content.role}</span>
+              </div>
+              <div className="factRow">
+                <span className="factLabel">Tools:</span>{' '}
+                <span className="factValue">{content.tools}</span>
+              </div>
+              <div className="factRow">
+                <span className="factLabel">Year:</span>{' '}
+                <span className="factValue">{content.year}</span>
+              </div>
+              <div className="factRow">
+                <span className="factLabel">Duration:</span>{' '}
+                <span className="factValue">{content.duration}</span>
+              </div>
+              <div className="factRow">
+                <span className="factLabel">Team:</span>{' '}
+                <span className="factValue">{content.team}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* ==== SECTIONS (D) ==== */}
+          {content.sections.map((section, index) => (
+            <ProjectSection key={section.title} section={section} index={index} />
+          ))}
+
+          {content.figma && (
+            <div
+              ref={figmaRef}
+              className={`detailFigmaWrap reveal ${
+                figmaInView ? 'inView' : ''
+              }`}
+            >
+              {/* FIX: tag <a pembuka LENGKAP (bug Claude yang ke-11).
+                  figmaUrl kosong → href "#" (HUB PKP sekarang).
+                  Begitu diisi URL → otomatis buka tab baru. */}
+              <a
+                href={content.figmaUrl || '#'}
+                target={content.figmaUrl ? '_blank' : undefined}
+                rel={content.figmaUrl ? 'noreferrer' : undefined}
+                className="detailFigmaPill"
+              >
+                View Figma prototype →
+              </a>
+            </div>
+          )}
+
+          <section ref={closingRef} className="detailClosing">
+            <p
+              className={`detailParagraph detailClosingText reveal ${
+                closingInView ? 'inView' : ''
+              }`}
+            >
+              {content.closing}
+            </p>
+          </section>
+
+          {nextProject && nextProject.title !== content.title && (
+            <div ref={nextRef} className="detailNextSection">
+              <span className="detailNextLabel">Next project</span>
+              <Link to={nextTo} className="detailNextPerspective">
+                <span className="detailNextTitle">{nextProject.title}</span>
+              </Link>
+            </div>
+          )}
+        </div>
       </article>
     </>
   )
@@ -242,71 +226,71 @@ function ProjectDetail() {
 
 function ProjectSection({ section, index }) {
   const [ref, inView] = useInView()
-  const placement = PLACEMENT_BY_INDEX[index] || 'left'
   const countLabel = String(index + 1).padStart(2, '0')
 
-  // ---- Layout: long-image-two-col-text ----
-  if (section.layout === 'long-image-two-col-text') {
-    return (
-      <div
-        ref={ref}
-        className={`detailSection detailSection--longimage reveal ${
-          inView ? 'inView' : ''
-        }`}
-      >
-        <span className="detailSectionCount">{countLabel}</span>
+  const isPair = section.layout === 'pair'
+  const isLongImage = section.layout === 'long-image-two-col-text'
+  const isSlider = !isPair && !isLongImage
 
-        <div className="detailSectionRow">
-          <div className="detailSectionMedia">
-            <LongImage
-              image={section.image}
+  // Teks yang belum ada di data → placeholder (J).
+  const descLeft =
+    section.twoColText?.left ?? section.description ?? `DESCRIPTION_LEFT_${index + 1}`
+  const descRight = section.twoColText?.right ?? `DESCRIPTION_RIGHT_${index + 1}`
+  const note = section.note ?? `NOTE_SECTION_${index + 1}`
+
+  // ==== SLIDER STATE — logika index/goNext/goPrev SAMA seperti lama ====
+  const total = isSlider ? section.images.length : 0
+  const [slideIndex, setSlideIndex] = useState(0)
+  const [direction, setDirection] = useState(null)
+  const [outgoing, setOutgoing] = useState(null)
+
+  const goNext = () => {
+    if (total <= 1) return
+    setDirection('next')
+    setOutgoing({ ...section.images[slideIndex], dir: 'next' })
+    setSlideIndex((i) => (i + 1) % total)
+  }
+
+  const goPrev = () => {
+    if (total <= 1) return
+    setDirection('prev')
+    setOutgoing({ ...section.images[slideIndex], dir: 'prev' })
+    setSlideIndex((i) => (i - 1 + total) % total)
+  }
+
+  const current = isSlider ? section.images[slideIndex] : null
+
+  return (
+    <div ref={ref} className={`editorialSection reveal ${inView ? 'inView' : ''}`}>
+      <span className="editorialSectionCount">{countLabel}</span>
+
+      <div className="editorialSectionRow">
+        <div className="editorialMedia">
+          {isSlider && (
+            <SliderMedia
+              images={section.images}
+              slideIndex={slideIndex}
+              direction={direction}
+              outgoing={outgoing}
+              onOutgoingDone={() => setOutgoing(null)}
               title={section.title}
               aspectRatio={section.aspectRatio}
               active={inView}
             />
-          </div>
+          )}
 
-          <div className="detailSectionSide detailSectionSide--sticky">
-            <h3 className="detailSectionTitle">{section.title}</h3>
-
-            <div className="longImageTextStack">
-              <p className="longImageTextBlock">
-                {section.twoColText.left}
-              </p>
-              <p className="longImageTextBlock">
-                {section.twoColText.right}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ---- Layout existing: slider / pair (persis pola HUB PKP) ----
-  const isPair = section.layout === 'pair'
-
-  return (
-    <div
-      ref={ref}
-      className={`detailSection detailSection--${placement} ${
-        isPair ? 'detailSection--pair' : 'detailSection--slider'
-      } reveal ${inView ? 'inView' : ''}`}
-    >
-      <span className="detailSectionCount">{countLabel}</span>
-
-      <div className="detailSectionRow">
-        <div className="detailSectionMedia">
-          {isPair ? (
+          {isPair && (
             <PairGallery
               images={section.images}
               title={section.title}
               aspectRatio={section.aspectRatio}
               active={inView}
             />
-          ) : (
-            <SliderGallery
-              images={section.images}
+          )}
+
+          {isLongImage && (
+            <LongImage
+              image={section.image}
               title={section.title}
               aspectRatio={section.aspectRatio}
               active={inView}
@@ -314,34 +298,50 @@ function ProjectSection({ section, index }) {
           )}
         </div>
 
-        <div className={`detailSectionSide detailSectionSide--${placement}`}>
-          <h3 className="detailSectionTitle">{section.title}</h3>
-          {section.description && (
-            <p className="detailSectionText">{section.description}</p>
-          )}
+        {isSlider && (
+          <div className="editorialRail">
+            <SliderRailMeta
+              caption={current?.caption}
+              index={slideIndex}
+              total={total}
+              note={note}
+              onNext={goNext}
+              onPrev={goPrev}
+              inView={inView}
+            />
+          </div>
+        )}
+
+        <div className="editorialTextRow">
+          <div className="editorialCol">
+            <h3 className="editorialSectionTitle">{section.title}</h3>
+            <p className="editorialDescText">{descLeft}</p>
+          </div>
+          <div className="editorialCol">
+            <p className="editorialDescText">{descRight}</p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function SliderGallery({ images, title, aspectRatio, active }) {
-  const [index, setIndex] = useState(0)
-  const total = images.length
-  const current = images[index]
-
-  // Kalau section TIDAK mengirim aspectRatio (mis. Garbage Classification
-  // section 02): frame beralih ke mode "natural" — tinggi frame dihitung
-  // manual dari rasio asli gambar, supaya transisi tinggi antar-slide
-  // bisa di-animasikan halus. HUB PKP selalu kirim aspectRatio, tetap
-  // lewat jalur lama, TIDAK terpengaruh sama sekali.
+// ==== MEDIA SLIDER (I) — preload semua gambar sekali di mount ====
+function SliderMedia({
+  images,
+  slideIndex,
+  direction,
+  outgoing,
+  onOutgoingDone,
+  title,
+  aspectRatio,
+  active,
+}) {
   const hasAspectRatio = Boolean(aspectRatio)
-
   const frameRef = useRef(null)
   const imgRef = useRef(null)
   const [naturalHeight, setNaturalHeight] = useState(null)
 
-  // Hitung tinggi frame dari rasio natural gambar x lebar frame saat ini.
   const measureHeight = useCallback(() => {
     const img = imgRef.current
     const frame = frameRef.current
@@ -350,24 +350,20 @@ function SliderGallery({ images, title, aspectRatio, active }) {
     setNaturalHeight((img.naturalHeight / img.naturalWidth) * w)
   }, [])
 
-  // Kalau gambar sudah ada di cache browser, event onLoad TIDAK pernah
-  // fire (img.complete langsung true saat mount), jadi dicek manual
-  // tiap ganti slide.
   useEffect(() => {
     if (hasAspectRatio) return
     if (imgRef.current?.complete) measureHeight()
-  }, [index, hasAspectRatio, measureHeight])
+  }, [slideIndex, hasAspectRatio, measureHeight])
 
-  // Recompute saat window resize (lebar frame berubah → tinggi
-  // proporsional ikut berubah).
   useEffect(() => {
     if (hasAspectRatio) return
     window.addEventListener('resize', measureHeight)
     return () => window.removeEventListener('resize', measureHeight)
   }, [hasAspectRatio, measureHeight])
 
-  const goNext = () => setIndex((i) => (i + 1) % total)
-  const goPrev = () => setIndex((i) => (i - 1 + total) % total)
+  const current = images[slideIndex]
+  const revealClass = direction ? `slide-in-${direction}` : active ? 'fade-in' : ''
+  const naturalClass = hasAspectRatio ? '' : 'detailSliderImage--natural'
 
   return (
     <div className="detailSlider">
@@ -384,48 +380,126 @@ function SliderGallery({ images, title, aspectRatio, active }) {
             : undefined
         }
       >
+        {/* Preload layer: semua gambar section ini di-mount sekali,
+            hidden, agar sudah ter-download saat halaman dibuka. */}
+        <div className="detailSliderPreload" aria-hidden="true">
+          {images.map((img) => (
+            <img key={`preload-${img.src}`} src={img.src} alt="" loading="eager" />
+          ))}
+        </div>
+
+        {outgoing && (
+          <img
+            key={`out-${outgoing.src}-${outgoing.dir}`}
+            className={`detailSliderImage is-outgoing slide-out-${outgoing.dir} ${naturalClass}`}
+            src={outgoing.src}
+            alt=""
+            aria-hidden="true"
+            onAnimationEnd={onOutgoingDone}
+          />
+        )}
+
         <img
           ref={imgRef}
-          key={index}
-          className="detailSliderImage"
+          key={`cur-${current.src}-${slideIndex}`}
+          className={`detailSliderImage is-current ${revealClass} ${naturalClass}`}
           src={current.src}
-          alt={current.caption || `${title} — ${index + 1}`}
+          alt={current.caption || `${title} — ${slideIndex + 1}`}
           onLoad={measureHeight}
         />
       </div>
-
-      <div className="detailSliderMeta">
-        {current.caption && (
-          <span className="detailSliderCaption">{current.caption}</span>
-        )}
-
-        {total > 1 && (
-          <div className="detailSliderControls">
-            <button
-              type="button"
-              className="detailSliderArrow detailSliderArrow--prev"
-              onClick={goPrev}
-              aria-label="Gambar sebelumnya"
-            >
-              ←
-            </button>
-
-            <span className="detailSliderCount">
-              {index + 1} / {total}
-            </span>
-
-            <button
-              type="button"
-              className="detailSliderArrow detailSliderArrow--next"
-              onClick={goNext}
-              aria-label="Gambar selanjutnya"
-            >
-              →
-            </button>
-          </div>
-        )}
-      </div>
     </div>
+  )
+}
+
+// ==== RAIL: KONTROL → CAPTION → NOTE (E) ====
+function SliderRailMeta({ caption, index, total, note, onNext, onPrev, inView }) {
+  return (
+    <div className="railSliderMeta">
+      {total > 1 && (
+        <div className="railControls">
+          <button
+            type="button"
+            className="detailSliderArrow detailSliderArrow--prev"
+            onClick={onPrev}
+            aria-label="Gambar sebelumnya"
+          >
+            ←
+          </button>
+
+          <FlipCounter current={index + 1} total={total} />
+
+          <button
+            type="button"
+            className="detailSliderArrow detailSliderArrow--next"
+            onClick={onNext}
+            aria-label="Gambar selanjutnya"
+          >
+            →
+          </button>
+        </div>
+      )}
+
+      <FlipCaption text={caption} />
+
+      {/* NOTE statis — animasi sekali saat section masuk viewport,
+          tidak berubah saat next/prev. */}
+      <p className={`railNote reveal ${inView ? 'inView' : ''}`}>{note}</p>
+    </div>
+  )
+}
+
+// Flip perspektif untuk caption (perpindahan antar slide)
+function FlipCaption({ text }) {
+  const [displayText, setDisplayText] = useState(text)
+  const [flipping, setFlipping] = useState(false)
+  const prevText = useRef(text)
+
+  useEffect(() => {
+    if (text === prevText.current) return
+    setFlipping(true)
+    const t1 = setTimeout(() => setDisplayText(text), 200)
+    const t2 = setTimeout(() => setFlipping(false), 400)
+    prevText.current = text
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [text])
+
+  if (!displayText) return null
+
+  return (
+    <span className="detailSliderCaptionWrap">
+      <span className={`detailSliderCaption ${flipping ? 'is-flipping' : ''}`}>
+        {displayText}
+      </span>
+    </span>
+  )
+}
+
+// Flip kecil untuk counter (n/n)
+function FlipCounter({ current, total }) {
+  const [displayCurrent, setDisplayCurrent] = useState(current)
+  const [flipping, setFlipping] = useState(false)
+  const prevCurrent = useRef(current)
+
+  useEffect(() => {
+    if (current === prevCurrent.current) return
+    setFlipping(true)
+    const t1 = setTimeout(() => setDisplayCurrent(current), 150)
+    const t2 = setTimeout(() => setFlipping(false), 300)
+    prevCurrent.current = current
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [current])
+
+  return (
+    <span className={`detailSliderCount ${flipping ? 'is-flipping' : ''}`}>
+      {displayCurrent} / {total}
+    </span>
   )
 }
 
@@ -445,9 +519,7 @@ function PairGallery({ images, title, aspectRatio, active }) {
             />
           </div>
 
-          {img.caption && (
-            <p className="detailPairCaption">{img.caption}</p>
-          )}
+          {img.caption && <p className="detailPairCaption">{img.caption}</p>}
         </div>
       ))}
     </div>
