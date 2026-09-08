@@ -32,8 +32,6 @@ body.page-project .aboutOverlay {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0 6vw 120px 0;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
-          mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
 }
 
 /* ===== Konten: statement kiri + kolom info kanan.
@@ -45,7 +43,7 @@ body.page-project .aboutOverlay {
   display: flex;
   gap: 8vw;
   flex-wrap: wrap;
-  padding-top: 48px;
+  padding-top: 0;
 }
 
 /* Kolom paragraf: lebar 620px supaya tidak terlalu memanjang ke bawah */

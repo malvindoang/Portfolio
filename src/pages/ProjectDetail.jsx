@@ -14,7 +14,7 @@ function ProjectDetail() {
   const navigate = useNavigate()
   const content = PROJECT_CONTENT[slug]
   const heroRef = useRef(null)
-  const nextRef = useRef(null)
+  const nextTitleRef = useRef(null)
 
   const ownerProject = ALL_PROJECTS.find((p) => p.slug === slug)
   const projectTheme = ownerProject?.theme || 'red'
@@ -31,7 +31,6 @@ function ProjectDetail() {
   }, [projectTheme])
 
   const [introRef, introInView] = useInView()
-  const [figmaRef, figmaInView] = useInView()
   const [closingRef, closingInView] = useInView()
 
   useEffect(() => {
@@ -45,17 +44,25 @@ function ProjectDetail() {
       const heroCoversWordmark = r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
-      // ==== READING MODE (State B/C) — TIDAK DIUBAH ====
-      const introRect = introRef.current?.getBoundingClientRect()
-      const nextRect = nextRef.current?.getBoundingClientRect()
+      // ===== TRIGGER ON: reading mode =====
+      // Aktif tepat saat scroll mencapai 50px pertama — sederhana
+      // dan konsisten di semua viewport.
+      const readingOn = window.scrollY >= 50
+
+      // ===== TRIGGER OFF: reading mode =====
+      // Anchor = tepi atas JUDUL next project (bukan section-nya).
+      // About/works/.sub baru muncul kembali tepat saat judul outline
+      // besarnya masuk viewport. Fallback ke closing kalau next tidak
+      // dirender.
+      const nextTitleRect = nextTitleRef.current?.getBoundingClientRect()
       const closingRect = closingRef.current?.getBoundingClientRect()
-      const pastIntro = introRect ? introRect.bottom < vh - 118 : false
-      const reachedNext = nextRect
-        ? nextRect.top < vh
+      const reachedNext = nextTitleRect
+        ? nextTitleRect.top < vh
         : closingRect
         ? closingRect.top < vh
         : false
-      document.body.classList.toggle('reading-mode', pastIntro && !reachedNext)
+
+      document.body.classList.toggle('reading-mode', readingOn && !reachedNext)
     }
 
     update()
@@ -95,7 +102,6 @@ function ProjectDetail() {
       <Corners onBack={() => navigate('/')} />
 
       <article className="detail">
-        {/* HERO — TIDAK DISENTUH (B) */}
         <section ref={heroRef} className="detailHero">
           {heroImage && (
             <>
@@ -126,9 +132,7 @@ function ProjectDetail() {
           </h1>
         </section>
 
-        {/* ==== EDITORIAL CONTAINER — 1140px center (A) ==== */}
         <div className="editorialContainer">
-          {/* ==== INTRO (C) — lead(455) + body(455) + rail facts(170) ==== */}
           <section ref={introRef} className="editorialIntroRow">
             <div
               className={`editorialIntroLead reveal ${
@@ -174,31 +178,9 @@ function ProjectDetail() {
             </div>
           </section>
 
-          {/* ==== SECTIONS (D) ==== */}
           {content.sections.map((section, index) => (
             <ProjectSection key={section.title} section={section} index={index} />
           ))}
-
-          {content.figma && (
-            <div
-              ref={figmaRef}
-              className={`detailFigmaWrap reveal ${
-                figmaInView ? 'inView' : ''
-              }`}
-            >
-              {/* FIX: tag <a pembuka LENGKAP (bug Claude yang ke-11).
-                  figmaUrl kosong → href "#" (HUB PKP sekarang).
-                  Begitu diisi URL → otomatis buka tab baru. */}
-              <a
-                href={content.figmaUrl || '#'}
-                target={content.figmaUrl ? '_blank' : undefined}
-                rel={content.figmaUrl ? 'noreferrer' : undefined}
-                className="detailFigmaPill"
-              >
-                View Figma prototype →
-              </a>
-            </div>
-          )}
 
           <section ref={closingRef} className="detailClosing">
             <p
@@ -210,17 +192,81 @@ function ProjectDetail() {
             </p>
           </section>
 
+          {content.figma && (
+            <div className="detailFigmaWrap">
+              <FigmaSpecTag
+                href={content.figmaUrl || '#'}
+                target={content.figmaUrl ? '_blank' : undefined}
+                rel={content.figmaUrl ? 'noreferrer' : undefined}
+              />
+            </div>
+          )}
+
           {nextProject && nextProject.title !== content.title && (
-            <div ref={nextRef} className="detailNextSection">
+            <div className="detailNextSection">
               <span className="detailNextLabel">Next project</span>
               <Link to={nextTo} className="detailNextPerspective">
-                <span className="detailNextTitle">{nextProject.title}</span>
+                <span ref={nextTitleRef} className="detailNextTitle">
+                  {nextProject.title}
+                </span>
               </Link>
             </div>
           )}
         </div>
       </article>
     </>
+  )
+}
+
+// ==== SPEC TAG — Opsi 1: "The working file" ====
+// Arrow HANYA di teks utama. Label murni penanda status, tanpa arrow.
+function FigmaSpecTag({ href, target, rel }) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <a
+      href={href}
+      target={target}
+      rel={rel}
+      className="detailFigmaSpecTag"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span className="detailFigmaSpecLine" aria-hidden="true" />
+      <span className="detailFigmaSpecBody">
+        <SpecTagLabel text={hovered ? 'LIVE IN FIGMA' : 'REF — PROTOTYPE'} />
+        <span className="detailFigmaSpecMain">
+          The working file <span className="detailFigmaSpecArrow">→</span>
+        </span>
+      </span>
+    </a>
+  )
+}
+
+// Flip perspektif untuk label spec-tag — reuse pola FlipCaption/FlipCounter.
+function SpecTagLabel({ text }) {
+  const [displayText, setDisplayText] = useState(text)
+  const [flipping, setFlipping] = useState(false)
+  const prevText = useRef(text)
+
+  useEffect(() => {
+    if (text === prevText.current) return
+    setFlipping(true)
+    const t1 = setTimeout(() => setDisplayText(text), 150)
+    const t2 = setTimeout(() => setFlipping(false), 300)
+    prevText.current = text
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [text])
+
+  return (
+    <span className="detailFigmaSpecLabelWrap">
+      <span className={`detailFigmaSpecLabel ${flipping ? 'is-flipping' : ''}`}>
+        {displayText}
+      </span>
+    </span>
   )
 }
 
@@ -232,13 +278,11 @@ function ProjectSection({ section, index }) {
   const isLongImage = section.layout === 'long-image-two-col-text'
   const isSlider = !isPair && !isLongImage
 
-  // Teks yang belum ada di data → placeholder (J).
   const descLeft =
     section.twoColText?.left ?? section.description ?? `DESCRIPTION_LEFT_${index + 1}`
   const descRight = section.twoColText?.right ?? `DESCRIPTION_RIGHT_${index + 1}`
   const note = section.note ?? `NOTE_SECTION_${index + 1}`
 
-  // ==== SLIDER STATE — logika index/goNext/goPrev SAMA seperti lama ====
   const total = isSlider ? section.images.length : 0
   const [slideIndex, setSlideIndex] = useState(0)
   const [direction, setDirection] = useState(null)
@@ -326,7 +370,6 @@ function ProjectSection({ section, index }) {
   )
 }
 
-// ==== MEDIA SLIDER (I) — preload semua gambar sekali di mount ====
 function SliderMedia({
   images,
   slideIndex,
@@ -380,8 +423,6 @@ function SliderMedia({
             : undefined
         }
       >
-        {/* Preload layer: semua gambar section ini di-mount sekali,
-            hidden, agar sudah ter-download saat halaman dibuka. */}
         <div className="detailSliderPreload" aria-hidden="true">
           {images.map((img) => (
             <img key={`preload-${img.src}`} src={img.src} alt="" loading="eager" />
@@ -412,7 +453,6 @@ function SliderMedia({
   )
 }
 
-// ==== RAIL: KONTROL → CAPTION → NOTE (E) ====
 function SliderRailMeta({ caption, index, total, note, onNext, onPrev, inView }) {
   return (
     <div className="railSliderMeta">
@@ -442,14 +482,11 @@ function SliderRailMeta({ caption, index, total, note, onNext, onPrev, inView })
 
       <FlipCaption text={caption} />
 
-      {/* NOTE statis — animasi sekali saat section masuk viewport,
-          tidak berubah saat next/prev. */}
       <p className={`railNote reveal ${inView ? 'inView' : ''}`}>{note}</p>
     </div>
   )
 }
 
-// Flip perspektif untuk caption (perpindahan antar slide)
 function FlipCaption({ text }) {
   const [displayText, setDisplayText] = useState(text)
   const [flipping, setFlipping] = useState(false)
@@ -478,7 +515,6 @@ function FlipCaption({ text }) {
   )
 }
 
-// Flip kecil untuk counter (n/n)
 function FlipCounter({ current, total }) {
   const [displayCurrent, setDisplayCurrent] = useState(current)
   const [flipping, setFlipping] = useState(false)

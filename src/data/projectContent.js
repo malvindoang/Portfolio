@@ -7,6 +7,7 @@ export const PROJECT_CONTENT = {
     duration: '6 months',
     team: '11 people',
     figma: true,
+    figmaUrl: '',
     hero: '/images/hub-pkp/landing-page.png',
     intro:
       "In Indonesia, more than 8 out of 10 homes are built by the people themselves — often without professional guidance, transparent pricing, or anyone to hold accountable. HUB Layanan Rumah Swadaya Layak Huni is the Ministry of Housing and Settlement Areas (PKP)'s digital answer to that reality.",
@@ -77,9 +78,6 @@ export const PROJECT_CONTENT = {
         images: [
           { src: '/images/hub-pkp/4a.png', caption: 'Searching on the go' },
           { src: '/images/hub-pkp/4b.png', caption: 'Found — getting to know them' },
-          // NANTI: setelah 2 gambar baru selesai diedit, tambahkan di sini, mis.:
-          // { src: '/images/hub-pkp/4c.png', caption: '...' },
-          // { src: '/images/hub-pkp/4d.png', caption: '...' },
         ],
         layout: 'pair',
         aspectRatio: '439 / 891',
@@ -96,7 +94,11 @@ export const PROJECT_CONTENT = {
     year: 2026,
     duration: '5 days',
     team: 'Individual',
-    figma: false,
+    // ===== PERUBAHAN: figma: false → true =====
+    // Supaya Figma Spec Tag muncul di page ini (sama seperti hub-pkp).
+    // figmaUrl kosong dulu, nanti diisi sendiri link Figma prototype.
+    figma: true,
+    figmaUrl: '',
     hero: null,
     heroLines: ['Garbage', 'Classification'],
     intro:

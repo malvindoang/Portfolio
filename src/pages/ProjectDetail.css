@@ -1,9 +1,9 @@
 .detail {
-  padding: 220px 0 220px; /* horizontal dipindah ke .editorialContainer */
+  padding: 220px 0 220px;
   color: var(--color-black);
 }
 
-/* ================= HERO — TIDAK DISENTUH ================= */
+/* ================= HERO ================= */
 
 .detailHero {
   position: relative;
@@ -13,7 +13,9 @@
   height: 50vh;
   min-height: 360px;
   overflow: hidden;
-  margin-bottom: 96px;
+  /* FLUID: di vh 900 = 96px (identik sekarang), di vh 1080 = 105px
+     (delta +9px, pola napas pelan seperti vanholtz 146→155) */
+  margin-bottom: calc(51px + 5vh);
 }
 
 .detailHeroImage {
@@ -25,8 +27,7 @@
   filter: grayscale(1) contrast(1.1);
   opacity: 0;
   transform: scale(1.05);
-  animation: heroImageReveal var(--motion-duration)
-    var(--motion-ease) forwards;
+  animation: heroImageReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
 .detailHeroOverlay {
@@ -54,38 +55,23 @@
   color: transparent;
   -webkit-text-stroke: 2px var(--color-white);
   opacity: 0;
-  animation: heroTitleReveal var(--motion-duration)
-    var(--motion-ease) forwards;
+  animation: heroTitleReveal var(--motion-duration) var(--motion-ease) forwards;
   animation-delay: calc(var(--motion-duration) * 0.4);
 }
 
-.detailHeroTitleLine {
-  display: block;
-}
-
-.detailHeroTitleLine--top {
-  padding-right: 0.35em;
-}
+.detailHeroTitleLine { display: block; }
+.detailHeroTitleLine--top { padding-right: 0.35em; }
 
 @keyframes heroImageReveal {
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes heroTitleReveal {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ================= REVEAL ON SCROLL — TIDAK DISENTUH ================= */
+/* ================= REVEAL ON SCROLL ================= */
 
 .reveal {
   opacity: 0;
@@ -100,21 +86,23 @@
   transform: translateY(0);
 }
 
-/* ================= EDITORIAL CONTAINER (A) =================
-   1140px, di-center. Di layar 1440 margin auto otomatis
-   menghasilkan ±150px kiri-kanan — sengaja menimpa wordmark. */
+/* ================= EDITORIAL CONTAINER (FLUID) =================
+   Base: min(1140px, 80vw) — di 1440×900 TETAP 1140px (identik).
+   Di viewport < 1425px container mengecil via 80vw (anti overflow).
+   Layar besar: lihat blok @media (min-width: 1600px) di bawah. */
 
 .editorialContainer {
-  width: min(1140px, 94vw);
+  width: min(1140px, 80vw);
   margin: 0 auto;
 }
 
-/* ================= INTRO ROW (C) =================
-   lead(455) + body(455) + rail facts(170), gap 30. */
+/* ================= INTRO ROW =================
+   Kolom lead/body FLUID via 1fr — otomatis mengikuti container.
+   Rail 170px & gap 30px tetap fixed (sama seperti vanholtz). */
 
 .editorialIntroRow {
   display: grid;
-  grid-template-columns: 455px 455px 170px;
+  grid-template-columns: 1fr 1fr 170px;
   grid-template-areas: 'lead body rail';
   column-gap: 30px;
   margin-bottom: 96px;
@@ -137,9 +125,7 @@
   opacity: 0.85;
 }
 
-.editorialRail {
-  grid-area: rail;
-}
+.editorialRail { grid-area: rail; }
 
 .editorialFacts {
   display: flex;
@@ -153,20 +139,14 @@
   color: #1e1e1e;
 }
 
-.factLabel {
-  font-weight: bold;
-}
+.factLabel { font-weight: bold; }
+.factValue { font-weight: normal; }
 
-.factValue {
-  font-weight: normal;
-}
+/* ================= SECTIONS =================
+   Media FLUID via 1fr — gambar otomatis melebar mengikuti container
+   (940px di 1440, 1240px di 1920 — persis angka vanholtz). */
 
-/* ================= SECTIONS (D) =================
-   media(940) + rail(170) atas, text(940, 2 kolom) di bawah. */
-
-.editorialSection {
-  margin: 0 0 107px;
-}
+.editorialSection { margin: 0 0 107px; }
 
 .editorialSectionCount {
   display: block;
@@ -180,10 +160,8 @@
 
 .editorialSectionRow {
   display: grid;
-  grid-template-columns: 940px 170px;
-  grid-template-areas:
-    'media rail'
-    'text  rail';
+  grid-template-columns: 1fr 170px;
+  grid-template-areas: 'media rail' 'text rail';
   column-gap: 30px;
   align-items: start;
 }
@@ -200,9 +178,12 @@
   margin-top: 35px;
 }
 
+/* Kolom teks bawah FLUID: bagi rata (lebar media - gap 30) / 2
+   → 455px di 1440, 605px di 1920 (persis vanholtz) */
 .editorialCol {
-  flex: 0 0 455px;
-  max-width: 455px;
+  flex: 1 1 0;
+  max-width: none;
+  min-width: 0;
 }
 
 .editorialSectionTitle {
@@ -222,7 +203,7 @@
   opacity: 0.85;
 }
 
-/* ================= RAIL: KONTROL / CAPTION / NOTE (E) ================= */
+/* ================= RAIL ================= */
 
 .railSliderMeta {
   display: flex;
@@ -250,17 +231,9 @@
     transform var(--motion-duration-fast) var(--motion-ease);
 }
 
-.detailSliderArrow:hover {
-  opacity: 1;
-}
-
-.detailSliderArrow--prev:hover {
-  transform: translateX(-2px);
-}
-
-.detailSliderArrow--next:hover {
-  transform: translateX(2px);
-}
+.detailSliderArrow:hover { opacity: 1; }
+.detailSliderArrow--prev:hover { transform: translateX(-2px); }
+.detailSliderArrow--next:hover { transform: translateX(2px); }
 
 .detailSliderCount {
   display: inline-block;
@@ -276,18 +249,9 @@
 }
 
 @keyframes countFlip {
-  0% {
-    transform: rotateX(0deg);
-    opacity: 1;
-  }
-  50% {
-    transform: rotateX(90deg);
-    opacity: 0;
-  }
-  100% {
-    transform: rotateX(0deg);
-    opacity: 1;
-  }
+  0% { transform: rotateX(0deg); opacity: 1; }
+  50% { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
 }
 
 .detailSliderCaptionWrap {
@@ -311,18 +275,9 @@
 }
 
 @keyframes captionFlip {
-  0% {
-    transform: rotateX(0deg);
-    opacity: 1;
-  }
-  50% {
-    transform: rotateX(-90deg);
-    opacity: 0;
-  }
-  100% {
-    transform: rotateX(0deg);
-    opacity: 1;
-  }
+  0% { transform: rotateX(0deg); opacity: 1; }
+  50% { transform: rotateX(-90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
 }
 
 .railNote {
@@ -333,13 +288,9 @@
   opacity: 0.6;
 }
 
-/* ================= SLIDER MEDIA (I) =================
-   Semua slide di-preload sekali (hidden layer). Transisi current/
-   outgoing murni transform+opacity, tidak ada fetch ulang. */
+/* ================= SLIDER MEDIA ================= */
 
-.detailSlider {
-  width: 100%;
-}
+.detailSlider { width: 100%; }
 
 .detailSliderFrame {
   position: relative;
@@ -355,10 +306,6 @@
   transition: height var(--motion-duration) var(--motion-ease);
 }
 
-/* FIX: preload yang benar-benar bekerja.
-   Versi Claude sebelumnya pakai width:0 + 1px — browser sering skip
-   fetch, sehingga preload tidak jalan. Versi ini menaruh gambar di
-   luar viewport tapi dengan ukuran wajar, browser pasti download. */
 .detailSliderPreload {
   position: absolute;
   left: -9999px;
@@ -382,29 +329,19 @@
   display: block;
 }
 
-.detailSliderImage--natural {
-  object-fit: contain;
-}
+.detailSliderImage--natural { object-fit: contain; }
 
-/* Reveal pertama kali section masuk viewport — fade saja */
-.detailSliderImage.is-current {
-  opacity: 0;
-}
+.detailSliderImage.is-current { opacity: 0; }
 
 .detailSliderImage.is-current.fade-in {
   animation: sliderFadeIn var(--motion-duration-fast) var(--motion-ease) forwards;
 }
 
 @keyframes sliderFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Next/prev — slide direction-aware, TANPA fade */
 .detailSliderImage.is-current.slide-in-next {
   opacity: 1;
   animation: slideInFromRight 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
@@ -415,9 +352,7 @@
   animation: slideInFromLeft 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
-.detailSliderImage.is-outgoing {
-  opacity: 1;
-}
+.detailSliderImage.is-outgoing { opacity: 1; }
 
 .detailSliderImage.is-outgoing.slide-out-next {
   animation: slideOutToLeft 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards;
@@ -428,42 +363,26 @@
 }
 
 @keyframes slideInFromRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes slideInFromLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes slideOutToLeft {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
 
 @keyframes slideOutToRight {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(100%);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
 }
 
-/* ================= PAIR GALLERY — TIDAK DISENTUH ================= */
+/* ================= PAIR GALLERY ================= */
 
 .detailPair {
   display: flex;
@@ -505,10 +424,7 @@
 }
 
 @keyframes pairReveal {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .detailPairCaption {
@@ -520,41 +436,9 @@
   opacity: 0.65;
 }
 
-/* ================= FIGMA PILL — TIDAK DISENTUH ================= */
+/* ================= LONG IMAGE ================= */
 
-.detailFigmaWrap {
-  margin: 0 0 56px;
-}
-
-.detailFigmaPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  padding: 11px 22px;
-  border: 1px solid #1e1e1e;
-  border-radius: 999px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  font-size: 13px;
-  letter-spacing: 0.3px;
-  color: #1e1e1e;
-  text-decoration: none;
-  transition:
-    background var(--motion-duration-fast) var(--motion-ease),
-    color var(--motion-duration-fast) var(--motion-ease);
-}
-
-.detailFigmaPill:hover {
-  background: #1e1e1e;
-  color: #f2f2f2;
-}
-
-/* ================= LONG IMAGE — TIDAK DISENTUH ================= */
-
-.longImageWrap {
-  width: 100%;
-}
+.longImageWrap { width: 100%; }
 
 .longImageFrame {
   width: 100%;
@@ -584,11 +468,9 @@
   opacity: 0.65;
 }
 
-/* ================= CLOSING — TIDAK DISENTUH ================= */
+/* ================= CLOSING ================= */
 
-.detailClosing {
-  margin-top: 96px;
-}
+.detailClosing { margin-top: 96px; }
 
 .detailParagraph {
   font-family: Arial, sans-serif;
@@ -605,12 +487,84 @@
   margin-bottom: 0;
 }
 
-/* ================= NEXT PROJECT (F) =================
-   Posisi berubah: rata kanan container 1140 (editorialContainer),
-   BUKAN tepi layar. Spesifikasi visual lain TIDAK disentuh. */
+/* ================= FIGMA SPEC TAG ================= */
+
+.detailFigmaWrap { margin: 72px 0 0; }
+
+.detailFigmaSpecTag {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.detailFigmaSpecLine {
+  display: block;
+  width: 1px;
+  height: 20px;
+  margin-top: 2px;
+  background: #1e1e1e;
+  opacity: 0.55;
+  transition: height var(--motion-duration-fast) var(--motion-ease);
+}
+
+.detailFigmaSpecTag:hover .detailFigmaSpecLine { height: 46px; }
+
+.detailFigmaSpecBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailFigmaSpecLabelWrap {
+  display: block;
+  perspective: 200px;
+}
+
+.detailFigmaSpecLabel {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #1e1e1e;
+  opacity: 0.5;
+  transform-origin: 50% 100%;
+}
+
+.detailFigmaSpecLabel.is-flipping {
+  animation: specLabelFlip 0.3s var(--motion-ease);
+}
+
+@keyframes specLabelFlip {
+  0% { transform: rotateX(0deg); opacity: 1; }
+  50% { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+.detailFigmaSpecMain {
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  color: #1e1e1e;
+  transition: transform var(--motion-duration-fast) var(--motion-ease);
+}
+
+.detailFigmaSpecTag:hover .detailFigmaSpecMain { transform: translateX(4px); }
+
+.detailFigmaSpecArrow { display: inline-block; }
+
+/* ================= NEXT PROJECT =================
+   Gap dari last object (figma tag / closing) = 108px di 1440×900,
+   persis padding-top section next project vanholtz (108.6px).
+   Di layar besar naik jadi 162px via blok @media 1600px. */
 
 .detailNextSection {
-  margin-top: 80px;
+  margin-top: 108px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -636,7 +590,7 @@
   display: inline-block;
   font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
-  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  font-size: clamp(2.5rem, 6.5vw, 125px);
   line-height: 0.9;
   letter-spacing: -1px;
   text-align: right;
@@ -655,16 +609,38 @@
   color: var(--color-black);
 }
 
-/* ================= MOBILE (G) — ≤768px, 1 kolom ================= */
+/* ================= LAYAR BESAR (≥1600px) — POLA VANHOLTZ =================
+   Container melebar: calc(80vw - 96px) = 1440px di 1920×1080
+   (gap samping otomatis jadi 240px, persis vanholtz).
+   Gap vertikal mengikuti delta vanholtz:
+   - intro → section: 96 → 150
+   - section → section: 107 → 161
+   - last object → next project: 108 → 162 */
+
+@media (min-width: 1600px) {
+  .editorialContainer {
+    width: calc(80vw - 96px);
+  }
+
+  .editorialIntroRow {
+    margin-bottom: 150px;
+  }
+
+  .editorialSection {
+    margin-bottom: 161px;
+  }
+
+  .detailNextSection {
+    margin-top: 162px;
+  }
+}
+
+/* ================= MOBILE ================= */
 
 @media (max-width: 768px) {
-  .detail {
-    padding: 180px 0 180px;
-  }
+  .detail { padding: 180px 0 180px; }
 
-  .editorialContainer {
-    width: 92vw;
-  }
+  .editorialContainer { width: 92vw; }
 
   .editorialIntroRow {
     grid-template-columns: 1fr;
@@ -673,9 +649,7 @@
     margin-bottom: 56px;
   }
 
-  .editorialSection {
-    margin: 0 0 72px;
-  }
+  .editorialSection { margin: 0 0 72px; }
 
   .editorialSectionRow {
     grid-template-columns: 1fr;
@@ -706,90 +680,66 @@
     border-radius: 0;
   }
 
-  .detailPair {
-    gap: 16px;
-  }
+  .detailPair { gap: 16px; }
+
+  .detailFigmaSpecTag { gap: 12px; }
+
+  .detailFigmaSpecLine { height: 18px; }
+
+  .detailFigmaSpecTag:active .detailFigmaSpecLine { height: 42px; }
+
+  .detailFigmaSpecTag:active .detailFigmaSpecMain { transform: translateX(4px); }
 }
 
-/* ============ PAGE-SPECIFIC — TIDAK DISENTUH ============ */
+/* ============ PAGE-SPECIFIC ============ */
 
-body.page-project {
-  background: #F2F2F2;
-}
-
-body.page-project .detailHero {
-  background: #1e1e1e;
-}
+body.page-project { background: #F2F2F2; }
+body.page-project .detailHero { background: #1e1e1e; }
 
 body.page-project .detailHeroImage,
-body.page-project .detailHeroOverlay {
-  display: none;
-}
+body.page-project .detailHeroOverlay { display: none; }
 
 body.page-project .corner,
 body.page-project .navWordmark,
-body.page-project .navLinks {
-  color: var(--color-black);
-}
+body.page-project .navLinks { color: var(--color-black); }
 
 body.page-project .corner .num,
 body.page-project .corner a,
 body.page-project .corner span.label,
-body.page-project .navLinks .label {
-  color: var(--color-black);
-}
+body.page-project .navLinks .label { color: var(--color-black); }
 
 body.page-project .wordmark {
   color: #1e1e1e;
   -webkit-text-stroke: 1px #1e1e1e;
 }
-body.page-project .sub {
-  color: #1e1e1e;
-}
+body.page-project .sub { color: #1e1e1e; }
 
-body.page-project .activeDash {
-  background: var(--color-black);
-}
+body.page-project .activeDash { background: var(--color-black); }
 
 body.page-project .navWordmark.nav--open .wordmark {
   color: var(--color-white);
   -webkit-text-stroke: 1px var(--color-white);
 }
-body.page-project .navWordmark.nav--open .sub {
-  color: var(--color-white);
-}
+body.page-project .navWordmark.nav--open .sub { color: var(--color-white); }
 
 body.page-project .navWordmark.nav--open .wordmarkLink:hover .wordmark {
   color: transparent;
 }
 
-body.page-project .navLinks.nav--open .label {
-  color: var(--color-white);
-}
-
-body.page-project .navLinks.nav--open .activeDash {
-  background: var(--color-white);
-}
+body.page-project .navLinks.nav--open .label { color: var(--color-white); }
+body.page-project .navLinks.nav--open .activeDash { background: var(--color-white); }
 
 body.page-project.on-hero .navLinks,
-body.page-project.on-hero .corner.tr {
-  color: var(--color-white);
-}
+body.page-project.on-hero .corner.tr { color: var(--color-white); }
 
 body.page-project.on-hero .navLinks .label,
 body.page-project.on-hero .corner.tr .num,
 body.page-project.on-hero .corner.tr a,
-body.page-project.on-hero .corner.tr span.label {
-  color: var(--color-white);
-}
+body.page-project.on-hero .corner.tr span.label { color: var(--color-white); }
 
-body.page-project.on-hero .navLinks .activeDash {
-  background: var(--color-white);
-}
+body.page-project.on-hero .navLinks .activeDash { background: var(--color-white); }
 
-:root {
-  --reading-shift: 34px;
-}
+:root { --reading-shift: 34px; }
 
 body.page-project.reading-mode .navWordmark.nav--closed {
   transform: translateY(var(--reading-shift));
@@ -805,6 +755,11 @@ body.page-project.reading-mode .corner.br {
   pointer-events: none;
 }
 
+body.page-project.reading-mode .navLinks {
+  opacity: 0;
+  pointer-events: none;
+}
+
 body.page-project.reading-mode .wordmark {
   color: transparent;
   -webkit-text-stroke: 0.75px #999;
@@ -813,11 +768,15 @@ body.page-project.reading-mode .wordmarkLink:hover .wordmark {
   color: transparent;
 }
 
+/* ===== .navLinks transition ditambah opacity =====
+   Supaya fade in/out about/works smooth (durasi & easing disamakan
+   dengan wordmark turun = 700ms cubic-bezier(0.16,1,0.3,1)). */
 body.page-project .navLinks {
   transition:
     color 0.3s ease,
     left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity var(--motion-duration) var(--motion-ease);
 }
 
 body.page-project .navLinks .label,
@@ -833,9 +792,7 @@ body.page-project .navWordmark {
     opacity var(--motion-duration) var(--motion-ease);
 }
 
-body.page-project .navLinks .activeDash {
-  transition: background 0.3s ease;
-}
+body.page-project .navLinks .activeDash { transition: background 0.3s ease; }
 
 body.page-project.about-open .navWordmark.nav--open {
   opacity: 1;
@@ -856,21 +813,12 @@ body.page-project.about-open .navWordmark.nav--open .sub {
   opacity: 0.75;
 }
 
-body.page-project.about-open .navLinks.nav--open .label {
-  color: var(--color-black);
-}
+body.page-project.about-open .navLinks.nav--open .label { color: var(--color-black); }
+body.page-project.about-open .navLinks.nav--open .activeDash { background: var(--color-black); }
 
-body.page-project.about-open .navLinks.nav--open .activeDash {
-  background: var(--color-black);
-}
+body.page-project.about-open .corner.tr .cornerIconBtn { color: var(--color-black); }
 
-body.page-project.about-open .corner.tr .cornerIconBtn {
-  color: var(--color-black);
-}
-
-body.page-project.about-open .navWordmark.nav--open {
-  transform: none;
-}
+body.page-project.about-open .navWordmark.nav--open { transform: none; }
 
 body.page-project.about-open .navWordmark.nav--open .sub {
   opacity: 0.75;

@@ -7,7 +7,13 @@
   letter-spacing: 0.3px;
 }
 .tr { top: 36px; right: 40px; text-align: right; font-size: 14px; z-index: 30; }
-.br { bottom: 36px; right: 40px; text-align: right; }
+
+.br {
+  bottom: 36px;
+  right: 40px;
+  text-align: right;
+  transition: opacity var(--motion-duration) var(--motion-ease);
+}
 
 /* Gap antar baris nav — seragam untuk corner maupun navLinks */
 .corner .row,
@@ -46,6 +52,13 @@
   color: var(--color-white);
   opacity: 0.75;
   margin-top: 14px;
+  transition: opacity var(--motion-duration) var(--motion-ease);
+}
+
+.navWordmark .sub {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  opacity: 0.50;
 }
 
 .aboutTrigger {
