@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, useCallback } from 'react'
+import { useLayoutEffect, useEffect, useRef, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
@@ -29,6 +29,32 @@ const HOVER_ROT_DEG = -24
 const HOVER_DURATION = 0.7
 const HOVER_EASE_NAME = 'vanholtzPop'
 CustomEase.create(HOVER_EASE_NAME, 'M0,0 C0.075,0.82 0.165,1 1,1')
+
+// ===== ENTRANCE LAYER 1 — CONTAINER DESCENT (JS, clip diam) =====
+// .list turun dari jauh di atas layar selama 3s. Ease sengaja LEBIH
+// LINEAR DI TENGAH supaya container TERUS bergerak sampai judul
+// terakhir menyala di 1.95s (kalau expo-out, container "parkir" dulu
+// dan judul atas spawn di tempat).
+const INTRO_OFFSET_DURATION_MS = 3000
+const INTRO_EASE_NAME = 'vanholtzDescentEase'
+CustomEase.create(INTRO_EASE_NAME, 'M0,0 C0.3,0.05,0.4,1 1,1')
+const introEase = gsap.parseEase(INTRO_EASE_NAME)
+
+// ===== ENTRANCE LAYER 2 — REVEAL PER PROJECT (SPIRAL: step 0.25s) =====
+// Step 0.25s = selisih kemiringan antar tetangga ±9-12° selama jendela
+// tengah intro = TANGGA SPIRAL TERBACA. Urutan DOM atas->bawah; paling
+// bawah (0.2s) duluan, paling atas (1.95s) terakhir.
+const INTRO_DELAYS = [1.95, 1.7, 1.45, 1.2, 0.95, 0.7, 0.45, 0.2]
+
+// Micro-stagger fade antar BARIS dalam satu project (kehidupan internal).
+const LINE_STAGGER_S = 0.09
+
+// Section label (Layer 5): fade opacity, delay 1.0 / 1.15 / 1.3s ...
+const SECTION_LABEL_DELAY_BASE = 1.0
+const SECTION_LABEL_DELAY_STEP = 0.15
+
+// Scroll-lock: descent selesai 3s; mayoritas judul mendarat ±3.5s.
+const HOME_SCROLL_LOCK_MS = 3000
 
 function getLines(title) {
   const words = title.split(' ')
@@ -81,6 +107,27 @@ function Home() {
   const contentRefs = useRef([])
   const hoveredIndexRef = useRef(-1)
 
+  // ===== GATE INTRO — FIRST LOAD ONLY =====
+  // window.__INTRO_DONE__ hidup per page-load: undefined saat refresh/
+  // hard-load (= main), true setelah mount pertama (= skip di semua
+  // navigasi SPA home<->project). Corners.jsx membaca flag yang sama.
+  const [playIntro] = useState(() => !window.__INTRO_DONE__)
+
+  useEffect(() => {
+    if (!playIntro) return undefined
+    // Set setelah seluruh mount-wave commit selesai (setTimeout 0),
+    // supaya Home DAN Corners di mount-wave yang sama sama-sama
+    // kebagian nilai true; navigasi berikutnya baru membaca true.
+    const t = setTimeout(() => {
+      window.__INTRO_DONE__ = true
+    }, 0)
+    return () => clearTimeout(t)
+  }, [playIntro])
+
+  // ===== ENTRANCE LAYER 1 — offset live (px, <=0), additive ke scroll =====
+  const introOffsetRef = useRef(0)
+  const introOffsetStartRef = useRef(0)
+
   const [activeSection, setActiveSection] = useState(0)
   const [gridLeft, setGridLeft] = useState(220)
 
@@ -92,7 +139,9 @@ function Home() {
     let current = 0
     anchorRefs.current.forEach((el, i) => {
       if (!el) return
-      const top = el.getBoundingClientRect().top
+      // Kompensasi offset intro: active-section tidak boleh "tertipu"
+      // pergeseran visual entrance. Setelah intro = 0 -> no-op.
+      const top = el.getBoundingClientRect().top - introOffsetRef.current
       const slot = SLOT_BASE + i * SLOT_STEP
       if (top <= slot + PARK_BUFFER) current = i
     })
@@ -120,6 +169,20 @@ function Home() {
     return out
   }
 
+  // ===== SCROLL LOCK (home-intro) — HANYA saat first load =====
+  useLayoutEffect(() => {
+    if (!playIntro) return undefined
+    document.body.classList.add('home-intro')
+    const timer = setTimeout(() => {
+      document.body.classList.remove('home-intro')
+    }, HOME_SCROLL_LOCK_MS)
+
+    return () => {
+      clearTimeout(timer)
+      document.body.classList.remove('home-intro')
+    }
+  }, [playIntro])
+
   useLayoutEffect(() => {
     const space = spaceRef.current
     const list = listRef.current
@@ -144,8 +207,11 @@ function Home() {
 
     const labelDocTop = labelDocTopRef.current
 
+    // SATU baris additive: offset intro dijumlah ke transform scroll
+    // normal. Setelah intro selesai offset = 0 permanen -> perilaku
+    // scroll kembali identik seperti semula.
     const writeTranslate = (scrollY) => {
-      list.style.transform = `translate3d(0, ${-scrollY}px, 0)`
+      list.style.transform = `translate3d(0, ${-scrollY + introOffsetRef.current}px, 0)`
     }
 
     const writeLabels = (scrollY) => {
@@ -165,13 +231,58 @@ function Home() {
       anchorRefs.current.forEach((el, i) => {
         if (!el) return
         const rect = el.getBoundingClientRect()
-        labelDocTop[i] = rect.top + window.scrollY
+        // Kompensasi offset intro supaya labelDocTop = posisi dokumen asli
+        labelDocTop[i] = rect.top + window.scrollY - introOffsetRef.current
       })
+    }
+
+    // ===== JARAK START DINAMIS =====
+    // Target: project PALING BAWAH (delay terkecil) menyala tepat ±100px
+    // di ATAS tepi atas viewport, lalu terlihat jatuh menyeberang layar.
+    const computeIntroOffsetStart = () => {
+      const posDokumenUIUX = list.scrollHeight - 120
+      const firstReveal = Math.min(...INTRO_DELAYS)
+      const progressAtReveal = firstReveal / (INTRO_OFFSET_DURATION_MS / 1000)
+      const easedAtReveal = introEase(progressAtReveal)
+      const remainingFactor = 1 - easedAtReveal
+      return -(posDokumenUIUX + 100) / remainingFactor
+    }
+
+    let introFrameStart = null
+    let introRAF = null
+
+    const stepIntro = (now) => {
+      if (introFrameStart === null) introFrameStart = now
+      const elapsed = now - introFrameStart
+      const progress = Math.min(elapsed / INTRO_OFFSET_DURATION_MS, 1)
+      const eased = introEase(progress)
+      introOffsetRef.current = introOffsetStartRef.current * (1 - eased)
+      writeTranslate(window.scrollY)
+
+      if (progress < 1) {
+        introRAF = requestAnimationFrame(stepIntro)
+      } else {
+        // Selesai: offset dikunci 0 permanen — nol residu.
+        introOffsetRef.current = 0
+        writeTranslate(window.scrollY)
+        introRAF = null
+      }
+    }
+
+    if (playIntro) {
+      introOffsetStartRef.current = computeIntroOffsetStart()
+      introOffsetRef.current = introOffsetStartRef.current
+    } else {
+      introOffsetRef.current = 0
     }
 
     measure()
     writeLabels(window.scrollY)
     setActiveSection(computeActiveSection())
+
+    if (playIntro) {
+      introRAF = requestAnimationFrame(stepIntro)
+    }
 
     let ticking = false
     const handleScroll = () => {
@@ -194,15 +305,20 @@ function Home() {
       applyRowTransforms()
       measure()
       writeLabels(window.scrollY)
+      // Re-kalkulasi jarak start kalau resize terjadi SAAT intro berjalan
+      if (introRAF !== null) {
+        introOffsetStartRef.current = computeIntroOffsetStart()
+      }
     }
     window.addEventListener('resize', handleResize)
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleResize)
+      if (introRAF !== null) cancelAnimationFrame(introRAF)
       ctx.revert()
     }
-  }, [computeActiveSection])
+  }, [computeActiveSection, playIntro])
 
   useLayoutEffect(() => {
     let ticking = false
@@ -286,6 +402,7 @@ function Home() {
     }
 
     const handleClick = (e) => {
+      if (document.body.classList.contains('home-intro')) return
       if (isOtherUiTarget(e.target)) return
       const projectIndex = findHitIndex(e.clientX, e.clientY)
       const slug = projectIndex >= 0 ? projectSlugsRef.current[projectIndex] : null
@@ -315,11 +432,15 @@ function Home() {
   const nextProjectSlugs = []
   const nextLineToProjectIndex = []
 
+  // Class no-intro mematikan semua CSS animation entrance di dalamnya
+  // (lihat rule .no-intro di Home.css) saat bukan first load.
+  const introClass = playIntro ? '' : ' no-intro'
+
   return (
     <>
-      <Corners sectionNav={sectionNav} onGridWidth={handleGridWidth} />
+      <Corners sectionNav={sectionNav} onGridWidth={handleGridWidth} playIntro={playIntro} />
 
-      <div className="stageSpace" ref={spaceRef}>
+      <div className={`stageSpace${introClass}`} ref={spaceRef}>
         <div
           className="stageFixed"
           style={{ perspective: `${PERSPECTIVE_VW}vw` }}
@@ -343,6 +464,9 @@ function Home() {
                     const projectIndex = projectCounter++
                     nextProjectSlugs[projectIndex] = p.slug || null
 
+                    // Layer 2: delay swing per project (SPIRAL step 0.25s).
+                    const groupDelay = INTRO_DELAYS[projectIndex] ?? 0
+
                     const rows = lines.map((line, li) => {
                       const globalLineIndex = lineCounter++
                       nextLineToProjectIndex[globalLineIndex] = projectIndex
@@ -352,6 +476,10 @@ function Home() {
                           className="projectRow"
                           key={li}
                           ref={(el) => (projectRowRefs.current[globalLineIndex] = el)}
+                          // Micro-stagger fade per baris +0.09s.
+                          style={{
+                            animationDelay: `${(groupDelay + li * LINE_STAGGER_S).toFixed(2)}s`,
+                          }}
                         >
                           <div className="meta">
                             {li === 0 ? (
@@ -379,6 +507,7 @@ function Home() {
                           to={`/project/${p.slug}`}
                           className="projectGroup"
                           key={p.title + i}
+                          style={{ animationDelay: `${groupDelay}s` }}
                         >
                           {rows}
                         </Link>
@@ -386,7 +515,11 @@ function Home() {
                     }
 
                     return (
-                      <div className="projectGroup" key={p.title + i}>
+                      <div
+                        className="projectGroup"
+                        key={p.title + i}
+                        style={{ animationDelay: `${groupDelay}s` }}
+                      >
                         {rows}
                       </div>
                     )
@@ -401,12 +534,15 @@ function Home() {
       {(projectSlugsRef.current = nextProjectSlugs) && null}
       {(lineToProjectIndexRef.current = nextLineToProjectIndex) && null}
 
-      <div className="labelLayer">
+      <div className={`labelLayer${introClass}`}>
         {SECTIONS.map((section, sIdx) => (
           <div
             key={section.label}
             className={`sectionLabel${sIdx === activeSection ? ' sectionLabel--active' : ''}`}
-            style={{ left: gridLeft }}
+            style={{
+              left: gridLeft,
+              animationDelay: `${SECTION_LABEL_DELAY_BASE + sIdx * SECTION_LABEL_DELAY_STEP}s`,
+            }}
             ref={(el) => (labelRefs.current[sIdx] = el)}
           >
             {section.label}

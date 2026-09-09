@@ -5,11 +5,25 @@ body {
   overflow-x: hidden;
 }
 
+/* Scroll-lock detik-detik pertama di home (lihat Home.jsx useLayoutEffect,
+   konstanta HOME_SCROLL_LOCK_MS). Class ini TIDAK mengontrol animasi
+   apapun — cuma mengunci scroll + gate klik selama entrance pertama. */
+body.home-intro {
+  overflow: hidden;
+}
+
 .stageSpace {
   position: relative;
   width: 100%;
 }
 
+/* ===== JENDELA CLIP — WAJIB DIAM PERMANEN =====
+   Elemen pemegang clip TIDAK BOLEH ber-animasi: kalau bingkainya
+   bergerak, tepi potongnya menyapu layar (wipe kaku) dan bacaan
+   "jatuh dari atas" hilang. Gerakan turun hidup di .list via offset
+   JS (introOffsetRef di Home.jsx, additive ke transform scroll),
+   sehingga tiap judul TERLIHAT menyeberangi jendela yang diam ini
+   dari tepi atas ke slotnya. */
 .stageFixed {
   position: fixed;
   inset: 0;
@@ -71,6 +85,22 @@ body {
     font-size 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  /* ===== ENTRANCE LAYER 5 — SECTION LABEL =====
+     Fade opacity 0->1 saja (transform tidak disentuh, biar transisi
+     active/inactive yang sudah ada tetap jalan normal setelah intro
+     selesai). Delay per section: 1.0 / 1.15 / 1.3s (inline, lihat
+     Home.jsx). fill-mode backwards supaya sesudah selesai opacity balik
+     ke aturan .sectionLabel / .sectionLabel--active di atas. */
+  animation: sectionLabelFade 0.5s ease 1 normal backwards;
+}
+
+@keyframes sectionLabelFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .sectionLabel--active {
@@ -80,11 +110,22 @@ body {
   transform: translateX(0);
 }
 
+/* ===== GATE INTRO — FIRST LOAD ONLY =====
+   Saat bukan first load (navigasi SPA home<->project), Home.jsx menambah
+   class .no-intro di .stageSpace dan .labelLayer -> semua CSS animation
+   entrance di dalamnya dimatikan: judul langsung tampil di posisi
+   resting (-42deg, opacity 1), label langsung terlihat. Transisi ke
+   project nanti dibangun sendiri tanpa efek ini. */
+.no-intro .projectGroup,
+.no-intro .projectRow,
+.no-intro .sectionLabel {
+  animation: none;
+}
+
 /* ===== PROJECT ROWS (3D) =====
    FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
    SELURUH pohon .projectGroup dst pointer-events:none permanen;
-   klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect.
-   <Link> asli hanya untuk a11y/SEO. */
+   klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect. */
 
 .projectGroup {
   position: relative;
@@ -95,6 +136,38 @@ body {
   pointer-events: none;
   transform-origin: calc(100% - 40px) center;
   transform-style: preserve-3d;
+  /* ===== ENTRANCE LAYER 2a — SWING (PENJAGA SPIRAL) =====
+     SPIRAL WAJIB TERLIHAT: timing `ease` (BUKAN expo-out) + durasi
+     2.5s membuat kecepatan sudut TERSEBAR MERATA di tengah durasi,
+     sehingga selisih kemiringan antar judul bertetangga (±9-12° dengan
+     step stagger 0.25s) BERTAHAN ±1.6-2 detik — tangga spiral terbaca
+     sepanjang intro, bukan sekilas lalu datar.
+     PENTING: elemen ini transform-style:preserve-3d, jadi opacity TIDAK
+     boleh diletakkan di sini (akan flatten chain 3D) — fade hidup di
+     .projectRow (leaf).
+     Delay per project inline via style di Home.jsx (step 0.25s,
+     bawah duluan). fill-mode backwards: sesudah selesai, transform
+     balik ke cascade normal == rotateY(0) -> resting -42deg murni
+     dari GSAP row, nol residu. */
+  animation: projectGroupSwing 2.5s ease 1 normal backwards;
+}
+
+/* MICRO-OVERSHOOT: di 80% durasi sudut lewat +1.5° lalu kembali ke 0 =
+   bounce settle halus (judul terasa "dilempar lalu menetap", bukan
+   "digeser lalu berhenti"). Resting tetap identitas -> composite
+   -42° murni dari GSAP row.
+   KNOB: 1.5deg = halus; 2.5deg = lebih playful; hapus keyframe 80%
+   kalau mau tanpa bounce. */
+@keyframes projectGroupSwing {
+  0% {
+    transform: rotateY(-58deg);
+  }
+  80% {
+    transform: rotateY(1.5deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
 }
 
 .projectRow {
@@ -106,6 +179,32 @@ body {
   padding: 0.3vw 40px 0.3vw 6vw;
   overflow: hidden;
   pointer-events: none;
+  /* ===== ENTRANCE LAYER 2b — FADE CEPAT (LEAF) =====
+     ANTI-SPAWN: 0.6s supaya judul SUDAH SOLID saat menyeberang tepi
+     atas viewport — terlihat jatuh utuh dari atas ke bawah, bukan
+     fade-in di tempat (= spawn).
+     opacity 0->1 di leaf (.projectRow), BUKAN di .projectGroup
+     (preserve-3d). Delay per BARIS ditulis inline di Home.jsx
+     (groupDelay + li × 0.09s = micro-stagger antar baris); `inherit`
+     di sini hanya fallback kalau inline tidak ada. Rotasi resting
+     -42deg (GSAP inline) SAMA SEKALI tidak disentuh keyframe ini
+     (cuma opacity).
+     KNOB: 0.4s = hampir instan; 0.8s = lebih lembut. */
+  animation-name: projectRowFade;
+  animation-duration: 0.6s;
+  animation-timing-function: ease;
+  animation-delay: inherit;
+  animation-iteration-count: 1;
+  animation-fill-mode: backwards;
+}
+
+@keyframes projectRowFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .meta {
@@ -143,9 +242,9 @@ body {
 
 /* ===== JUDUL — OUTLINE SYSTEM (bahasa visual permanen) =====
    Pola constant-stroke (sama seperti wordmark MALVIN):
-   stroke 2px SELALU ada sewarna fill → tidak menambah ukuran visual.
+   stroke 2px SELALU ada sewarna fill -> tidak menambah ukuran visual.
    - Resting : fill solid (stroke tertutup fill, tak terlihat)
-   - Hover   : fill transparent → outline muncul
+   - Hover   : fill transparent -> outline muncul
                (class .is-hovered di-toggle JS di Home.jsx, diperlukan
                karena seluruh pohon 3D pointer-events:none)
    Font 'Archivo Black NoOverlap' (hasil FontForge remove-overlap)

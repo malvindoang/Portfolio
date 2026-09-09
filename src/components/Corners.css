@@ -30,6 +30,30 @@
   font-size: 14px;
 }
 
+/* ===== ENTRANCE LAYER 4 — CORNER DIRECTIONAL (keyframes) =====
+   Dipakai lewat inline `animation` di Corners.jsx (bukan class statis),
+   supaya delay per-baris & gating cornersIntro gampang dikontrol dari JS. */
+@keyframes cornerFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes cornerFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* WORDMARK FINAL cross-browser — TIDAK disentuh */
 .wordmark {
   font-family: 'Arial Black', sans-serif;
@@ -59,6 +83,29 @@
   font-family: Arial, sans-serif;
   font-size: 13px;
   opacity: 0.50;
+}
+
+/* ===== ENTRANCE LAYER 3 — WORDMARK MASK REVEAL =====
+   Wrapper overflow:hidden per baris (.maskLine) + inner yang di-slide
+   (.maskInner). Delay per baris ditulis inline via animationDelay di
+   Corners.jsx (WORDMARK_DELAYS_HOME / _PROJECT). fill-mode backwards:
+   sesudah selesai, transform lepas dari cascade -> balik ke `none`
+   (translateX(0)), identik dengan posisi akhir animasi -> tidak "pop". */
+.maskLine {
+  display: block;
+  overflow: hidden;
+}
+.maskInner {
+  display: inline-block;
+  animation: maskReveal 1s ease 1 normal backwards;
+}
+@keyframes maskReveal {
+  0% {
+    transform: translateX(-105%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .aboutTrigger {
