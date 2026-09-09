@@ -107,10 +107,11 @@ function Home() {
   const contentRefs = useRef([])
   const hoveredIndexRef = useRef(-1)
 
-  // ===== GATE INTRO — FIRST LOAD ONLY =====
-  // window.__INTRO_DONE__ hidup per page-load: undefined saat refresh/
-  // hard-load (= main), true setelah mount pertama (= skip di semua
-  // navigasi SPA home<->project). Corners.jsx membaca flag yang sama.
+  // ===== FLAG FIRST-LOAD — KHUSUS UNTUK CORNERS =====
+  // PENTING: flag ini SEKARANG HANYA mengontrol corner + wordmark
+  // (dikirim ke Corners.jsx). Entrance JUDUL (descent + swing + fade +
+  // label) TIDAK lagi pakai flag ini — judul SELALU main setiap Home
+  // mount, baik refresh maupun balik dari project.
   const [playIntro] = useState(() => !window.__INTRO_DONE__)
 
   useEffect(() => {
@@ -169,9 +170,11 @@ function Home() {
     return out
   }
 
-  // ===== SCROLL LOCK (home-intro) — HANYA saat first load =====
+  // ===== SCROLL LOCK (home-intro) — SETIAP Home terbuka =====
+  // Tidak lagi digate first-load: karena entrance judul sekarang selalu
+  // main, scroll juga selalu dikunci sebentar tiap home terbuka supaya
+  // user tidak scroll di tengah animasi jatuh.
   useLayoutEffect(() => {
-    if (!playIntro) return undefined
     document.body.classList.add('home-intro')
     const timer = setTimeout(() => {
       document.body.classList.remove('home-intro')
@@ -181,12 +184,17 @@ function Home() {
       clearTimeout(timer)
       document.body.classList.remove('home-intro')
     }
-  }, [playIntro])
+  }, [])
 
   useLayoutEffect(() => {
     const space = spaceRef.current
     const list = listRef.current
     if (!space || !list) return undefined
+
+    // Reset scroll tiap Home terbuka (refresh maupun balik dari project)
+    // supaya entrance jatuh selalu terlihat dari atas, bukan dari sisa
+    // posisi scroll halaman sebelumnya.
+    window.scrollTo(0, 0)
 
     const applyRowTransforms = () => {
       const mapping = lineToProjectIndexRef.current
@@ -269,20 +277,16 @@ function Home() {
       }
     }
 
-    if (playIntro) {
-      introOffsetStartRef.current = computeIntroOffsetStart()
-      introOffsetRef.current = introOffsetStartRef.current
-    } else {
-      introOffsetRef.current = 0
-    }
+    // Entrance judul SELALU main setiap Home mount (refresh maupun balik
+    // dari project) — tidak ada gate di sini lagi.
+    introOffsetStartRef.current = computeIntroOffsetStart()
+    introOffsetRef.current = introOffsetStartRef.current
 
     measure()
     writeLabels(window.scrollY)
     setActiveSection(computeActiveSection())
 
-    if (playIntro) {
-      introRAF = requestAnimationFrame(stepIntro)
-    }
+    introRAF = requestAnimationFrame(stepIntro)
 
     let ticking = false
     const handleScroll = () => {
@@ -318,7 +322,7 @@ function Home() {
       if (introRAF !== null) cancelAnimationFrame(introRAF)
       ctx.revert()
     }
-  }, [computeActiveSection, playIntro])
+  }, [computeActiveSection])
 
   useLayoutEffect(() => {
     let ticking = false
@@ -327,7 +331,7 @@ function Home() {
 
     const isOtherUiTarget = (target) =>
       !!target?.closest?.(
-        '.corner, .navLinks, .navWordmark, .aboutOverlay, .aboutClose'
+        '.corner, .navLinks, .navWordmark', '.aboutOverlay, .aboutClose'
       )
 
     const findHitIndex = (x, y) => {
@@ -432,15 +436,13 @@ function Home() {
   const nextProjectSlugs = []
   const nextLineToProjectIndex = []
 
-  // Class no-intro mematikan semua CSS animation entrance di dalamnya
-  // (lihat rule .no-intro di Home.css) saat bukan first load.
-  const introClass = playIntro ? '' : ' no-intro'
-
   return (
     <>
+      {/* playIntro dikirim HANYA untuk gate corner/wordmark di Corners.
+          Entrance judul di file ini TIDAK memakainya. */}
       <Corners sectionNav={sectionNav} onGridWidth={handleGridWidth} playIntro={playIntro} />
 
-      <div className={`stageSpace${introClass}`} ref={spaceRef}>
+      <div className="stageSpace" ref={spaceRef}>
         <div
           className="stageFixed"
           style={{ perspective: `${PERSPECTIVE_VW}vw` }}
@@ -534,7 +536,7 @@ function Home() {
       {(projectSlugsRef.current = nextProjectSlugs) && null}
       {(lineToProjectIndexRef.current = nextLineToProjectIndex) && null}
 
-      <div className={`labelLayer${introClass}`}>
+      <div className="labelLayer">
         {SECTIONS.map((section, sIdx) => (
           <div
             key={section.label}

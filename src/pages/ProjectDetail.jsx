@@ -44,16 +44,8 @@ function ProjectDetail() {
       const heroCoversWordmark = r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
-      // ===== TRIGGER ON: reading mode =====
-      // Aktif tepat saat scroll mencapai 50px pertama — sederhana
-      // dan konsisten di semua viewport.
       const readingOn = window.scrollY >= 50
 
-      // ===== TRIGGER OFF: reading mode =====
-      // Anchor = tepi atas JUDUL next project (bukan section-nya).
-      // About/works/.sub baru muncul kembali tepat saat judul outline
-      // besarnya masuk viewport. Fallback ke closing kalau next tidak
-      // dirender.
       const nextTitleRect = nextTitleRef.current?.getBoundingClientRect()
       const closingRect = closingRef.current?.getBoundingClientRect()
       const reachedNext = nextTitleRect
@@ -218,8 +210,6 @@ function ProjectDetail() {
   )
 }
 
-// ==== SPEC TAG — Opsi 1: "The working file" ====
-// Arrow HANYA di teks utama. Label murni penanda status, tanpa arrow.
 function FigmaSpecTag({ href, target, rel }) {
   const [hovered, setHovered] = useState(false)
 
@@ -243,7 +233,6 @@ function FigmaSpecTag({ href, target, rel }) {
   )
 }
 
-// Flip perspektif untuk label spec-tag — reuse pola FlipCaption/FlipCounter.
 function SpecTagLabel({ text }) {
   const [displayText, setDisplayText] = useState(text)
   const [flipping, setFlipping] = useState(false)
@@ -385,6 +374,16 @@ function SliderMedia({
   const imgRef = useRef(null)
   const [naturalHeight, setNaturalHeight] = useState(null)
 
+  // ===== STICKY REVEAL =====
+  // Sekali section pernah masuk viewport, flag `revealed` tetap true
+  // selamanya — gambar tidak fade ulang saat user scroll naik/turun.
+  // Ini fix bug "gambar load ulang" yang sebenarnya cuma fade dari
+  // opacity 0 karena `revealClass` kosong saat `active=false`.
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => {
+    if (active && !revealed) setRevealed(true)
+  }, [active, revealed])
+
   const measureHeight = useCallback(() => {
     const img = imgRef.current
     const frame = frameRef.current
@@ -405,7 +404,13 @@ function SliderMedia({
   }, [hasAspectRatio, measureHeight])
 
   const current = images[slideIndex]
-  const revealClass = direction ? `slide-in-${direction}` : active ? 'fade-in' : ''
+
+  // Prioritas class: slide animation > revealed (sticky opacity 1) > kosong
+  const revealClass = direction
+    ? `slide-in-${direction}`
+    : revealed
+    ? 'fade-in'
+    : ''
   const naturalClass = hasAspectRatio ? '' : 'detailSliderImage--natural'
 
   return (

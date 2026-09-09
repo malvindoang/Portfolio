@@ -7,7 +7,7 @@ body {
 
 /* Scroll-lock detik-detik pertama di home (lihat Home.jsx useLayoutEffect,
    konstanta HOME_SCROLL_LOCK_MS). Class ini TIDAK mengontrol animasi
-   apapun — cuma mengunci scroll + gate klik selama entrance pertama. */
+   apapun — cuma mengunci scroll + gate klik selama entrance. */
 body.home-intro {
   overflow: hidden;
 }
@@ -110,22 +110,12 @@ body.home-intro {
   transform: translateX(0);
 }
 
-/* ===== GATE INTRO — FIRST LOAD ONLY =====
-   Saat bukan first load (navigasi SPA home<->project), Home.jsx menambah
-   class .no-intro di .stageSpace dan .labelLayer -> semua CSS animation
-   entrance di dalamnya dimatikan: judul langsung tampil di posisi
-   resting (-42deg, opacity 1), label langsung terlihat. Transisi ke
-   project nanti dibangun sendiri tanpa efek ini. */
-.no-intro .projectGroup,
-.no-intro .projectRow,
-.no-intro .sectionLabel {
-  animation: none;
-}
-
 /* ===== PROJECT ROWS (3D) =====
    FIX HIT-TEST 3D — LEVEL 3 (JS FALLBACK):
    SELURUH pohon .projectGroup dst pointer-events:none permanen;
-   klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect. */
+   klik & cursor diurus Effect JS di Home.jsx via getBoundingClientRect.
+   Entrance judul SELALU main setiap Home mount (refresh maupun balik
+   dari project) — tidak ada gate / .no-intro di sini. */
 
 .projectGroup {
   position: relative;

@@ -8,7 +8,7 @@ export const PROJECT_CONTENT = {
     team: '11 people',
     figma: true,
     figmaUrl: '',
-    hero: '/images/hub-pkp/landing-page.png',
+    hero: '/images/hub-pkp/landing-page.avif',
     intro:
       "In Indonesia, more than 8 out of 10 homes are built by the people themselves — often without professional guidance, transparent pricing, or anyone to hold accountable. HUB Layanan Rumah Swadaya Layak Huni is the Ministry of Housing and Settlement Areas (PKP)'s digital answer to that reality.",
     approach:
@@ -25,9 +25,9 @@ export const PROJECT_CONTENT = {
         note:
           'Use the arrows to move between the three points of view. Notice how the same map and the same status steps reappear in each slide — only the information around them changes with the role.',
         images: [
-          { src: '/images/hub-pkp/1a.png', caption: "The citizen's view — finding workers nearby" },
-          { src: '/images/hub-pkp/1b.png', caption: "The contractor's view — receiving job requests" },
-          { src: '/images/hub-pkp/1c.png', caption: "The government's view — verifying workers" },
+          { src: '/images/hub-pkp/1a.avif', caption: "The citizen's view — finding workers nearby" },
+          { src: '/images/hub-pkp/1b.avif', caption: "The contractor's view — receiving job requests" },
+          { src: '/images/hub-pkp/1c.avif', caption: "The government's view — verifying workers" },
         ],
         layout: 'slider',
         aspectRatio: '480 / 371',
@@ -43,9 +43,9 @@ export const PROJECT_CONTENT = {
         note:
           'Use the arrows to follow one request from map to signature. Watch the status bar at the top of each screen — it always shows where both sides stand, so neither ever has to guess.',
         images: [
-          { src: '/images/hub-pkp/2a.png', caption: 'Seeing who works near you' },
-          { src: '/images/hub-pkp/2b.png', caption: 'Reading the price, line by line' },
-          { src: '/images/hub-pkp/2c.png', caption: 'Agreeing in writing, paying step by step' },
+          { src: '/images/hub-pkp/2a.avif', caption: 'Seeing who works near you' },
+          { src: '/images/hub-pkp/2b.avif', caption: 'Reading the price, line by line' },
+          { src: '/images/hub-pkp/2c.avif', caption: 'Agreeing in writing, paying step by step' },
         ],
         layout: 'slider',
         aspectRatio: '360 / 301',
@@ -56,13 +56,13 @@ export const PROJECT_CONTENT = {
           "A public service shouldn't end at the screen. Some citizens still want to sit across a table and ask — so the Balai landing page acts as an open door: a distribution map that leads people to their nearest office, and offline consultation they can actually attend. On the other side of the same coin, the monitoring dashboard acts as a control room, where internal staff see app usage, project activity, and administration in one place — because a national program stays trustworthy only when someone can see the whole picture.",
         twoColText: {
           right:
-            "The two sides feed each other. A citizen who walks into a Balai after finding it on the map leaves with a digital record; a consultation held across a table becomes data the dashboard can see. I gave the internal screens a different rhythm — denser tables, clearer statuses, less decoration — because staff return to them every day, while citizens may visit once. But both share the same honesty: nothing hidden on the counter, nothing hidden in the system. Designing the government's side taught me that transparency is not one screen; it is a loop between the people and the people who serve them.",
+            "The two sides feed each other. A citizen who walks into a Balai after finding it on the map leaves with a digital record; a consultation held across a table becomes data the dashboard can see. I gave the internal screens a different rhythm — denser tables, clearer statuses, less decoration — because staff return to them every day, while citizens may visit once. But both share the same honesty: nothing hidden at the counter, nothing hidden in the system. Designing the government's side taught me that transparency is not one screen; it is a loop between the people and the people who serve them.",
         },
         note:
           'Use the arrows to switch sides of the same coin: the public door and the internal control room. Compare the two maps — one helps citizens find an office, the other helps staff see everything.',
         images: [
-          { src: '/images/hub-pkp/3a.png', caption: 'The open door — leading citizens to the nearest Balai' },
-          { src: '/images/hub-pkp/3b.png', caption: 'The control room — seeing the whole service' },
+          { src: '/images/hub-pkp/3a.avif', caption: 'The open door — leading citizens to the nearest Balai' },
+          { src: '/images/hub-pkp/3b.avif', caption: 'The control room — seeing the whole service' },
         ],
         layout: 'slider',
         aspectRatio: '144 / 151',
@@ -76,8 +76,8 @@ export const PROJECT_CONTENT = {
             "And it is not only the citizen's side that travels. The splash screen carries the ministry's mark — this is an official service, not a startup experiment — while on the other phone, contractors carry their own pocket office: a project list with live progress, and the same contract and payment steps waiting in the tabs below. Two people, two screens, one project staying in sync from a construction site and from a kitchen table. That was the final test of the whole system: if the web hub was the promise, the mobile app had to be the habit.",
         },
         images: [
-          { src: '/images/hub-pkp/4a.png', caption: 'Searching on the go' },
-          { src: '/images/hub-pkp/4b.png', caption: 'Found — getting to know them' },
+          { src: '/images/hub-pkp/4a.avif', caption: 'Searching on the go' },
+          { src: '/images/hub-pkp/4b.avif', caption: 'Found — getting to know them' },
         ],
         layout: 'pair',
         aspectRatio: '439 / 891',
@@ -94,9 +94,6 @@ export const PROJECT_CONTENT = {
     year: 2026,
     duration: '5 days',
     team: 'Individual',
-    // ===== PERUBAHAN: figma: false → true =====
-    // Supaya Figma Spec Tag muncul di page ini (sama seperti hub-pkp).
-    // figmaUrl kosong dulu, nanti diisi sendiri link Figma prototype.
     figma: true,
     figmaUrl: '',
     hero: null,
@@ -108,7 +105,7 @@ export const PROJECT_CONTENT = {
     sections: [
       {
         title: 'Explaining a model in everyday language',
-        image: { src: '/images/garbage-classification/home.png', caption: 'Home page' },
+        image: { src: '/images/garbage-classification/home.avif', caption: 'Home page' },
         twoColText: {
           left:
             "The home page explains before it asks. In plain Bahasa Indonesia, with illustrations of waste bins, leaf-trucks, and clouds that feel more like a poster than a dashboard, it answers the only question a first-time visitor has — what is this tool, and why does it matter. The eco-green palette quietly signals what the project cares about, so anyone, from students to grandparents, feels the tool was made for them.",
@@ -128,9 +125,9 @@ export const PROJECT_CONTENT = {
         note:
           'Use the arrows to walk the whole flow — upload, confirm, answer. Watch how each screen holds exactly one action, and how the result page shows the model\'s confidence instead of pretending to be certain.',
         images: [
-          { src: '/images/garbage-classification/detection.png', caption: 'Detection: one photo, clear rules' },
-          { src: '/images/garbage-classification/after-upload.png', caption: 'Confirm before the model looks' },
-          { src: '/images/garbage-classification/result.png', caption: 'An honest answer: label, confidence, alternatives' },
+          { src: '/images/garbage-classification/detection.avif', caption: 'Detection: one photo, clear rules' },
+          { src: '/images/garbage-classification/after-upload.avif', caption: 'Confirm before the model looks' },
+          { src: '/images/garbage-classification/result.avif', caption: 'An honest answer: label, confidence, alternatives' },
         ],
         layout: 'slider',
       },

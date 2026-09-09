@@ -824,3 +824,64 @@ body.page-project.about-open .navWordmark.nav--open .sub {
   opacity: 0.75;
   pointer-events: auto;
 }
+
+/* ============================================================
+   FIX GAMBAR: ketajaman AVIF + performance hint
+   ============================================================
+   image-rendering: crisp-edges = browser pakai algoritma scaling
+   tajam (nearest-neighbor / high-quality bilinear) saat gambar
+   di-resize oleh CSS (object-fit: cover). Tanpa ini, AVIF yang
+   di-downscale terlihat sedikit soft — paling kelihatan di tepi
+   teks screenshot UI (yang merupakan mayoritas aset Anda).
+   
+   will-change: transform = sinyal ke browser: "elemen ini akan
+   di-animasikan transform-nya" -> browser pre-allocate layer
+   compositor sendiri, composite lebih cepat saat slide animasi
+   jalan (slideInFromLeft/Right). Dilepas otomatis saat animasi
+   selesai (CSS animation forwards), tidak perlu cleanup manual.
+   ============================================================ */
+
+.detailSliderImage,
+.detailPairImage,
+.longImageImg,
+.detailHeroImage {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.detailSliderImage.is-current,
+.detailSliderImage.is-outgoing,
+.detailPairFrame.is-active .detailPairImage,
+.longImageFrame.is-active .longImageImg {
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   STICKY OPACITY SETELAH REVEAL
+   ============================================================
+   .fade-in animation berakhir di opacity 1 via `forwards`. Tapi
+   saat section keluar viewport (`active=false`), class fade-in
+   hilang → opacity kembali ke 0 (CSS `.is-current { opacity: 0 }`).
+   Ini yang bikin "load ulang" saat scroll naik.
+   
+   Rule di bawah: setelah animation fade-in selesai, biarkan
+   opacity 1 tetap berlaku — sticky. Animasi slide tetap jalan
+   normal karena punya opacity 1 inline dari CSS-nya sendiri.
+   ============================================================ */
+
+.detailSliderImage.is-current.fade-in {
+  opacity: 1;
+}
+
+/* Fallback: kalau JS `revealed=true` tapi class fade-in sudah
+   hilang karena re-render, opacity tetap 1 (tidak flicker). */
+.detailSliderFrame.is-active .detailSliderImage.is-current {
+  opacity: 1;
+  transition: opacity 0.01s;
+}
+
+/* Slider frame isolation: bantu browser treat frame sebagai layer
+   sendiri, hindari recomposite seluruh row saat slide berubah. */
+.detailSliderFrame {
+  contain: layout style paint;
+}
