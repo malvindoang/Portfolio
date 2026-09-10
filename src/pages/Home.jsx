@@ -31,19 +31,12 @@ const HOVER_EASE_NAME = 'vanholtzPop'
 CustomEase.create(HOVER_EASE_NAME, 'M0,0 C0.075,0.82 0.165,1 1,1')
 
 // ===== ENTRANCE LAYER 1 — CONTAINER DESCENT (JS, clip diam) =====
-// .list turun dari jauh di atas layar selama 3s. Ease sengaja LEBIH
-// LINEAR DI TENGAH supaya container TERUS bergerak sampai judul
-// terakhir menyala di 1.95s (kalau expo-out, container "parkir" dulu
-// dan judul atas spawn di tempat).
 const INTRO_OFFSET_DURATION_MS = 3000
 const INTRO_EASE_NAME = 'vanholtzDescentEase'
 CustomEase.create(INTRO_EASE_NAME, 'M0,0 C0.3,0.05,0.4,1 1,1')
 const introEase = gsap.parseEase(INTRO_EASE_NAME)
 
 // ===== ENTRANCE LAYER 2 — REVEAL PER PROJECT (SPIRAL: step 0.25s) =====
-// Step 0.25s = selisih kemiringan antar tetangga ±9-12° selama jendela
-// tengah intro = TANGGA SPIRAL TERBACA. Urutan DOM atas->bawah; paling
-// bawah (0.2s) duluan, paling atas (1.95s) terakhir.
 const INTRO_DELAYS = [1.95, 1.7, 1.45, 1.2, 0.95, 0.7, 0.45, 0.2]
 
 // Micro-stagger fade antar BARIS dalam satu project (kehidupan internal).
@@ -55,6 +48,12 @@ const SECTION_LABEL_DELAY_STEP = 0.15
 
 // Scroll-lock: descent selesai 3s; mayoritas judul mendarat ±3.5s.
 const HOME_SCROLL_LOCK_MS = 3000
+
+// ===== POSISI SCROLL HOME TERAKHIR =====
+// Disimpan saat Home ditinggalkan (unmount), dipakai untuk restore saat
+// kembali via tombol back — meniru perilaku browser back yang mengembalikan
+// posisi scroll halaman sebelumnya. Module-level supaya lolos StrictMode.
+let lastHomeScrollY = 0
 
 function getLines(title) {
   const words = title.split(' ')
@@ -108,22 +107,21 @@ function Home() {
   const hoveredIndexRef = useRef(-1)
 
   // ===== FLAG FIRST-LOAD — KHUSUS UNTUK CORNERS =====
-  // PENTING: flag ini SEKARANG HANYA mengontrol corner + wordmark
-  // (dikirim ke Corners.jsx). Entrance JUDUL (descent + swing + fade +
-  // label) TIDAK lagi pakai flag ini — judul SELALU main setiap Home
-  // mount, baik refresh maupun balik dari project.
   const [playIntro] = useState(() => !window.__INTRO_DONE__)
 
   useEffect(() => {
     if (!playIntro) return undefined
-    // Set setelah seluruh mount-wave commit selesai (setTimeout 0),
-    // supaya Home DAN Corners di mount-wave yang sama sama-sama
-    // kebagian nilai true; navigasi berikutnya baru membaca true.
     const t = setTimeout(() => {
       window.__INTRO_DONE__ = true
     }, 0)
     return () => clearTimeout(t)
   }, [playIntro])
+
+  // ===== TOMBOL BACK vs WORDMARK — CAPTURE KE REF (STRICTMODE-SAFE) =====
+  // useRef dipertahankan antar pass StrictMode. true = kembali via tombol
+  // back (jangan reset scroll, jangan lock overflow); false = wordmark /
+  // refresh / link lain (reset scroll ke atas + lock seperti biasa).
+  const skipScrollRef = useRef(window.__SKIP_HOME_SCROLL_RESET__ === true)
 
   // ===== ENTRANCE LAYER 1 — offset live (px, <=0), additive ke scroll =====
   const introOffsetRef = useRef(0)
@@ -140,8 +138,6 @@ function Home() {
     let current = 0
     anchorRefs.current.forEach((el, i) => {
       if (!el) return
-      // Kompensasi offset intro: active-section tidak boleh "tertipu"
-      // pergeseran visual entrance. Setelah intro = 0 -> no-op.
       const top = el.getBoundingClientRect().top - introOffsetRef.current
       const slot = SLOT_BASE + i * SLOT_STEP
       if (top <= slot + PARK_BUFFER) current = i
@@ -170,11 +166,23 @@ function Home() {
     return out
   }
 
-  // ===== SCROLL LOCK (home-intro) — SETIAP Home terbuka =====
-  // Tidak lagi digate first-load: karena entrance judul sekarang selalu
-  // main, scroll juga selalu dikunci sebentar tiap home terbuka supaya
-  // user tidak scroll di tengah animasi jatuh.
+  // ===== SIMPAN POSISI SCROLL SAAT HOME DITINGGALKAN =====
+  // Cleanup useEffect ini jalan tepat sebelum Home unmount (ke project),
+  // merekam posisi scroll home terakhir untuk restore saat kembali.
+  useEffect(() => {
+    return () => {
+      lastHomeScrollY = window.scrollY
+    }
+  }, [])
+
+  // ===== SCROLL LOCK (home-intro) =====
+  // PENTING: saat kembali via tombol back (skipScrollRef true), lock
+  // TIDAK dipasang. body.home-intro { overflow:hidden } membuat dokumen
+  // tidak scrollable -> browser clamp scroll ke 0. Itu penyebab scroll
+  // selalu lompat ke atas setiap kembali ke home sebelumnya.
   useLayoutEffect(() => {
+    if (skipScrollRef.current) return undefined
+
     document.body.classList.add('home-intro')
     const timer = setTimeout(() => {
       document.body.classList.remove('home-intro')
@@ -186,15 +194,20 @@ function Home() {
     }
   }, [])
 
+  // ===== RESET SCROLL (WORDMARK / REFRESH) + BERSIHKAN FLAG =====
+  useLayoutEffect(() => {
+    if (window.__SKIP_HOME_SCROLL_RESET__) {
+      delete window.__SKIP_HOME_SCROLL_RESET__
+    }
+    if (!skipScrollRef.current) {
+      window.scrollTo(0, 0)
+    }
+  }, [])
+
   useLayoutEffect(() => {
     const space = spaceRef.current
     const list = listRef.current
     if (!space || !list) return undefined
-
-    // Reset scroll tiap Home terbuka (refresh maupun balik dari project)
-    // supaya entrance jatuh selalu terlihat dari atas, bukan dari sisa
-    // posisi scroll halaman sebelumnya.
-    window.scrollTo(0, 0)
 
     const applyRowTransforms = () => {
       const mapping = lineToProjectIndexRef.current
@@ -215,9 +228,6 @@ function Home() {
 
     const labelDocTop = labelDocTopRef.current
 
-    // SATU baris additive: offset intro dijumlah ke transform scroll
-    // normal. Setelah intro selesai offset = 0 permanen -> perilaku
-    // scroll kembali identik seperti semula.
     const writeTranslate = (scrollY) => {
       list.style.transform = `translate3d(0, ${-scrollY + introOffsetRef.current}px, 0)`
     }
@@ -239,14 +249,10 @@ function Home() {
       anchorRefs.current.forEach((el, i) => {
         if (!el) return
         const rect = el.getBoundingClientRect()
-        // Kompensasi offset intro supaya labelDocTop = posisi dokumen asli
         labelDocTop[i] = rect.top + window.scrollY - introOffsetRef.current
       })
     }
 
-    // ===== JARAK START DINAMIS =====
-    // Target: project PALING BAWAH (delay terkecil) menyala tepat ±100px
-    // di ATAS tepi atas viewport, lalu terlihat jatuh menyeberang layar.
     const computeIntroOffsetStart = () => {
       const posDokumenUIUX = list.scrollHeight - 120
       const firstReveal = Math.min(...INTRO_DELAYS)
@@ -270,21 +276,30 @@ function Home() {
       if (progress < 1) {
         introRAF = requestAnimationFrame(stepIntro)
       } else {
-        // Selesai: offset dikunci 0 permanen — nol residu.
         introOffsetRef.current = 0
         writeTranslate(window.scrollY)
         introRAF = null
       }
     }
 
-    // Entrance judul SELALU main setiap Home mount (refresh maupun balik
-    // dari project) — tidak ada gate di sini lagi.
     introOffsetStartRef.current = computeIntroOffsetStart()
     introOffsetRef.current = introOffsetStartRef.current
 
     measure()
-    writeLabels(window.scrollY)
-    setActiveSection(computeActiveSection())
+
+    // ===== RESTORE POSISI SCROLL HOME (TOMBOL BACK) =====
+    // Setelah tinggi dokumen benar (measure), kembalikan posisi scroll
+    // home terakhir supaya persis seperti browser back. Sinkronisasi
+    // ulang transform + label + section aktif ke scrollY baru.
+    if (skipScrollRef.current) {
+      window.scrollTo(0, lastHomeScrollY)
+      writeTranslate(window.scrollY)
+      writeLabels(window.scrollY)
+      setActiveSection(computeActiveSection())
+    } else {
+      writeLabels(window.scrollY)
+      setActiveSection(computeActiveSection())
+    }
 
     introRAF = requestAnimationFrame(stepIntro)
 
@@ -309,7 +324,6 @@ function Home() {
       applyRowTransforms()
       measure()
       writeLabels(window.scrollY)
-      // Re-kalkulasi jarak start kalau resize terjadi SAAT intro berjalan
       if (introRAF !== null) {
         introOffsetStartRef.current = computeIntroOffsetStart()
       }
@@ -348,10 +362,6 @@ function Home() {
       return -1
     }
 
-    /* Outline system (lihat Home.css): class .is-hovered mengubah judul
-       dari fill solid ke outline saat hover masuk, dan mengembalikannya
-       ke fill saat hover keluar. Ditumpangkan di handler rotasi GSAP
-       yang sama supaya kedua efek selalu sinkron. */
     const setRowHoverState = (projectIndex) => {
       if (hoveredIndexRef.current === projectIndex) return
       const prevIndex = hoveredIndexRef.current
@@ -438,8 +448,6 @@ function Home() {
 
   return (
     <>
-      {/* playIntro dikirim HANYA untuk gate corner/wordmark di Corners.
-          Entrance judul di file ini TIDAK memakainya. */}
       <Corners sectionNav={sectionNav} onGridWidth={handleGridWidth} playIntro={playIntro} />
 
       <div className="stageSpace" ref={spaceRef}>
@@ -466,7 +474,6 @@ function Home() {
                     const projectIndex = projectCounter++
                     nextProjectSlugs[projectIndex] = p.slug || null
 
-                    // Layer 2: delay swing per project (SPIRAL step 0.25s).
                     const groupDelay = INTRO_DELAYS[projectIndex] ?? 0
 
                     const rows = lines.map((line, li) => {
@@ -478,7 +485,6 @@ function Home() {
                           className="projectRow"
                           key={li}
                           ref={(el) => (projectRowRefs.current[globalLineIndex] = el)}
-                          // Micro-stagger fade per baris +0.09s.
                           style={{
                             animationDelay: `${(groupDelay + li * LINE_STAGGER_S).toFixed(2)}s`,
                           }}

@@ -374,11 +374,6 @@ function SliderMedia({
   const imgRef = useRef(null)
   const [naturalHeight, setNaturalHeight] = useState(null)
 
-  // ===== STICKY REVEAL =====
-  // Sekali section pernah masuk viewport, flag `revealed` tetap true
-  // selamanya — gambar tidak fade ulang saat user scroll naik/turun.
-  // Ini fix bug "gambar load ulang" yang sebenarnya cuma fade dari
-  // opacity 0 karena `revealClass` kosong saat `active=false`.
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
     if (active && !revealed) setRevealed(true)
@@ -405,7 +400,6 @@ function SliderMedia({
 
   const current = images[slideIndex]
 
-  // Prioritas class: slide animation > revealed (sticky opacity 1) > kosong
   const revealClass = direction
     ? `slide-in-${direction}`
     : revealed
@@ -492,6 +486,12 @@ function SliderRailMeta({ caption, index, total, note, onNext, onPrev, inView })
   )
 }
 
+/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE =====
+   Animasi 2D ringan: fade (opacity 0→1) + slide vertikal kecil (8px).
+   Durasi 0.2s, easing snappy. Tidak pakai rotateX/perspective (3D flip)
+   yang memaksa browser re-rasterize glyph tiap frame — itu penyebab lag.
+   TranslateY + opacity tinggal composite layer yang sudah ada (GPU-friendly).
+   State machine sederhana: ganti teks di 100ms, stop flipping di 250ms. */
 function FlipCaption({ text }) {
   const [displayText, setDisplayText] = useState(text)
   const [flipping, setFlipping] = useState(false)
@@ -500,8 +500,8 @@ function FlipCaption({ text }) {
   useEffect(() => {
     if (text === prevText.current) return
     setFlipping(true)
-    const t1 = setTimeout(() => setDisplayText(text), 200)
-    const t2 = setTimeout(() => setFlipping(false), 400)
+    const t1 = setTimeout(() => setDisplayText(text), 100)
+    const t2 = setTimeout(() => setFlipping(false), 250)
     prevText.current = text
     return () => {
       clearTimeout(t1)

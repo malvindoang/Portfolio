@@ -13,8 +13,6 @@
   height: 50vh;
   min-height: 360px;
   overflow: hidden;
-  /* FLUID: di vh 900 = 96px (identik sekarang), di vh 1080 = 105px
-     (delta +9px, pola napas pelan seperti vanholtz 146→155) */
   margin-bottom: calc(51px + 5vh);
 }
 
@@ -86,19 +84,14 @@
   transform: translateY(0);
 }
 
-/* ================= EDITORIAL CONTAINER (FLUID) =================
-   Base: min(1140px, 80vw) — di 1440×900 TETAP 1140px (identik).
-   Di viewport < 1425px container mengecil via 80vw (anti overflow).
-   Layar besar: lihat blok @media (min-width: 1600px) di bawah. */
+/* ================= EDITORIAL CONTAINER (FLUID) ================= */
 
 .editorialContainer {
   width: min(1140px, 80vw);
   margin: 0 auto;
 }
 
-/* ================= INTRO ROW =================
-   Kolom lead/body FLUID via 1fr — otomatis mengikuti container.
-   Rail 170px & gap 30px tetap fixed (sama seperti vanholtz). */
+/* ================= INTRO ROW ================= */
 
 .editorialIntroRow {
   display: grid;
@@ -142,9 +135,7 @@
 .factLabel { font-weight: bold; }
 .factValue { font-weight: normal; }
 
-/* ================= SECTIONS =================
-   Media FLUID via 1fr — gambar otomatis melebar mengikuti container
-   (940px di 1440, 1240px di 1920 — persis angka vanholtz). */
+/* ================= SECTIONS ================= */
 
 .editorialSection { margin: 0 0 107px; }
 
@@ -178,8 +169,6 @@
   margin-top: 35px;
 }
 
-/* Kolom teks bawah FLUID: bagi rata (lebar media - gap 30) / 2
-   → 455px di 1440, 605px di 1920 (persis vanholtz) */
 .editorialCol {
   flex: 1 1 0;
   max-width: none;
@@ -254,9 +243,14 @@
   100% { transform: rotateX(0deg); opacity: 1; }
 }
 
+/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE =====
+   Animasi 2D ringan: fade + slide vertikal 8px (bukan full -100%).
+   Durasi 0.2s, easing cubic-bezier(0.22,1,0.36,1) (easeOutExpo)
+   = cepat di awal, lembut di akhir.
+   GPU-friendly: hanya composite layer, tanpa re-rasterize glyph.
+   will-change + backface-visibility untuk hint compositor. */
 .detailSliderCaptionWrap {
   display: block;
-  perspective: 400px;
 }
 
 .detailSliderCaption {
@@ -267,17 +261,23 @@
   line-height: 1.5;
   color: var(--color-black);
   opacity: 0.75;
-  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .detailSliderCaption.is-flipping {
-  animation: captionFlip 0.4s var(--motion-ease);
+  animation: captionFlip 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes captionFlip {
-  0% { transform: rotateX(0deg); opacity: 1; }
-  50% { transform: rotateX(-90deg); opacity: 0; }
-  100% { transform: rotateX(0deg); opacity: 1; }
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.75;
+  }
 }
 
 .railNote {
@@ -558,10 +558,7 @@
 
 .detailFigmaSpecArrow { display: inline-block; }
 
-/* ================= NEXT PROJECT =================
-   Gap dari last object (figma tag / closing) = 108px di 1440×900,
-   persis padding-top section next project vanholtz (108.6px).
-   Di layar besar naik jadi 162px via blok @media 1600px. */
+/* ================= NEXT PROJECT ================= */
 
 .detailNextSection {
   margin-top: 108px;
@@ -609,13 +606,7 @@
   color: var(--color-black);
 }
 
-/* ================= LAYAR BESAR (≥1600px) — POLA VANHOLTZ =================
-   Container melebar: calc(80vw - 96px) = 1440px di 1920×1080
-   (gap samping otomatis jadi 240px, persis vanholtz).
-   Gap vertikal mengikuti delta vanholtz:
-   - intro → section: 96 → 150
-   - section → section: 107 → 161
-   - last object → next project: 108 → 162 */
+/* ================= LAYAR BESAR (≥1600px) ================= */
 
 @media (min-width: 1600px) {
   .editorialContainer {
@@ -768,9 +759,6 @@ body.page-project.reading-mode .wordmarkLink:hover .wordmark {
   color: transparent;
 }
 
-/* ===== .navLinks transition ditambah opacity =====
-   Supaya fade in/out about/works smooth (durasi & easing disamakan
-   dengan wordmark turun = 700ms cubic-bezier(0.16,1,0.3,1)). */
 body.page-project .navLinks {
   transition:
     color 0.3s ease,
@@ -827,18 +815,6 @@ body.page-project.about-open .navWordmark.nav--open .sub {
 
 /* ============================================================
    FIX GAMBAR: ketajaman AVIF + performance hint
-   ============================================================
-   image-rendering: crisp-edges = browser pakai algoritma scaling
-   tajam (nearest-neighbor / high-quality bilinear) saat gambar
-   di-resize oleh CSS (object-fit: cover). Tanpa ini, AVIF yang
-   di-downscale terlihat sedikit soft — paling kelihatan di tepi
-   teks screenshot UI (yang merupakan mayoritas aset Anda).
-   
-   will-change: transform = sinyal ke browser: "elemen ini akan
-   di-animasikan transform-nya" -> browser pre-allocate layer
-   compositor sendiri, composite lebih cepat saat slide animasi
-   jalan (slideInFromLeft/Right). Dilepas otomatis saat animasi
-   selesai (CSS animation forwards), tidak perlu cleanup manual.
    ============================================================ */
 
 .detailSliderImage,
@@ -856,32 +832,15 @@ body.page-project.about-open .navWordmark.nav--open .sub {
   will-change: transform, opacity;
 }
 
-/* ============================================================
-   STICKY OPACITY SETELAH REVEAL
-   ============================================================
-   .fade-in animation berakhir di opacity 1 via `forwards`. Tapi
-   saat section keluar viewport (`active=false`), class fade-in
-   hilang → opacity kembali ke 0 (CSS `.is-current { opacity: 0 }`).
-   Ini yang bikin "load ulang" saat scroll naik.
-   
-   Rule di bawah: setelah animation fade-in selesai, biarkan
-   opacity 1 tetap berlaku — sticky. Animasi slide tetap jalan
-   normal karena punya opacity 1 inline dari CSS-nya sendiri.
-   ============================================================ */
-
 .detailSliderImage.is-current.fade-in {
   opacity: 1;
 }
 
-/* Fallback: kalau JS `revealed=true` tapi class fade-in sudah
-   hilang karena re-render, opacity tetap 1 (tidak flicker). */
 .detailSliderFrame.is-active .detailSliderImage.is-current {
   opacity: 1;
   transition: opacity 0.01s;
 }
 
-/* Slider frame isolation: bantu browser treat frame sebagai layer
-   sendiri, hindari recomposite seluruh row saat slide berubah. */
 .detailSliderFrame {
   contain: layout style paint;
 }
