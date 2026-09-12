@@ -20,8 +20,21 @@ body {
   color: var(--color-black);
   font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
   overflow-x: hidden;
+  /* TIDAK ADA transition background-color.
+     Pergantian warna body selalu instan dan SELALU terjadi di balik
+     curtain yang sudah menutup penuh, sehingga tidak pernah ada
+     sisa warna merah/putih yang bocor ke layar. */
 }
+
+/* Warna halaman project (state settled). */
 body.page-project {
+  background: #F2F2F2;
+  --color-black: #1e1e1e;
+}
+
+/* Sumber kebenaran warna SAAT TRANSISI — dikontrol murni oleh
+   PageTransition.jsx. Nilainya sengaja sama dengan .page-project. */
+body.pt-bg-project {
   background: #F2F2F2;
   --color-black: #1e1e1e;
 }

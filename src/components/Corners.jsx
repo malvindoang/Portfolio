@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react'
+import { createPortal } from 'react-dom'
 import LiveClock from './LiveClock'
 import About from './About'
+import { PageTransitionContext } from './PageTransitionContext'
 import { SECTIONS } from '../data/projects'
 import './Corners.css'
 
@@ -71,7 +73,12 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
   const navLinksRef = useRef(null)
   const location = useLocation()
   const navigate = useNavigate()
-  const isHome = location.pathname === '/'
+
+  // FIX: ikuti route yang SEDANG dirender PageTransition (displayLoc),
+  // bukan pathname router yang berubah lebih dulu. Ini menghentikan
+  // pergeseran posisi 01/02/03 & about di tengah transisi.
+  const { routePath } = useContext(PageTransitionContext)
+  const isHome = (routePath ?? location.pathname) === '/'
 
   const [playIntroSelf] = useState(() => !window.__INTRO_DONE__)
   const playIntro = typeof playIntroProp === 'boolean' ? playIntroProp : playIntroSelf
@@ -127,22 +134,17 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
     navigate('/')
   }
 
-  // Wordmark MALVIN — TIDAK set flag → Home reset scroll ke atas.
   const handleWordmarkClick = () => {
     setAboutOpen(false)
     navigate('/')
   }
 
-  // Tombol back (←) di pojok kanan atas halaman project — set flag
-  // SEBELUM navigate. Home akan: (1) tidak memasang scroll-lock
-  // overflow:hidden (penyebab clamp ke 0), dan (2) restore posisi
-  // scroll home terakhir — persis seperti browser back.
   const handleBackClick = () => {
     window.__SKIP_HOME_SCROLL_RESET__ = true
     if (onBack) onBack()
   }
 
-  return (
+  return createPortal(
     <>
       <div
         ref={wordmarkRef}
@@ -297,7 +299,8 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
       )}
 
       <About isOpen={aboutOpen} bodyLeft={bodyLeft} />
-    </>
+    </>,
+    document.body
   )
 }
 

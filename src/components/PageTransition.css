@@ -1,0 +1,42 @@
+/* ============================================================
+   PAGE TRANSITION — Orchestrator (curtain, single tree)
+   ============================================================ */
+
+.ptViewport {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   CORNERS: tetap di layar (di-portal ke body), z-index di bawah
+   curtain (50) supaya pergantian chrome tertutup saat transisi.
+
+   TIDAK ADA transition warna di sini: pergantian warna corners
+   selalu terjadi INSTAN di balik curtain yang sudah menutup
+   penuh, sehingga tidak pernah ada sisa warna yang bocor.
+   ============================================================ */
+
+body > .navWordmark,
+body > .navLinks,
+body > .corner,
+body > .aboutOverlay {
+  z-index: 40;
+}
+
+body.pt-corners-dark > .corner,
+body.pt-corners-dark > .corner .num,
+body.pt-corners-dark > .corner a,
+body.pt-corners-dark > .corner span.label,
+body.pt-corners-dark > .navLinks .label {
+  color: #1e1e1e;
+}
+
+body.pt-corners-dark > .navWordmark .wordmark {
+  color: #1e1e1e;
+  -webkit-text-stroke-color: #1e1e1e;
+}
+
+body.pt-corners-dark > .navWordmark .sub {
+  color: #1e1e1e;
+}

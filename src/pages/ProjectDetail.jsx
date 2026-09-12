@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useContext } from 'react'
 import { useParams, Navigate, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import gsap from 'gsap'
 import Corners from '../components/Corners'
+import { PageTransitionContext } from '../components/PageTransitionContext'
 import { PROJECT_CONTENT } from '../data/projectContent'
 import { SECTIONS } from '../data/projects'
 import { useInView } from '../hooks/useInView'
@@ -14,26 +16,71 @@ function ProjectDetail() {
   const navigate = useNavigate()
   const content = PROJECT_CONTENT[slug]
   const heroRef = useRef(null)
+  const heroTitleRef = useRef(null)
   const nextTitleRef = useRef(null)
+
+  const { isActive } = useContext(PageTransitionContext)
 
   const ownerProject = ALL_PROJECTS.find((p) => p.slug === slug)
   const projectTheme = ownerProject?.theme || 'red'
 
   useEffect(() => {
+    if (!isActive) return
     window.scrollTo(0, 0)
-  }, [slug])
+  }, [slug, isActive])
 
   useEffect(() => {
+    if (!isActive) return
     document.body.classList.add('page-project', `theme-${projectTheme}`)
     return () => {
       document.body.classList.remove('page-project', `theme-${projectTheme}`)
     }
-  }, [projectTheme])
+  }, [projectTheme, isActive])
+
+  // ===== MORPH C: spotlight (Home) → hero title (Project) =====
+  useLayoutEffect(() => {
+    if (!isActive) return
+    const morph = window.__MORPH_FROM_SPOTLIGHT__
+    if (!morph) return
+    delete window.__MORPH_FROM_SPOTLIGHT__
+
+    const el = heroTitleRef.current
+    if (!el) return
+
+    window.scrollTo(0, 0)
+
+    const rect = el.getBoundingClientRect()
+    const finalCX = rect.left + rect.width / 2
+    const finalCY = rect.top + rect.height / 2
+    const startCX = window.innerWidth / 2
+    const startCY = window.innerHeight / 2
+    const heroFontSize = parseFloat(getComputedStyle(el).fontSize) || 1
+    const spotFontSize = morph.fontSize || heroFontSize
+    const startScale = Math.min(Math.max(spotFontSize / heroFontSize, 0.6), 1.6)
+
+    gsap.set(el, { animation: 'none', opacity: 0 })
+    gsap.fromTo(
+      el,
+      { x: startCX - finalCX, y: startCY - finalCY, scale: startScale, opacity: 0 },
+      {
+        x: 0,
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        duration: 1.1,
+        ease: 'power3.inOut',
+        delay: 0.35,
+        onComplete: () => gsap.set(el, { clearProps: 'transform' }),
+      }
+    )
+  }, [isActive])
 
   const [introRef, introInView] = useInView()
   const [closingRef, closingInView] = useInView()
 
   useEffect(() => {
+    if (!isActive) return
+
     const update = () => {
       const vh = window.innerHeight
 
@@ -41,7 +88,10 @@ function ProjectDetail() {
       const overHero = r ? r.top < 90 && r.bottom > 90 : false
       document.body.classList.toggle('on-hero', overHero)
 
-      const heroCoversWordmark = r ? r.bottom > vh - 118 : false
+      // FIX: jangan toggle wordmark-hidden selama transisi (layout belum
+      // settle → rect salah → class tersangkut). Hitung ulang saat settle.
+      const inTransition = document.body.classList.contains('pt-active')
+      const heroCoversWordmark = !inTransition && r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
       const readingOn = window.scrollY >= 50
@@ -59,6 +109,12 @@ function ProjectDetail() {
 
     update()
 
+    // Hitung ulang setelah transisi selesai (layout sudah flow normal)
+    const onSettled = () => {
+      requestAnimationFrame(() => requestAnimationFrame(update))
+    }
+    window.addEventListener('pt-settled', onSettled)
+
     let ticking = false
     const handleScroll = () => {
       if (ticking) return
@@ -73,13 +129,14 @@ function ProjectDetail() {
     window.addEventListener('resize', update)
 
     return () => {
+      window.removeEventListener('pt-settled', onSettled)
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', update)
       document.body.classList.remove('on-hero')
       document.body.classList.remove('wordmark-hidden')
       document.body.classList.remove('reading-mode')
     }
-  }, [])
+  }, [isActive])
 
   if (!content) return <Navigate to="/" replace />
 
@@ -106,7 +163,7 @@ function ProjectDetail() {
             </>
           )}
 
-          <h1 className="detailHeroTitle">
+          <h1 className="detailHeroTitle" ref={heroTitleRef}>
             {content.heroLines
               ? content.heroLines.map((line, i) => (
                   <span
@@ -126,47 +183,18 @@ function ProjectDetail() {
 
         <div className="editorialContainer">
           <section ref={introRef} className="editorialIntroRow">
-            <div
-              className={`editorialIntroLead reveal ${
-                introInView ? 'inView' : ''
-              }`}
-            >
+            <div className={`editorialIntroLead reveal ${introInView ? 'inView' : ''}`}>
               {content.intro}
             </div>
-
-            <div
-              className={`editorialIntroBody reveal ${
-                introInView ? 'inView' : ''
-              }`}
-            >
+            <div className={`editorialIntroBody reveal ${introInView ? 'inView' : ''}`}>
               {content.approach}
             </div>
-
-            <div
-              className={`editorialRail editorialFacts reveal ${
-                introInView ? 'inView' : ''
-              }`}
-            >
-              <div className="factRow">
-                <span className="factLabel">Role:</span>{' '}
-                <span className="factValue">{content.role}</span>
-              </div>
-              <div className="factRow">
-                <span className="factLabel">Tools:</span>{' '}
-                <span className="factValue">{content.tools}</span>
-              </div>
-              <div className="factRow">
-                <span className="factLabel">Year:</span>{' '}
-                <span className="factValue">{content.year}</span>
-              </div>
-              <div className="factRow">
-                <span className="factLabel">Duration:</span>{' '}
-                <span className="factValue">{content.duration}</span>
-              </div>
-              <div className="factRow">
-                <span className="factLabel">Team:</span>{' '}
-                <span className="factValue">{content.team}</span>
-              </div>
+            <div className={`editorialRail editorialFacts reveal ${introInView ? 'inView' : ''}`}>
+              <div className="factRow"><span className="factLabel">Role:</span> <span className="factValue">{content.role}</span></div>
+              <div className="factRow"><span className="factLabel">Tools:</span> <span className="factValue">{content.tools}</span></div>
+              <div className="factRow"><span className="factLabel">Year:</span> <span className="factValue">{content.year}</span></div>
+              <div className="factRow"><span className="factLabel">Duration:</span> <span className="factValue">{content.duration}</span></div>
+              <div className="factRow"><span className="factLabel">Team:</span> <span className="factValue">{content.team}</span></div>
             </div>
           </section>
 
@@ -175,11 +203,7 @@ function ProjectDetail() {
           ))}
 
           <section ref={closingRef} className="detailClosing">
-            <p
-              className={`detailParagraph detailClosingText reveal ${
-                closingInView ? 'inView' : ''
-              }`}
-            >
+            <p className={`detailParagraph detailClosingText reveal ${closingInView ? 'inView' : ''}`}>
               {content.closing}
             </p>
           </section>
@@ -267,8 +291,7 @@ function ProjectSection({ section, index }) {
   const isLongImage = section.layout === 'long-image-two-col-text'
   const isSlider = !isPair && !isLongImage
 
-  const descLeft =
-    section.twoColText?.left ?? section.description ?? `DESCRIPTION_LEFT_${index + 1}`
+  const descLeft = section.twoColText?.left ?? section.description ?? `DESCRIPTION_LEFT_${index + 1}`
   const descRight = section.twoColText?.right ?? `DESCRIPTION_RIGHT_${index + 1}`
   const note = section.note ?? `NOTE_SECTION_${index + 1}`
 
@@ -296,7 +319,6 @@ function ProjectSection({ section, index }) {
   return (
     <div ref={ref} className={`editorialSection reveal ${inView ? 'inView' : ''}`}>
       <span className="editorialSectionCount">{countLabel}</span>
-
       <div className="editorialSectionRow">
         <div className="editorialMedia">
           {isSlider && (
@@ -311,7 +333,6 @@ function ProjectSection({ section, index }) {
               active={inView}
             />
           )}
-
           {isPair && (
             <PairGallery
               images={section.images}
@@ -320,7 +341,6 @@ function ProjectSection({ section, index }) {
               active={inView}
             />
           )}
-
           {isLongImage && (
             <LongImage
               image={section.image}
@@ -330,7 +350,6 @@ function ProjectSection({ section, index }) {
             />
           )}
         </div>
-
         {isSlider && (
           <div className="editorialRail">
             <SliderRailMeta
@@ -344,7 +363,6 @@ function ProjectSection({ section, index }) {
             />
           </div>
         )}
-
         <div className="editorialTextRow">
           <div className="editorialCol">
             <h3 className="editorialSectionTitle">{section.title}</h3>
@@ -359,16 +377,7 @@ function ProjectSection({ section, index }) {
   )
 }
 
-function SliderMedia({
-  images,
-  slideIndex,
-  direction,
-  outgoing,
-  onOutgoingDone,
-  title,
-  aspectRatio,
-  active,
-}) {
+function SliderMedia({ images, slideIndex, direction, outgoing, onOutgoingDone, title, aspectRatio, active }) {
   const hasAspectRatio = Boolean(aspectRatio)
   const frameRef = useRef(null)
   const imgRef = useRef(null)
@@ -400,34 +409,21 @@ function SliderMedia({
 
   const current = images[slideIndex]
 
-  const revealClass = direction
-    ? `slide-in-${direction}`
-    : revealed
-    ? 'fade-in'
-    : ''
+  const revealClass = direction ? `slide-in-${direction}` : revealed ? 'fade-in' : ''
   const naturalClass = hasAspectRatio ? '' : 'detailSliderImage--natural'
 
   return (
     <div className="detailSlider">
       <div
         ref={frameRef}
-        className={`detailSliderFrame ${active ? 'is-active' : ''} ${
-          hasAspectRatio ? '' : 'detailSliderFrame--natural'
-        }`}
-        style={
-          hasAspectRatio
-            ? { aspectRatio }
-            : naturalHeight
-            ? { height: naturalHeight }
-            : undefined
-        }
+        className={`detailSliderFrame ${active ? 'is-active' : ''} ${hasAspectRatio ? '' : 'detailSliderFrame--natural'}`}
+        style={hasAspectRatio ? { aspectRatio } : naturalHeight ? { height: naturalHeight } : undefined}
       >
         <div className="detailSliderPreload" aria-hidden="true">
           {images.map((img) => (
             <img key={`preload-${img.src}`} src={img.src} alt="" loading="eager" />
           ))}
         </div>
-
         {outgoing && (
           <img
             key={`out-${outgoing.src}-${outgoing.dir}`}
@@ -438,7 +434,6 @@ function SliderMedia({
             onAnimationEnd={onOutgoingDone}
           />
         )}
-
         <img
           ref={imgRef}
           key={`cur-${current.src}-${slideIndex}`}
@@ -457,41 +452,17 @@ function SliderRailMeta({ caption, index, total, note, onNext, onPrev, inView })
     <div className="railSliderMeta">
       {total > 1 && (
         <div className="railControls">
-          <button
-            type="button"
-            className="detailSliderArrow detailSliderArrow--prev"
-            onClick={onPrev}
-            aria-label="Gambar sebelumnya"
-          >
-            ←
-          </button>
-
+          <button type="button" className="detailSliderArrow detailSliderArrow--prev" onClick={onPrev} aria-label="Gambar sebelumnya">←</button>
           <FlipCounter current={index + 1} total={total} />
-
-          <button
-            type="button"
-            className="detailSliderArrow detailSliderArrow--next"
-            onClick={onNext}
-            aria-label="Gambar selanjutnya"
-          >
-            →
-          </button>
+          <button type="button" className="detailSliderArrow detailSliderArrow--next" onClick={onNext} aria-label="Gambar selanjutnya">→</button>
         </div>
       )}
-
       <FlipCaption text={caption} />
-
       <p className={`railNote reveal ${inView ? 'inView' : ''}`}>{note}</p>
     </div>
   )
 }
 
-/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE =====
-   Animasi 2D ringan: fade (opacity 0→1) + slide vertikal kecil (8px).
-   Durasi 0.2s, easing snappy. Tidak pakai rotateX/perspective (3D flip)
-   yang memaksa browser re-rasterize glyph tiap frame — itu penyebab lag.
-   TranslateY + opacity tinggal composite layer yang sudah ada (GPU-friendly).
-   State machine sederhana: ganti teks di 100ms, stop flipping di 250ms. */
 function FlipCaption({ text }) {
   const [displayText, setDisplayText] = useState(text)
   const [flipping, setFlipping] = useState(false)
@@ -513,9 +484,7 @@ function FlipCaption({ text }) {
 
   return (
     <span className="detailSliderCaptionWrap">
-      <span className={`detailSliderCaption ${flipping ? 'is-flipping' : ''}`}>
-        {displayText}
-      </span>
+      <span className={`detailSliderCaption ${flipping ? 'is-flipping' : ''}`}>{displayText}</span>
     </span>
   )
 }
@@ -549,17 +518,9 @@ function PairGallery({ images, title, aspectRatio, active }) {
     <div className="detailPair">
       {images.map((img, i) => (
         <div key={img.src} className="detailPairItem">
-          <div
-            className={`detailPairFrame ${active ? 'is-active' : ''}`}
-            style={{ aspectRatio }}
-          >
-            <img
-              className="detailPairImage"
-              src={img.src}
-              alt={img.caption || `${title} — ${i + 1}`}
-            />
+          <div className={`detailPairFrame ${active ? 'is-active' : ''}`} style={{ aspectRatio }}>
+            <img className="detailPairImage" src={img.src} alt={img.caption || `${title} — ${i + 1}`} />
           </div>
-
           {img.caption && <p className="detailPairCaption">{img.caption}</p>}
         </div>
       ))}
@@ -570,17 +531,9 @@ function PairGallery({ images, title, aspectRatio, active }) {
 function LongImage({ image, title, aspectRatio, active }) {
   return (
     <div className="longImageWrap">
-      <div
-        className={`longImageFrame ${active ? 'is-active' : ''}`}
-        style={aspectRatio ? { aspectRatio } : undefined}
-      >
-        <img
-          className="longImageImg"
-          src={image.src}
-          alt={image.caption || title}
-        />
+      <div className={`longImageFrame ${active ? 'is-active' : ''}`} style={aspectRatio ? { aspectRatio } : undefined}>
+        <img className="longImageImg" src={image.src} alt={image.caption || title} />
       </div>
-
       {image.caption && <p className="longImageCaption">{image.caption}</p>}
     </div>
   )

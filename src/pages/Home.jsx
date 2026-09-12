@@ -30,29 +30,32 @@ const HOVER_DURATION = 0.7
 const HOVER_EASE_NAME = 'vanholtzPop'
 CustomEase.create(HOVER_EASE_NAME, 'M0,0 C0.075,0.82 0.165,1 1,1')
 
-// ===== ENTRANCE LAYER 1 — CONTAINER DESCENT (JS, clip diam) =====
 const INTRO_OFFSET_DURATION_MS = 3000
 const INTRO_EASE_NAME = 'vanholtzDescentEase'
 CustomEase.create(INTRO_EASE_NAME, 'M0,0 C0.3,0.05,0.4,1 1,1')
 const introEase = gsap.parseEase(INTRO_EASE_NAME)
 
-// ===== ENTRANCE LAYER 2 — REVEAL PER PROJECT (SPIRAL: step 0.25s) =====
 const INTRO_DELAYS = [1.95, 1.7, 1.45, 1.2, 0.95, 0.7, 0.45, 0.2]
 
-// Micro-stagger fade antar BARIS dalam satu project (kehidupan internal).
 const LINE_STAGGER_S = 0.09
 
-// Section label (Layer 5): fade opacity, delay 1.0 / 1.15 / 1.3s ...
 const SECTION_LABEL_DELAY_BASE = 1.0
 const SECTION_LABEL_DELAY_STEP = 0.15
 
-// Scroll-lock: descent selesai 3s; mayoritas judul mendarat ±3.5s.
 const HOME_SCROLL_LOCK_MS = 3000
 
-// ===== POSISI SCROLL HOME TERAKHIR =====
-// Disimpan saat Home ditinggalkan (unmount), dipakai untuk restore saat
-// kembali via tombol back — meniru perilaku browser back yang mengembalikan
-// posisi scroll halaman sebelumnya. Module-level supaya lolos StrictMode.
+const PUSH_DURATION = 0.3
+const PUSH_EASE_NAME = 'vanholtzPush'
+CustomEase.create(PUSH_EASE_NAME, 'M0,0 C0.3,0 0.2,1 1,1')
+
+const AWAY_ROT_DEG = -100
+const AWAY_DURATION = 0.9
+const AWAY_STAGGER = 0.1
+const REPOSITION_DURATION = 0.6
+const HOLD_AFTER_GONE = 0.35
+const AWAY_EASE_NAME = 'vanholtzAway'
+CustomEase.create(AWAY_EASE_NAME, 'M0,0 C0.55,0 0.1,1 1,1')
+
 let lastHomeScrollY = 0
 
 function getLines(title) {
@@ -106,8 +109,19 @@ function Home() {
   const contentRefs = useRef([])
   const hoveredIndexRef = useRef(-1)
 
-  // ===== FLAG FIRST-LOAD — KHUSUS UNTUK CORNERS =====
+  const isPushingRef = useRef(false)
+  const entranceActiveRef = useRef(true)
+
   const [playIntro] = useState(() => !window.__INTRO_DONE__)
+
+  // ===== RETURN ENTRANCE (stacking jatuh setelah background pure merah) =====
+  // holdEntrance = true hanya saat Home di-mount sebagai tujuan transisi
+  // pulang (flag diset PageTransition sebelum swap). Selama hold, judul &
+  // label invisible tapi CORNER tetap visible (corner di portal terpisah).
+  const [holdEntrance] = useState(() => window.__PT_HOME_ENTRANCE_PENDING__ === true)
+  const [entranceReleased, setEntranceReleased] = useState(false)
+  const introActive = playIntro || (holdEntrance && entranceReleased)
+  const holding = holdEntrance && !entranceReleased
 
   useEffect(() => {
     if (!playIntro) return undefined
@@ -117,13 +131,19 @@ function Home() {
     return () => clearTimeout(t)
   }, [playIntro])
 
-  // ===== TOMBOL BACK vs WORDMARK — CAPTURE KE REF (STRICTMODE-SAFE) =====
-  // useRef dipertahankan antar pass StrictMode. true = kembali via tombol
-  // back (jangan reset scroll, jangan lock overflow); false = wordmark /
-  // refresh / link lain (reset scroll ke atas + lock seperti biasa).
+  // Release entrance tepat saat transisi selesai = background sudah pure merah
+  useEffect(() => {
+    if (!holding) return undefined
+    const onSettled = () => {
+      window.__PT_HOME_ENTRANCE_PENDING__ = false
+      setEntranceReleased(true)
+    }
+    window.addEventListener('pt-settled', onSettled)
+    return () => window.removeEventListener('pt-settled', onSettled)
+  }, [holding])
+
   const skipScrollRef = useRef(window.__SKIP_HOME_SCROLL_RESET__ === true)
 
-  // ===== ENTRANCE LAYER 1 — offset live (px, <=0), additive ke scroll =====
   const introOffsetRef = useRef(0)
   const introOffsetStartRef = useRef(0)
 
@@ -166,20 +186,12 @@ function Home() {
     return out
   }
 
-  // ===== SIMPAN POSISI SCROLL SAAT HOME DITINGGALKAN =====
-  // Cleanup useEffect ini jalan tepat sebelum Home unmount (ke project),
-  // merekam posisi scroll home terakhir untuk restore saat kembali.
   useEffect(() => {
     return () => {
       lastHomeScrollY = window.scrollY
     }
   }, [])
 
-  // ===== SCROLL LOCK (home-intro) =====
-  // PENTING: saat kembali via tombol back (skipScrollRef true), lock
-  // TIDAK dipasang. body.home-intro { overflow:hidden } membuat dokumen
-  // tidak scrollable -> browser clamp scroll ke 0. Itu penyebab scroll
-  // selalu lompat ke atas setiap kembali ke home sebelumnya.
   useLayoutEffect(() => {
     if (skipScrollRef.current) return undefined
 
@@ -194,7 +206,6 @@ function Home() {
     }
   }, [])
 
-  // ===== RESET SCROLL (WORDMARK / REFRESH) + BERSIHKAN FLAG =====
   useLayoutEffect(() => {
     if (window.__SKIP_HOME_SCROLL_RESET__) {
       delete window.__SKIP_HOME_SCROLL_RESET__
@@ -279,6 +290,7 @@ function Home() {
         introOffsetRef.current = 0
         writeTranslate(window.scrollY)
         introRAF = null
+        entranceActiveRef.current = false
       }
     }
 
@@ -287,10 +299,6 @@ function Home() {
 
     measure()
 
-    // ===== RESTORE POSISI SCROLL HOME (TOMBOL BACK) =====
-    // Setelah tinggi dokumen benar (measure), kembalikan posisi scroll
-    // home terakhir supaya persis seperti browser back. Sinkronisasi
-    // ulang transform + label + section aktif ke scrollY baru.
     if (skipScrollRef.current) {
       window.scrollTo(0, lastHomeScrollY)
       writeTranslate(window.scrollY)
@@ -301,7 +309,19 @@ function Home() {
       setActiveSection(computeActiveSection())
     }
 
-    introRAF = requestAnimationFrame(stepIntro)
+    if (introActive) {
+      introRAF = requestAnimationFrame(stepIntro)
+    } else if (holding) {
+      // HOLD: list diparkir di posisi awal descent, klik diblok,
+      // judul invisible (via inline style di render). Corner tetap visible.
+      introOffsetRef.current = introOffsetStartRef.current
+      writeTranslate(window.scrollY)
+      entranceActiveRef.current = true
+    } else {
+      introOffsetRef.current = 0
+      writeTranslate(window.scrollY)
+      entranceActiveRef.current = false
+    }
 
     let ticking = false
     const handleScroll = () => {
@@ -336,7 +356,8 @@ function Home() {
       if (introRAF !== null) cancelAnimationFrame(introRAF)
       ctx.revert()
     }
-  }, [computeActiveSection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeActiveSection, introActive, holding])
 
   useLayoutEffect(() => {
     let ticking = false
@@ -405,6 +426,8 @@ function Home() {
         applyCursor(-1)
         return
       }
+      if (isPushingRef.current) return
+      if (entranceActiveRef.current) return
       lastX = e.clientX
       lastY = e.clientY
       if (ticking) return
@@ -417,10 +440,90 @@ function Home() {
 
     const handleClick = (e) => {
       if (document.body.classList.contains('home-intro')) return
+      if (entranceActiveRef.current) return
       if (isOtherUiTarget(e.target)) return
+      if (isPushingRef.current) return
+
       const projectIndex = findHitIndex(e.clientX, e.clientY)
       const slug = projectIndex >= 0 ? projectSlugsRef.current[projectIndex] : null
-      if (slug) navigate(`/project/${slug}`)
+      if (!slug) return
+
+      const rows = getRowsForProject(projectIndex)
+      if (!rows.length) {
+        navigate(`/project/${slug}`)
+        return
+      }
+
+      isPushingRef.current = true
+
+      const mapping = lineToProjectIndexRef.current
+      const otherRows = projectRowRefs.current.filter(
+        (row, i) => row && mapping[i] !== projectIndex
+      )
+
+      gsap.to(rows, {
+        rotationY: 0,
+        duration: PUSH_DURATION,
+        ease: PUSH_EASE_NAME,
+        overwrite: 'auto',
+      })
+
+      gsap.to(otherRows, {
+        rotationY: AWAY_ROT_DEG,
+        opacity: 0,
+        duration: AWAY_DURATION,
+        stagger: { each: AWAY_STAGGER, from: 'end' },
+        ease: AWAY_EASE_NAME,
+        overwrite: 'auto',
+      })
+
+      gsap.to(labelRefs.current.filter(Boolean), {
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power2.in',
+        overwrite: 'auto',
+      })
+
+      const awayTotal =
+        AWAY_DURATION + AWAY_STAGGER * Math.max(otherRows.length - 1, 0)
+
+      gsap.delayedCall(awayTotal, () => {
+        const vpW = window.innerWidth
+        const vpH = window.innerHeight
+        let minTop = Infinity
+        let maxBottom = -Infinity
+        let minLeft = Infinity
+        let maxRight = -Infinity
+        rows.forEach((row) => {
+          const r = row.getBoundingClientRect()
+          minTop = Math.min(minTop, r.top)
+          maxBottom = Math.max(maxBottom, r.bottom)
+          minLeft = Math.min(minLeft, r.left)
+          maxRight = Math.max(maxRight, r.right)
+        })
+        const dx = vpW / 2 - (minLeft + maxRight) / 2
+        const dy = vpH / 2 - (minTop + maxBottom) / 2
+        gsap.to(rows, {
+          x: dx,
+          y: dy,
+          duration: REPOSITION_DURATION,
+          ease: 'power3.inOut',
+          overwrite: 'auto',
+        })
+      })
+
+      const exitTotal = awayTotal + REPOSITION_DURATION + HOLD_AFTER_GONE
+
+      gsap.delayedCall(exitTotal, () => {
+        const titleEl = rows[0]?.querySelector('.title')
+        window.__MORPH_FROM_SPOTLIGHT__ = {
+          fontSize: titleEl ? parseFloat(getComputedStyle(titleEl).fontSize) : null,
+        }
+        navigate(`/project/${slug}`)
+        setTimeout(() => {
+          isPushingRef.current = false
+        }, 50)
+      })
     }
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
@@ -485,9 +588,15 @@ function Home() {
                           className="projectRow"
                           key={li}
                           ref={(el) => (projectRowRefs.current[globalLineIndex] = el)}
-                          style={{
-                            animationDelay: `${(groupDelay + li * LINE_STAGGER_S).toFixed(2)}s`,
-                          }}
+                          style={
+                            introActive
+                              ? {
+                                  animationDelay: `${(groupDelay + li * LINE_STAGGER_S).toFixed(2)}s`,
+                                }
+                              : holding
+                              ? { animation: 'none', opacity: 0 }
+                              : { animation: 'none' }
+                          }
                         >
                           <div className="meta">
                             {li === 0 ? (
@@ -509,13 +618,17 @@ function Home() {
                       )
                     })
 
+                    const groupStyle = introActive
+                      ? { animationDelay: `${groupDelay}s` }
+                      : { animation: 'none' }
+
                     if (p.slug) {
                       return (
                         <Link
                           to={`/project/${p.slug}`}
                           className="projectGroup"
                           key={p.title + i}
-                          style={{ animationDelay: `${groupDelay}s` }}
+                          style={groupStyle}
                         >
                           {rows}
                         </Link>
@@ -526,7 +639,7 @@ function Home() {
                       <div
                         className="projectGroup"
                         key={p.title + i}
-                        style={{ animationDelay: `${groupDelay}s` }}
+                        style={groupStyle}
                       >
                         {rows}
                       </div>
@@ -547,10 +660,14 @@ function Home() {
           <div
             key={section.label}
             className={`sectionLabel${sIdx === activeSection ? ' sectionLabel--active' : ''}`}
-            style={{
-              left: gridLeft,
-              animationDelay: `${SECTION_LABEL_DELAY_BASE + sIdx * SECTION_LABEL_DELAY_STEP}s`,
-            }}
+            style={
+              holding
+                ? { left: gridLeft, animation: 'none', opacity: 0 }
+                : {
+                    left: gridLeft,
+                    animationDelay: `${SECTION_LABEL_DELAY_BASE + sIdx * SECTION_LABEL_DELAY_STEP}s`,
+                  }
+            }
             ref={(el) => (labelRefs.current[sIdx] = el)}
           >
             {section.label}
