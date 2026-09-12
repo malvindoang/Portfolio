@@ -1,29 +1,61 @@
 /* ============================================================
-   PAGE TRANSITION — Orchestrator (curtain, single tree)
+   PAGE TRANSITION — Orchestrator (lampu crossfade, single tree)
+   Urutan lapis:  corners(60) > viewport(10) > curtain(5) > body
    ============================================================ */
 
 .ptViewport {
   position: relative;
+  z-index: 10; /* di atas curtain, di bawah corners */
   width: 100%;
   min-height: 100vh;
 }
 
 /* ============================================================
-   CORNERS: tetap di layar (di-portal ke body), z-index di bawah
-   curtain (50) supaya pergantian chrome tertutup saat transisi.
-
-   TIDAK ADA transition warna di sini: pergantian warna corners
-   selalu terjadi INSTAN di balik curtain yang sudah menutup
-   penuh, sehingga tidak pernah ada sisa warna yang bocor.
+   CORNERS: lapisan PALING ATAS — selalu terbaca selama transisi
    ============================================================ */
 
 body > .navWordmark,
 body > .navLinks,
 body > .corner,
 body > .aboutOverlay {
-  z-index: 40;
+  z-index: 60;
 }
 
+/* Warna chrome crossfade 0.35s (= COVER_DURATION), dimulai cover-start */
+body > .corner,
+body > .corner .num,
+body > .corner a,
+body > .corner span.label,
+body > .navWordmark,
+body > .navWordmark .wordmark,
+body > .navWordmark .sub,
+body > .navLinks,
+body > .navLinks .label {
+  transition:
+    color 0.35s ease,
+    -webkit-text-stroke-color 0.35s ease;
+}
+
+/* ---- Micro-crossfade grup yang berganti konten (.corner.tr):
+   fade-in 0.2s (base) / fade-out 0.12s (rule hidden).
+   Wordmark, navLinks, corner br TIDAK ikut fade (persistent). ---- */
+body > .corner.tr {
+  opacity: 1;
+  transition:
+    color 0.35s ease,
+    -webkit-text-stroke-color 0.35s ease,
+    opacity 0.2s ease;
+}
+
+body.pt-tr-hidden > .corner.tr {
+  opacity: 0;
+  transition:
+    color 0.35s ease,
+    -webkit-text-stroke-color 0.35s ease,
+    opacity 0.12s ease;
+}
+
+/* ---- Warna chrome gelap (halaman project) ---- */
 body.pt-corners-dark > .corner,
 body.pt-corners-dark > .corner .num,
 body.pt-corners-dark > .corner a,

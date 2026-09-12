@@ -14,19 +14,19 @@ if (!CustomEase.get(EASE_NAME)) {
 const COLOR_HOME = '#E34234'
 const COLOR_PROJECT = '#F2F2F2'
 const COVER_DURATION = 0.35
-const HOLD_COVER = 0.12 // jeda curtain menutup penuh sebelum reveal
-const REVEAL_DURATION = 0.5
+const HOLD_COVER = 0.12
+const TR_OUT = 0.12
 
 function PageTransition({ children }) {
   const location = useLocation()
   const [displayLoc, setDisplayLoc] = useState(location)
 
+  const viewportRef = useRef(null)
   const curtainRef = useRef(null)
   const runningRef = useRef(false)
   const tlRef = useRef(null)
   const safetyRef = useRef(null)
 
-  // Kill hanya saat unmount benar-benar
   useEffect(() => {
     return () => {
       tlRef.current?.kill()
@@ -42,12 +42,16 @@ function PageTransition({ children }) {
     const toProject = location.pathname !== '/'
     const targetColor = toProject ? COLOR_PROJECT : COLOR_HOME
     const curtain = curtainRef.current
+    const viewport = viewportRef.current
 
     document.body.classList.add('pt-active', 'overflowHidden')
     gsap.set(curtain, { backgroundColor: targetColor, opacity: 0 })
+    gsap.set(viewport, { opacity: 1 })
 
     const finish = () => {
-      document.body.classList.remove('pt-active', 'overflowHidden')
+      gsap.set(viewport, { clearProps: 'opacity' })
+      gsap.set(curtain, { opacity: 0 })
+      document.body.classList.remove('pt-active', 'overflowHidden', 'pt-tr-hidden')
       runningRef.current = false
       if (safetyRef.current) clearTimeout(safetyRef.current)
       window.dispatchEvent(new Event('pt-settled'))
@@ -56,66 +60,78 @@ function PageTransition({ children }) {
     const tl = gsap.timeline({ onComplete: finish })
     tlRef.current = tl
 
-    // 1) Curtain fade-in menutupi halaman lama
+    // ===== COVER: konten lama meluruh DI ATAS warna baru yang masuk =====
+    tl.call(
+      () => {
+        document.body.classList.toggle('pt-corners-dark', toProject)
+        window.dispatchEvent(new Event('pt-cover-start'))
+      },
+      null,
+      0
+    )
     tl.to(curtain, { opacity: 1, duration: COVER_DURATION, ease: EASE_NAME }, 0)
-
-    // 2) PASTIKAN curtain opacity benar-benar 1 (tidak mengandalkan frame
-    //    terakhir tween) sebelum apa pun di-swap di belakangnya.
+    tl.to(viewport, { opacity: 0, duration: COVER_DURATION, ease: EASE_NAME }, 0)
     tl.set(curtain, { opacity: 1 }, COVER_DURATION)
+    tl.set(viewport, { opacity: 0 }, COVER_DURATION)
 
-    // 3) Di balik curtain yang sudah penuh: swap route + snap warna body
-    //    & corners SEKETIKA (tanpa transition di CSS → tidak ada sisa).
+    // Fade-out grup chrome yang akan berganti konten
+    tl.call(
+      () => {
+        document.body.classList.add('pt-tr-hidden')
+      },
+      null,
+      COVER_DURATION - TR_OUT
+    )
+
+    // ===== SWAP: mount konten baru di balik beat warna (sudah opacity 0) =====
     tl.call(
       () => {
         window.__PT_HOME_ENTRANCE_PENDING__ = !toProject
         window.scrollTo(0, 0)
         setDisplayLoc(location)
         document.body.classList.toggle('pt-bg-project', toProject)
-        document.body.classList.toggle('pt-corners-dark', toProject)
         window.dispatchEvent(new Event('pt-bg-set'))
       },
       null,
       COVER_DURATION + 0.02
     )
 
-    // 4) Tahan sebentar (curtain penuh), lalu buka = reveal halaman baru
+    // ===== REVEAL: CUT, bukan fade =====
+    // Konten baru LANGSUNG penuh (opacity 1) tepat saat beat warna selesai,
+    // sehingga "konten sudah ada saat warna putih muncul" — tanpa fade-in.
     tl.call(
       () => {
+        document.body.classList.remove('pt-tr-hidden')
         window.dispatchEvent(new Event('pt-reveal-start'))
       },
       null,
       COVER_DURATION + HOLD_COVER
     )
-    tl.to(
-      curtain,
-      { opacity: 0, duration: REVEAL_DURATION, ease: EASE_NAME },
-      COVER_DURATION + HOLD_COVER
-    )
+    tl.set(viewport, { opacity: 1 }, COVER_DURATION + HOLD_COVER)
+    tl.set(curtain, { opacity: 0 }, COVER_DURATION + HOLD_COVER)
 
-    // Safety: tidak boleh macet permanen
     safetyRef.current = setTimeout(
       finish,
-      (COVER_DURATION + HOLD_COVER + REVEAL_DURATION + 1) * 1000
+      (COVER_DURATION + HOLD_COVER + 1) * 1000
     )
-
-    // PENTING: tidak ada cleanup yang meng-kill timeline ini saat deps berubah.
   }, [location, displayLoc])
 
   return (
     <PageTransitionContext.Provider value={{ isActive: true, routePath: displayLoc.pathname }}>
-      {/* Curtain: di atas corners (z 50) supaya pergantian chrome tertutup */}
+      {/* Curtain = lapis warna, DI BAWAH konten (z 5) */}
       <div
         ref={curtainRef}
         aria-hidden="true"
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 50,
+          zIndex: 5,
           opacity: 0,
           pointerEvents: 'none',
         }}
       />
-      <div className="ptViewport">
+      {/* Viewport = konten, DI ATAS curtain (z 10), DI BAWAH corners (z 60) */}
+      <div ref={viewportRef} className="ptViewport">
         {cloneElement(children, { location: displayLoc })}
       </div>
     </PageTransitionContext.Provider>
