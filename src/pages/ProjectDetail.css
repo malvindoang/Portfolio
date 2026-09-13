@@ -10,9 +10,9 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  height: 28vw;              /* responsif berbasis LEBAR (pola vanholtz) */
+  height: 28vw;
   min-height: 360px;
-  max-height: 70vh;          /* pagar atas */
+  max-height: 70vh;
   overflow: hidden;
   margin-bottom: calc(51px + 5vh);
 }
@@ -21,16 +21,22 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;   /* crop simetris: tengah tinggi & tengah lebar */
+  object-position: center;
   display: block;
-  filter: none;              /* MATI: Tidak ada grayscale/contrast */
+  filter: none;
   opacity: 0;
   transform: scale(1.05);
   animation: heroImageReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
+/* ===== EXCEPTION HUB PKP =====
+   Lock crop ke kiri-atas supaya teks Photoshop tidak terpotong. */
+body.page-project.theme-mono .detailHeroImage {
+  object-position: left top;
+}
+
 .detailHeroOverlay {
-  display: none;             /* MATI: Scrim dihapus total */
+  display: none;
 }
 
 .detailHeroTitle {
@@ -373,52 +379,33 @@
   to { transform: translateX(100%); }
 }
 
-/* ================= PAIR GALLERY ================= */
+/* ================= SINGLE IMAGE (section 04 Hub PKP) =================
+   1 gambar full-width media area (940px di 1440, sama seperti slider 01-03),
+   caption di bawah gambar, tanpa slider/rail. */
 
-.detailPair {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+.detailSingle { width: 100%; }
+
+.detailSingleFrame {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e2e2e2;
 }
 
-.detailPairItem {
-  display: flex;
-  flex-direction: column;
-}
-
-.detailPairFrame {
-  position: relative;
-  width: 300px;
-  flex: 0 0 auto;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-}
-
-.detailPairImage {
-  position: absolute;
-  inset: 0;
+.detailSingleImg {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  display: block;
+  object-fit: cover;
   opacity: 0;
   transform: translateY(22px);
 }
 
-.detailPairFrame.is-active .detailPairImage {
-  animation: pairReveal var(--motion-duration) var(--motion-ease) forwards;
+.detailSingleFrame.is-active .detailSingleImg {
+  animation: imageReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
-.detailPairItem:nth-child(2) .detailPairFrame.is-active .detailPairImage {
-  animation-delay: var(--motion-stagger);
-}
-
-@keyframes pairReveal {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.detailPairCaption {
+.detailSingleCaption {
   margin-top: 10px;
   font-family: Arial, sans-serif;
   font-size: 12px;
@@ -447,7 +434,7 @@
 }
 
 .longImageFrame.is-active .longImageImg {
-  animation: pairReveal var(--motion-duration) var(--motion-ease) forwards;
+  animation: imageReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
 .longImageCaption {
@@ -457,6 +444,11 @@
   line-height: 1.5;
   color: var(--color-black);
   opacity: 0.65;
+}
+
+/* Keyframe reveal gambar — dipakai SingleImage + LongImage */
+@keyframes imageReveal {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ================= CLOSING ================= */
@@ -655,15 +647,6 @@
     min-height: 320px;
   }
 
-  .detailPairFrame {
-    width: min(150px, 44%);
-    background: transparent;
-    overflow: visible;
-    border-radius: 0;
-  }
-
-  .detailPair { gap: 16px; }
-
   .detailFigmaSpecTag { gap: 12px; }
 
   .detailFigmaSpecLine { height: 18px; }
@@ -806,7 +789,7 @@ body.page-project.about-open .navWordmark.nav--open .sub {
    ============================================================ */
 
 .detailSliderImage,
-.detailPairImage,
+.detailSingleImg,
 .longImageImg,
 .detailHeroImage {
   image-rendering: -webkit-optimize-contrast;
@@ -815,7 +798,7 @@ body.page-project.about-open .navWordmark.nav--open .sub {
 
 .detailSliderImage.is-current,
 .detailSliderImage.is-outgoing,
-.detailPairFrame.is-active .detailPairImage,
+.detailSingleFrame.is-active .detailSingleImg,
 .longImageFrame.is-active .longImageImg {
   will-change: transform, opacity;
 }

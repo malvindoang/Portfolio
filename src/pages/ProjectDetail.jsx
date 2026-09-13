@@ -10,7 +10,6 @@ import { SECTIONS } from '../data/projects'
 import { useInView } from '../hooks/useInView'
 import './ProjectDetail.css'
 
-// Registrasi plugin ScrollTrigger
 gsap.registerPlugin(ScrollTrigger)
 
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
@@ -22,7 +21,7 @@ function ProjectDetail() {
   const heroRef = useRef(null)
   const heroTitleRef = useRef(null)
   const nextTitleRef = useRef(null)
-  const morphWasUsedRef = useRef(false) // <- TAMBAHAN: track apakah morph sudah dipakai
+  const morphWasUsedRef = useRef(false)
 
   const { isActive } = useContext(PageTransitionContext)
 
@@ -49,7 +48,7 @@ function ProjectDetail() {
     if (!morph) return
     delete window.__MORPH_FROM_SPOTLIGHT__
 
-    morphWasUsedRef.current = true // <- TAMBAHAN: catat bahwa morph dipakai
+    morphWasUsedRef.current = true
 
     const el = heroTitleRef.current
     if (!el) return
@@ -83,8 +82,6 @@ function ProjectDetail() {
   }, [isActive])
 
   // ===== PARALLAX HERO TITLE (FIXED) =====
-  // Start: posisi CSS .detailHeroTitle { top: 6%; } (langsung aktif saat user scroll)
-  // End: setara bottom: 6% (dihitung dinamis, adaptif resize)
   useLayoutEffect(() => {
     if (!isActive) return
 
@@ -92,12 +89,11 @@ function ProjectDetail() {
     const hero = heroRef.current
     if (!el || !hero) return
 
-    // Hitung jarak tempuh: heroHeight - topOffset - bottomOffset - titleHeight
     const getTravelDistance = () => {
       const heroHeight = hero.offsetHeight
       const titleHeight = el.offsetHeight
-      const topOffset = heroHeight * 0.06    // top: 6%
-      const bottomOffset = heroHeight * 0.06 // bottom: 6%
+      const topOffset = heroHeight * 0.06
+      const bottomOffset = heroHeight * 0.06
       return Math.max(0, heroHeight - topOffset - bottomOffset - titleHeight)
     }
 
@@ -109,10 +105,10 @@ function ProjectDetail() {
         overwrite: 'auto',
         scrollTrigger: {
           trigger: document.documentElement,
-          start: 0,                            // Mulai dari scrollY=0 (tidak menunggu hero)
-          end: () => `+=${hero.offsetHeight}`, // Berlangsung sepanjang tinggi hero
+          start: 0,
+          end: () => `+=${hero.offsetHeight}`,
           scrub: 0.75,
-          invalidateOnRefresh: true,           // Hitung ulang saat resize
+          invalidateOnRefresh: true,
         },
       })
       ScrollTrigger.refresh()
@@ -122,15 +118,14 @@ function ProjectDetail() {
     let tween
     let delayedCall
 
-    // Jika morph baru saja jalan, tunda parallax 1.55 detik
-    // (durasi morph = 1.1 + delay 0.35 = 1.45, plus 0.1 buffer)
     if (morphWasUsedRef.current) {
       delayedCall = gsap.delayedCall(1.55, () => {
         tween = setupParallax()
       })
     } else {
-      // Jika tidak ada morph (misal: reload langsung di halaman project),
-      // langsung aktifkan parallax
+      // FIX: matikan CSS animation heroTitleReveal (fill-mode forwards
+      // menahan transform, bikin GSAP tidak bisa kontrol y untuk parallax)
+      gsap.set(el, { animation: 'none', opacity: 1 })
       tween = setupParallax()
     }
 
@@ -158,7 +153,6 @@ function ProjectDetail() {
       const overHero = r ? r.top < 90 && r.bottom > 90 : false
       document.body.classList.toggle('on-hero', overHero)
 
-      // FIX: Jangan toggle wordmark-hidden jika sedang transisi (layout belum settle)
       const inTransition = document.body.classList.contains('pt-active')
       const heroCoversWordmark = !inTransition && r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
@@ -178,7 +172,6 @@ function ProjectDetail() {
 
     update()
 
-    // FIX: Hitung ulang posisi tepat setelah transisi selesai
     const onSettled = () => {
       requestAnimationFrame(() => requestAnimationFrame(update))
     }
@@ -356,9 +349,9 @@ function ProjectSection({ section, index }) {
   const [ref, inView] = useInView()
   const countLabel = String(index + 1).padStart(2, '0')
 
-  const isPair = section.layout === 'pair'
+  const isSingle = section.layout === 'single'
   const isLongImage = section.layout === 'long-image-two-col-text'
-  const isSlider = !isPair && !isLongImage
+  const isSlider = !isSingle && !isLongImage
 
   const descLeft = section.twoColText?.left ?? section.description ?? `DESCRIPTION_LEFT_${index + 1}`
   const descRight = section.twoColText?.right ?? `DESCRIPTION_RIGHT_${index + 1}`
@@ -402,9 +395,9 @@ function ProjectSection({ section, index }) {
               active={inView}
             />
           )}
-          {isPair && (
-            <PairGallery
-              images={section.images}
+          {isSingle && (
+            <SingleImage
+              image={section.image}
               title={section.title}
               aspectRatio={section.aspectRatio}
               active={inView}
@@ -582,17 +575,21 @@ function FlipCounter({ current, total }) {
   )
 }
 
-function PairGallery({ images, title, aspectRatio, active }) {
+/* ===== SINGLE IMAGE (section 04 Hub PKP — 1 gambar, caption di bawah, tanpa slider/rail) ===== */
+function SingleImage({ image, title, aspectRatio, active }) {
   return (
-    <div className="detailPair">
-      {images.map((img, i) => (
-        <div key={img.src} className="detailPairItem">
-          <div className={`detailPairFrame ${active ? 'is-active' : ''}`} style={{ aspectRatio }}>
-            <img className="detailPairImage" src={img.src} alt={img.caption || `${title} — ${i + 1}`} />
-          </div>
-          {img.caption && <p className="detailPairCaption">{img.caption}</p>}
-        </div>
-      ))}
+    <div className="detailSingle">
+      <div
+        className={`detailSingleFrame ${active ? 'is-active' : ''}`}
+        style={aspectRatio ? { aspectRatio } : undefined}
+      >
+        <img
+          className="detailSingleImg"
+          src={image.src}
+          alt={image.caption || title}
+        />
+      </div>
+      {image.caption && <p className="detailSingleCaption">{image.caption}</p>}
     </div>
   )
 }

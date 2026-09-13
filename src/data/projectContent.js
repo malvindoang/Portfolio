@@ -75,12 +75,12 @@ export const PROJECT_CONTENT = {
           right:
             "And it is not only the citizen's side that travels. The splash screen carries the ministry's mark — this is an official service, not a startup experiment — while on the other phone, contractors carry their own pocket office: a project list with live progress, and the same contract and payment steps waiting in the tabs below. Two people, two screens, one project staying in sync from a construction site and from a kitchen table. That was the final test of the whole system: if the web hub was the promise, the mobile app had to be the habit.",
         },
-        images: [
-          { src: '/images/hub-pkp/4a.avif', caption: 'Searching on the go' },
-          { src: '/images/hub-pkp/4b.avif', caption: 'Found — getting to know them' },
-        ],
-        layout: 'pair',
-        aspectRatio: '439 / 891',
+        image: {
+          src: '/images/hub-pkp/4merge.avif',
+          caption: 'One hub, four pockets — official app, citizen search, contractor office',
+        },
+        layout: 'single',
+        aspectRatio: '1856 / 1080',
       },
     ],
     closing:
