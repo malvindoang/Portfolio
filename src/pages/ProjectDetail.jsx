@@ -2,12 +2,16 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback, useContext }
 import { useParams, Navigate, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Corners from '../components/Corners'
 import { PageTransitionContext } from '../components/PageTransitionContext'
 import { PROJECT_CONTENT } from '../data/projectContent'
 import { SECTIONS } from '../data/projects'
 import { useInView } from '../hooks/useInView'
 import './ProjectDetail.css'
+
+// Registrasi plugin ScrollTrigger
+gsap.registerPlugin(ScrollTrigger)
 
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
 
@@ -18,6 +22,7 @@ function ProjectDetail() {
   const heroRef = useRef(null)
   const heroTitleRef = useRef(null)
   const nextTitleRef = useRef(null)
+  const morphWasUsedRef = useRef(false) // <- TAMBAHAN: track apakah morph sudah dipakai
 
   const { isActive } = useContext(PageTransitionContext)
 
@@ -43,6 +48,8 @@ function ProjectDetail() {
     const morph = window.__MORPH_FROM_SPOTLIGHT__
     if (!morph) return
     delete window.__MORPH_FROM_SPOTLIGHT__
+
+    morphWasUsedRef.current = true // <- TAMBAHAN: catat bahwa morph dipakai
 
     const el = heroTitleRef.current
     if (!el) return
@@ -75,6 +82,69 @@ function ProjectDetail() {
     )
   }, [isActive])
 
+  // ===== PARALLAX HERO TITLE (FIXED) =====
+  // Start: posisi CSS .detailHeroTitle { top: 6%; } (langsung aktif saat user scroll)
+  // End: setara bottom: 6% (dihitung dinamis, adaptif resize)
+  useLayoutEffect(() => {
+    if (!isActive) return
+
+    const el = heroTitleRef.current
+    const hero = heroRef.current
+    if (!el || !hero) return
+
+    // Hitung jarak tempuh: heroHeight - topOffset - bottomOffset - titleHeight
+    const getTravelDistance = () => {
+      const heroHeight = hero.offsetHeight
+      const titleHeight = el.offsetHeight
+      const topOffset = heroHeight * 0.06    // top: 6%
+      const bottomOffset = heroHeight * 0.06 // bottom: 6%
+      return Math.max(0, heroHeight - topOffset - bottomOffset - titleHeight)
+    }
+
+    const setupParallax = () => {
+      gsap.set(el, { y: 0 })
+      const tween = gsap.to(el, {
+        y: () => getTravelDistance(),
+        ease: 'none',
+        overwrite: 'auto',
+        scrollTrigger: {
+          trigger: document.documentElement,
+          start: 0,                            // Mulai dari scrollY=0 (tidak menunggu hero)
+          end: () => `+=${hero.offsetHeight}`, // Berlangsung sepanjang tinggi hero
+          scrub: 0.75,
+          invalidateOnRefresh: true,           // Hitung ulang saat resize
+        },
+      })
+      ScrollTrigger.refresh()
+      return tween
+    }
+
+    let tween
+    let delayedCall
+
+    // Jika morph baru saja jalan, tunda parallax 1.55 detik
+    // (durasi morph = 1.1 + delay 0.35 = 1.45, plus 0.1 buffer)
+    if (morphWasUsedRef.current) {
+      delayedCall = gsap.delayedCall(1.55, () => {
+        tween = setupParallax()
+      })
+    } else {
+      // Jika tidak ada morph (misal: reload langsung di halaman project),
+      // langsung aktifkan parallax
+      tween = setupParallax()
+    }
+
+    const handleResize = () => ScrollTrigger.refresh()
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      delayedCall?.kill()
+      tween?.scrollTrigger?.kill()
+      tween?.kill()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [isActive, slug])
+
   const [introRef, introInView] = useInView()
   const [closingRef, closingInView] = useInView()
 
@@ -88,8 +158,7 @@ function ProjectDetail() {
       const overHero = r ? r.top < 90 && r.bottom > 90 : false
       document.body.classList.toggle('on-hero', overHero)
 
-      // FIX: jangan toggle wordmark-hidden selama transisi (layout belum
-      // settle → rect salah → class tersangkut). Hitung ulang saat settle.
+      // FIX: Jangan toggle wordmark-hidden jika sedang transisi (layout belum settle)
       const inTransition = document.body.classList.contains('pt-active')
       const heroCoversWordmark = !inTransition && r ? r.bottom > vh - 118 : false
       document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
@@ -109,7 +178,7 @@ function ProjectDetail() {
 
     update()
 
-    // Hitung ulang setelah transisi selesai (layout sudah flow normal)
+    // FIX: Hitung ulang posisi tepat setelah transisi selesai
     const onSettled = () => {
       requestAnimationFrame(() => requestAnimationFrame(update))
     }

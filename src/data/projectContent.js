@@ -8,7 +8,7 @@ export const PROJECT_CONTENT = {
     team: '11 people',
     figma: true,
     figmaUrl: '',
-    hero: '/images/hub-pkp/landing-page.avif',
+    hero: '/images/hub-pkp/hero-hubpkp.avif',
     intro:
       "In Indonesia, more than 8 out of 10 homes are built by the people themselves — often without professional guidance, transparent pricing, or anyone to hold accountable. HUB Layanan Rumah Swadaya Layak Huni is the Ministry of Housing and Settlement Areas (PKP)'s digital answer to that reality.",
     approach:

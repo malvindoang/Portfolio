@@ -10,8 +10,9 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  height: 50vh;
+  height: 28vw;              /* responsif berbasis LEBAR (pola vanholtz) */
   min-height: 360px;
+  max-height: 70vh;          /* pagar atas */
   overflow: hidden;
   margin-bottom: calc(51px + 5vh);
 }
@@ -20,28 +21,23 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top;
+  object-position: center;   /* crop simetris: tengah tinggi & tengah lebar */
   display: block;
-  filter: grayscale(1) contrast(1.1);
+  filter: none;              /* MATI: Tidak ada grayscale/contrast */
   opacity: 0;
   transform: scale(1.05);
   animation: heroImageReveal var(--motion-duration) var(--motion-ease) forwards;
 }
 
 .detailHeroOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(135deg, var(--color-bg), #000 85%);
-  mix-blend-mode: multiply;
-  opacity: 0.75;
+  display: none;             /* MATI: Scrim dihapus total */
 }
 
 .detailHeroTitle {
   position: absolute;
   z-index: 2;
   right: 4vw;
-  bottom: 6%;
+  top: 6%;
   font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
   font-weight: 900;
   font-size: clamp(3.5rem, 9vw, 9rem);
@@ -243,12 +239,7 @@
   100% { transform: rotateX(0deg); opacity: 1; }
 }
 
-/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE =====
-   Animasi 2D ringan: fade + slide vertikal 8px (bukan full -100%).
-   Durasi 0.2s, easing cubic-bezier(0.22,1,0.36,1) (easeOutExpo)
-   = cepat di awal, lembut di akhir.
-   GPU-friendly: hanya composite layer, tanpa re-rasterize glyph.
-   will-change + backface-visibility untuk hint compositor. */
+/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE ===== */
 .detailSliderCaptionWrap {
   display: block;
 }
@@ -660,7 +651,7 @@
   }
 
   .detailHero {
-    height: 60vh;
+    height: 70vw;
     min-height: 320px;
   }
 
@@ -686,9 +677,6 @@
 
 body.page-project { background: #F2F2F2; }
 body.page-project .detailHero { background: #1e1e1e; }
-
-body.page-project .detailHeroImage,
-body.page-project .detailHeroOverlay { display: none; }
 
 body.page-project .corner,
 body.page-project .navWordmark,
