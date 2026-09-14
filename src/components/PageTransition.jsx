@@ -17,6 +17,12 @@ const COVER_DURATION = 0.35
 const HOLD_COVER = 0.12
 const TR_OUT = 0.12
 
+// ===== BARU: durasi exit phase (project→home saja) =====
+// Corner meluncur keluar (1.32s) + jeda kosong (~0.28s) sebelum cover
+// warna merah mulai fade-in. Total 1.6s memberi panggung kosong yang
+// terbaca mata sebelum beat warna masuk.
+const EXIT_DURATION = 1.6
+
 function PageTransition({ children }) {
   const location = useLocation()
   const [displayLoc, setDisplayLoc] = useState(location)
@@ -40,6 +46,7 @@ function PageTransition({ children }) {
     runningRef.current = true
 
     const toProject = location.pathname !== '/'
+    const fromProject = displayLoc.pathname !== '/'
     const targetColor = toProject ? COLOR_PROJECT : COLOR_HOME
     const curtain = curtainRef.current
     const viewport = viewportRef.current
@@ -51,7 +58,7 @@ function PageTransition({ children }) {
     const finish = () => {
       gsap.set(viewport, { clearProps: 'opacity' })
       gsap.set(curtain, { opacity: 0 })
-      document.body.classList.remove('pt-active', 'overflowHidden', 'pt-tr-hidden')
+      document.body.classList.remove('pt-active', 'overflowHidden', 'pt-tr-hidden', 'pt-exit-active')
       runningRef.current = false
       if (safetyRef.current) clearTimeout(safetyRef.current)
       window.dispatchEvent(new Event('pt-settled'))
@@ -60,6 +67,23 @@ function PageTransition({ children }) {
     const tl = gsap.timeline({ onComplete: finish })
     tlRef.current = tl
 
+    // ===== BARU: EXIT PHASE (hanya project→home) =====
+    // Corner akan meluncur keluar via listener `pt-exit-start` di Corners.jsx.
+    // Home→Project tidak pakai ini karena Home.jsx sudah handle spiral exit.
+    const coverStart = fromProject ? EXIT_DURATION : 0
+
+    if (fromProject) {
+      tl.call(
+        () => {
+          document.body.classList.add('pt-exit-active')
+          window.dispatchEvent(new Event('pt-exit-start'))
+        },
+        null,
+        0
+      )
+      tl.to({}, { duration: EXIT_DURATION }, 0)
+    }
+
     // ===== COVER: konten lama meluruh DI ATAS warna baru yang masuk =====
     tl.call(
       () => {
@@ -67,12 +91,12 @@ function PageTransition({ children }) {
         window.dispatchEvent(new Event('pt-cover-start'))
       },
       null,
-      0
+      coverStart
     )
-    tl.to(curtain, { opacity: 1, duration: COVER_DURATION, ease: EASE_NAME }, 0)
-    tl.to(viewport, { opacity: 0, duration: COVER_DURATION, ease: EASE_NAME }, 0)
-    tl.set(curtain, { opacity: 1 }, COVER_DURATION)
-    tl.set(viewport, { opacity: 0 }, COVER_DURATION)
+    tl.to(curtain, { opacity: 1, duration: COVER_DURATION, ease: EASE_NAME }, coverStart)
+    tl.to(viewport, { opacity: 0, duration: COVER_DURATION, ease: EASE_NAME }, coverStart)
+    tl.set(curtain, { opacity: 1 }, coverStart + COVER_DURATION)
+    tl.set(viewport, { opacity: 0 }, coverStart + COVER_DURATION)
 
     // Fade-out grup chrome yang akan berganti konten
     tl.call(
@@ -80,7 +104,7 @@ function PageTransition({ children }) {
         document.body.classList.add('pt-tr-hidden')
       },
       null,
-      COVER_DURATION - TR_OUT
+      coverStart + COVER_DURATION - TR_OUT
     )
 
     // ===== SWAP: mount konten baru di balik beat warna (sudah opacity 0) =====
@@ -93,7 +117,7 @@ function PageTransition({ children }) {
         window.dispatchEvent(new Event('pt-bg-set'))
       },
       null,
-      COVER_DURATION + 0.02
+      coverStart + COVER_DURATION + 0.02
     )
 
     // ===== REVEAL: CUT, bukan fade =====
@@ -101,18 +125,18 @@ function PageTransition({ children }) {
     // sehingga "konten sudah ada saat warna putih muncul" — tanpa fade-in.
     tl.call(
       () => {
-        document.body.classList.remove('pt-tr-hidden')
+        document.body.classList.remove('pt-tr-hidden', 'pt-exit-active')
         window.dispatchEvent(new Event('pt-reveal-start'))
       },
       null,
-      COVER_DURATION + HOLD_COVER
+      coverStart + COVER_DURATION + HOLD_COVER
     )
-    tl.set(viewport, { opacity: 1 }, COVER_DURATION + HOLD_COVER)
-    tl.set(curtain, { opacity: 0 }, COVER_DURATION + HOLD_COVER)
+    tl.set(viewport, { opacity: 1 }, coverStart + COVER_DURATION + HOLD_COVER)
+    tl.set(curtain, { opacity: 0 }, coverStart + COVER_DURATION + HOLD_COVER)
 
     safetyRef.current = setTimeout(
       finish,
-      (COVER_DURATION + HOLD_COVER + 1) * 1000
+      (coverStart + COVER_DURATION + HOLD_COVER + 1) * 1000
     )
   }, [location, displayLoc])
 

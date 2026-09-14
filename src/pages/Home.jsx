@@ -449,6 +449,9 @@ function Home() {
 
       isPushingRef.current = true
 
+      // ===== BARU: trigger corner meluncur keluar (bareng label fade) =====
+      window.dispatchEvent(new Event('pt-exit-start'))
+
       const mapping = lineToProjectIndexRef.current
       const otherRows = projectRowRefs.current.filter(
         (row, i) => row && mapping[i] !== projectIndex

@@ -19,14 +19,25 @@ const DIRECTIONAL_BASE_PROJECT = 0.3
 const directionalDelay = (index, isHome) =>
   (isHome ? DIRECTIONAL_BASE_HOME : DIRECTIONAL_BASE_PROJECT) + index * 0.1
 
-const CORNERS_INTRO_MS_HOME = 3500
-const CORNERS_INTRO_MS_PROJECT = 1300
+// ===== EXIT (mirror entrance, MURNI meluncur tanpa fade) =====
+const EXIT_SLIDE_DURATION = 0.6
+const EXIT_SLIDE_EASE = 'ease'
+const EXIT_STAGGER = 0.18
+const EXIT_DELAY_BR = 0
+const EXIT_DELAY_TR = EXIT_STAGGER
+const EXIT_DELAY_WORKS = EXIT_STAGGER * 2
+const EXIT_DELAY_ABOUT = EXIT_STAGGER * 3
+const EXIT_DELAY_WORDMARK = EXIT_STAGGER * 4
 
-function CornerIconRows({ spacerCount, icon, onClick, ariaLabel, cornersIntro, isHome }) {
+function CornerIconRows({ spacerCount, icon, onClick, ariaLabel, introOn, isHome, leaving }) {
   const boxClass =
     icon === 'back' ? 'cornerIconBox cornerIconBox--x' : 'cornerIconBox cornerIconBox--y'
 
-  const rowStyle = cornersIntro
+  const rowStyle = leaving
+    ? {
+        animation: `cornerExitRight ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${EXIT_DELAY_TR}s forwards`,
+      }
+    : introOn
     ? {
         animation: 'cornerFromRight 0.6s ease backwards',
         animationDelay: `${directionalDelay(spacerCount, isHome)}s`,
@@ -66,7 +77,7 @@ function CornerIconRows({ spacerCount, icon, onClick, ariaLabel, cornersIntro, i
   )
 }
 
-function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) {
+function Corners({ sectionNav, onGridWidth, onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [bodyLeft, setBodyLeft] = useState(220)
   const wordmarkRef = useRef(null)
@@ -74,34 +85,60 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
   const location = useLocation()
   const navigate = useNavigate()
 
-  // FIX: ikuti route yang SEDANG dirender PageTransition (displayLoc),
-  // bukan pathname router yang berubah lebih dulu. Ini menghentikan
-  // pergeseran posisi 01/02/03 & about di tengah transisi.
   const { routePath } = useContext(PageTransitionContext)
   const isHome = (routePath ?? location.pathname) === '/'
 
-  const [playIntroSelf] = useState(() => !window.__INTRO_DONE__)
-  const playIntro = typeof playIntroProp === 'boolean' ? playIntroProp : playIntroSelf
+  // ===== SINGLE TRIGGER: entranceKey =====
+  // Dimulai dari 1 supaya fresh mount langsung ada animation (tidak ada
+  // flash posisi final). Increment setiap pt-reveal-start untuk replay
+  // animation setelah navigate.
+  const [leaving, setLeaving] = useState(false)
+  const [entranceKey, setEntranceKey] = useState(() => 1)
+
+  // Satu-satunya trigger entrance. Tidak ada dual-trigger (playIntro/cornersIntro)
+  // yang bisa flip true/false dan menyebabkan flash posisi final.
+  const introOn = entranceKey > 0
 
   useEffect(() => {
-    if (!playIntro) return undefined
-    const t = setTimeout(() => {
-      window.__INTRO_DONE__ = true
-    }, 0)
-    return () => clearTimeout(t)
-  }, [playIntro])
-
-  const [cornersIntro, setCornersIntro] = useState(true)
-  useEffect(() => {
-    const ms = isHome ? CORNERS_INTRO_MS_HOME : CORNERS_INTRO_MS_PROJECT
-    const t = setTimeout(() => setCornersIntro(false), ms)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const onExitStart = () => setLeaving(true)
+    const onRevealStart = () => {
+      setEntranceKey((k) => k + 1)
+      setLeaving(false)
+    }
+    window.addEventListener('pt-exit-start', onExitStart)
+    window.addEventListener('pt-reveal-start', onRevealStart)
+    return () => {
+      window.removeEventListener('pt-exit-start', onExitStart)
+      window.removeEventListener('pt-reveal-start', onRevealStart)
+    }
   }, [])
 
-  const introOn = playIntro && cornersIntro
-
   const wordmarkDelays = isHome ? WORDMARK_DELAYS_HOME : WORDMARK_DELAYS_PROJECT
+
+  const entranceLeft = (d) => ({
+    animation: 'cornerFromLeft 0.6s ease backwards',
+    animationDelay: `${d}s`,
+  })
+  const entranceRight = (d) => ({
+    animation: 'cornerFromRight 0.6s ease backwards',
+    animationDelay: `${d}s`,
+  })
+  const exitLeft = (d) => ({
+    animation: `cornerExitLeft ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${d}s forwards`,
+  })
+  const exitRight = (d) => ({
+    animation: `cornerExitRight ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${d}s forwards`,
+  })
+  const cornerStyle = (dir, entranceDelay, exitDelay) =>
+    leaving
+      ? dir === 'left'
+        ? exitLeft(exitDelay)
+        : exitRight(exitDelay)
+      : introOn
+      ? dir === 'left'
+        ? entranceLeft(entranceDelay)
+        : entranceRight(entranceDelay)
+      : undefined
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -147,8 +184,10 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
   return createPortal(
     <>
       <div
+        key={`wm-${entranceKey}`}
         ref={wordmarkRef}
         className={`navWordmark ${aboutOpen ? 'nav--open' : 'nav--closed'}`}
+        style={cornerStyle('left', 0, EXIT_DELAY_WORDMARK)}
       >
         <Link to="/" className="wordmarkLink" onClick={handleWordmarkClick}>
           <div className="wordmark">
@@ -156,7 +195,7 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
               <div
                 className="maskInner"
                 style={
-                  playIntro
+                  introOn
                     ? { animationDelay: `${wordmarkDelays[0]}s` }
                     : { animation: 'none' }
                 }
@@ -171,7 +210,7 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
             <div
               className="maskInner"
               style={
-                playIntro
+                introOn
                   ? { animationDelay: `${wordmarkDelays[1]}s` }
                   : { animation: 'none' }
               }
@@ -183,7 +222,7 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
             <div
               className="maskInner"
               style={
-                playIntro
+                introOn
                   ? { animationDelay: `${wordmarkDelays[2]}s` }
                   : { animation: 'none' }
               }
@@ -195,19 +234,13 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
       </div>
 
       <div
+        key={`nl-${entranceKey}`}
         ref={navLinksRef}
         className={`navLinks ${aboutOpen ? 'nav--open' : 'nav--closed'}`}
       >
         <div
           className="row"
-          style={
-            playIntro
-              ? {
-                  animation: 'cornerFromLeft 0.6s ease backwards',
-                  animationDelay: `${directionalDelay(0, isHome)}s`,
-                }
-              : undefined
-          }
+          style={cornerStyle('left', directionalDelay(0, isHome), EXIT_DELAY_ABOUT)}
         >
           <span className="label aboutTrigger" onClick={() => setAboutOpen((v) => !v)}>
             about
@@ -216,14 +249,7 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
         </div>
         <div
           className="row"
-          style={
-            playIntro
-              ? {
-                  animation: 'cornerFromLeft 0.6s ease backwards',
-                  animationDelay: `${directionalDelay(1, isHome)}s`,
-                }
-              : undefined
-          }
+          style={cornerStyle('left', directionalDelay(1, isHome), EXIT_DELAY_WORKS)}
         >
           <span className="label worksTrigger" onClick={handleWorksClick}>
             work(s)
@@ -239,22 +265,16 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
             icon="close"
             ariaLabel="Close about"
             onClick={() => setAboutOpen(false)}
-            cornersIntro={introOn}
+            introOn={introOn}
             isHome={isHome}
+            leaving={leaving}
           />
         ) : sectionNav ? (
           sectionNav.map((s, i) => (
             <div
               className="row"
-              key={s.label}
-              style={
-                introOn
-                  ? {
-                      animation: 'cornerFromRight 0.6s ease backwards',
-                      animationDelay: `${directionalDelay(i, isHome)}s`,
-                    }
-                  : undefined
-              }
+              key={`${s.label}-${entranceKey}`}
+              style={cornerStyle('right', directionalDelay(i, isHome), EXIT_DELAY_TR)}
             >
               <span className="num">{String(i + 1).padStart(2, '0')}</span>
               <span
@@ -273,23 +293,18 @@ function Corners({ sectionNav, onGridWidth, onBack, playIntro: playIntroProp }) 
             icon="back"
             ariaLabel="Back to home"
             onClick={handleBackClick}
-            cornersIntro={introOn}
+            introOn={introOn}
             isHome={isHome}
+            leaving={leaving}
           />
         ) : null}
       </div>
 
       {!aboutOpen && (
         <div
+          key={`br-${entranceKey}`}
           className="corner br"
-          style={
-            introOn
-              ? {
-                  animation: 'cornerFromRight 0.6s ease backwards',
-                  animationDelay: `${directionalDelay(3, isHome)}s`,
-                }
-              : undefined
-          }
+          style={cornerStyle('right', directionalDelay(3, isHome), EXIT_DELAY_BR)}
         >
           <div className="sub">
             Jakarta, Indonesia<br />

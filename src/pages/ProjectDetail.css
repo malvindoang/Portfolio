@@ -126,6 +126,14 @@ body:not(.hero-settled) .reveal.inView {
   font-family: Arial, sans-serif;
   font-size: 15px;
   line-height: 1.7;
+}
+
+/* ← FIX ROOT CAUSE FLICKER: opacity istirahat DIPINDAH ke state .inView.
+   Sebelumnya `opacity: 0.85` di sini mengalahkan `.reveal { opacity: 0 }`
+   (specificity sama, aturan ini lebih akhir) sehingga paragraf TERLIHAT
+   0.85 selama window antara reveal dan observer/gate engage = kedip.
+   Sekarang state dasar .reveal (hidden) tidak punya kompetitor. */
+.editorialIntroBody.inView {
   opacity: 0.85;
 }
 
@@ -290,6 +298,12 @@ body:not(.hero-settled) .reveal.inView {
   font-size: 13px;
   line-height: 1.6;
   color: var(--color-black);
+}
+
+/* ← FIX LATEN YANG IDENTIK: .railNote juga elemen .reveal yang punya
+   opacity sendiri; dipindah ke state .inView supaya tidak bisa
+   menghasilkan kedip yang sama di kemudian hari. */
+.railNote.inView {
   opacity: 0.6;
 }
 
@@ -820,4 +834,11 @@ body.page-project.about-open .navWordmark.nav--open .sub {
 
 .detailSliderFrame {
   contain: layout style paint;
+}
+
+/* ===== EXIT PHASE: konten fade + drift (project→home) ===== */
+body.pt-exit-active .detail {
+  opacity: 0;
+  transform: translateY(-15px);
+  transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
 }

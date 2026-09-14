@@ -54,6 +54,31 @@
   }
 }
 
+/* ===== BARU: EXIT LAYER — mirror entrance, MURNI meluncur tanpa fade =====
+   Jarak 260px supaya elemen benar-benar hilang di balik tepi layar.
+   opacity: 1 di seluruh keyframe (tidak pernah fade).
+   Durasi & easing (0.6s ease) sama persis dengan entrance. */
+@keyframes cornerExitLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-260px);
+  }
+}
+@keyframes cornerExitRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(260px);
+  }
+}
+
 /* WORDMARK FINAL cross-browser — TIDAK disentuh */
 .wordmark {
   font-family: 'Arial Black', sans-serif;
