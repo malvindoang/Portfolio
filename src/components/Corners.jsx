@@ -88,21 +88,23 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
   const { routePath } = useContext(PageTransitionContext)
   const isHome = (routePath ?? location.pathname) === '/'
 
-  // ===== SINGLE TRIGGER: entranceKey =====
-  // Dimulai dari 1 supaya fresh mount langsung ada animation (tidak ada
-  // flash posisi final). Increment setiap pt-reveal-start untuk replay
-  // animation setelah navigate.
   const [leaving, setLeaving] = useState(false)
   const [entranceKey, setEntranceKey] = useState(() => 1)
+  const prevRoutePathRef = useRef(routePath)
 
-  // Satu-satunya trigger entrance. Tidak ada dual-trigger (playIntro/cornersIntro)
-  // yang bisa flip true/false dan menyebabkan flash posisi final.
   const introOn = entranceKey > 0
+
+  // Track route change untuk trigger entranceKey
+  useEffect(() => {
+    if (prevRoutePathRef.current !== routePath) {
+      setEntranceKey((k) => k + 1)
+      prevRoutePathRef.current = routePath
+    }
+  }, [routePath])
 
   useEffect(() => {
     const onExitStart = () => setLeaving(true)
     const onRevealStart = () => {
-      setEntranceKey((k) => k + 1)
       setLeaving(false)
     }
     window.addEventListener('pt-exit-start', onExitStart)
