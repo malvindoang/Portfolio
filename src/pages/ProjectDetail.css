@@ -17,6 +17,8 @@
   margin-bottom: calc(51px + 5vh);
 }
 
+/* Gambar STATIS di posisi final — tidak pernah bergerak.
+   Reveal dikerjakan curtain di atasnya (pola vanholtz). */
 .detailHeroImage {
   width: 100%;
   height: 100%;
@@ -24,9 +26,25 @@
   object-position: center;
   display: block;
   filter: none;
-  opacity: 0;
-  transform: scale(1.05);
-  animation: heroImageReveal var(--motion-duration) var(--motion-ease) forwards;
+  opacity: 1;
+  transform: none;
+}
+
+/* ===== CURTAIN REVEAL (POLA VANHOLTZ ::after) =====
+   Panel sewarna page (#F2F2F2) menutup penuh hero (scaleY 1).
+   GSAP animasikan scaleY 1→0 dengan origin TOP → curtain mengkerut
+   ke atas → gambar terbuka dari BAWAH ke ATAS, gambar diam.
+   Sebelum reveal: area hero = warna page = seamless, tidak ada
+   kotak abu-abu / band gelap yang bocor. */
+.detailHeroCurtain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #F2F2F2;
+  transform: scaleY(1);
+  transform-origin: center top;
+  will-change: transform;
+  pointer-events: none;
 }
 
 /* ===== EXCEPTION HUB PKP =====
@@ -39,6 +57,8 @@ body.page-project.theme-mono .detailHeroImage {
   display: none;
 }
 
+/* Title: opacity 0 statis — fade + rise dijalankan GSAP.
+   z-index 2 = di atas curtain (z 1). */
 .detailHeroTitle {
   position: absolute;
   z-index: 2;
@@ -55,21 +75,12 @@ body.page-project.theme-mono .detailHeroImage {
   color: transparent;
   -webkit-text-stroke: 2px var(--color-white);
   opacity: 0;
-  animation: heroTitleReveal var(--motion-duration) var(--motion-ease) forwards;
-  animation-delay: calc(var(--motion-duration) * 0.4);
+  transform: translateY(0);
+  will-change: transform, opacity;
 }
 
 .detailHeroTitleLine { display: block; }
 .detailHeroTitleLine--top { padding-right: 0.35em; }
-
-@keyframes heroImageReveal {
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes heroTitleReveal {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 /* ================= REVEAL ON SCROLL ================= */
 
@@ -245,7 +256,6 @@ body.page-project.theme-mono .detailHeroImage {
   100% { transform: rotateX(0deg); opacity: 1; }
 }
 
-/* ===== CAPTION SLIDER — ULTRA-LIGHT FADE-SLIDE ===== */
 .detailSliderCaptionWrap {
   display: block;
 }
@@ -379,9 +389,7 @@ body.page-project.theme-mono .detailHeroImage {
   to { transform: translateX(100%); }
 }
 
-/* ================= SINGLE IMAGE (section 04 Hub PKP) =================
-   1 gambar full-width media area (940px di 1440, sama seperti slider 01-03),
-   caption di bawah gambar, tanpa slider/rail. */
+/* ================= SINGLE IMAGE (section 04 Hub PKP) ================= */
 
 .detailSingle { width: 100%; }
 
@@ -446,7 +454,6 @@ body.page-project.theme-mono .detailHeroImage {
   opacity: 0.65;
 }
 
-/* Keyframe reveal gambar — dipakai SingleImage + LongImage */
 @keyframes imageReveal {
   to { opacity: 1; transform: translateY(0); }
 }
@@ -773,6 +780,7 @@ body.page-project.about-open .navWordmark.nav--open .sub {
 }
 
 body.page-project.about-open .navLinks.nav--open .label { color: var(--color-black); }
+
 body.page-project.about-open .navLinks.nav--open .activeDash { background: var(--color-black); }
 
 body.page-project.about-open .corner.tr .cornerIconBtn { color: var(--color-black); }

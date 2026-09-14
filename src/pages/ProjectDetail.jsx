@@ -14,14 +14,40 @@ gsap.registerPlugin(ScrollTrigger)
 
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
 
+// ===== HERO ENTRANCE (POLA VANHOLTZ: CURTAIN REVEAL) =====
+const HERO_CURTAIN_START_DELAY = 1.4
+const HERO_CURTAIN_DURATION = 0.9
+const HERO_TITLE_START_DELAY = 1.6
+const HERO_TITLE_FADE_DURATION = 1.0
+// TUNING: rise diselaraskan dengan rasa parallax scrub 5.
+// power1.out = decelerasi gradual (smooth), tidak berhenti tajam.
+// 3.5s = waktu rise mirip dengan "catch-up time" parallax saat scroll.
+const HERO_TITLE_RISE_DURATION = 3.5
+const HERO_TITLE_RISE_PX = 160
+const HERO_DECODE_CAP_MS = 2500
+const HERO_FALLBACK_MS = 300
+
+// ===== HERO PARALLAX (tuning rasa glide) =====
+// scrub: seberapa "berat" judul mengejar posisi target saat scroll.
+//   0   = instan (kaku, native browser feel)
+//   0.75= halus standar
+//   1.5 = melayang terasa
+//   2.0 = melayang terasa
+//   5.0 = sangat melayang (pilihan Anda — rasa paling premium)
+//   >5.0 = mulai terasa lag berlebihan (hindari)
+const HERO_PARALLAX_SCRUB = 5
+
 function ProjectDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const content = PROJECT_CONTENT[slug]
   const heroRef = useRef(null)
   const heroTitleRef = useRef(null)
+  const curtainRef = useRef(null)
   const nextTitleRef = useRef(null)
-  const morphWasUsedRef = useRef(false)
+
+  const motionStateRef = useRef({ entrance: 0, scroll: 0 })
+  const scrollTweenRef = useRef(null)
 
   const { isActive } = useContext(PageTransitionContext)
 
@@ -41,102 +67,160 @@ function ProjectDetail() {
     }
   }, [projectTheme, isActive])
 
-  // ===== MORPH C: spotlight (Home) → hero title (Project) =====
-  useLayoutEffect(() => {
-    if (!isActive) return
-    const morph = window.__MORPH_FROM_SPOTLIGHT__
-    if (!morph) return
-    delete window.__MORPH_FROM_SPOTLIGHT__
-
-    morphWasUsedRef.current = true
-
-    const el = heroTitleRef.current
-    if (!el) return
-
-    window.scrollTo(0, 0)
-
-    const rect = el.getBoundingClientRect()
-    const finalCX = rect.left + rect.width / 2
-    const finalCY = rect.top + rect.height / 2
-    const startCX = window.innerWidth / 2
-    const startCY = window.innerHeight / 2
-    const heroFontSize = parseFloat(getComputedStyle(el).fontSize) || 1
-    const spotFontSize = morph.fontSize || heroFontSize
-    const startScale = Math.min(Math.max(spotFontSize / heroFontSize, 0.6), 1.6)
-
-    gsap.set(el, { animation: 'none', opacity: 0 })
-    gsap.fromTo(
-      el,
-      { x: startCX - finalCX, y: startCY - finalCY, scale: startScale, opacity: 0 },
-      {
-        x: 0,
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        duration: 1.1,
-        ease: 'power3.inOut',
-        delay: 0.35,
-        onComplete: () => gsap.set(el, { clearProps: 'transform' }),
-      }
-    )
-  }, [isActive])
-
-  // ===== PARALLAX HERO TITLE (FIXED) =====
+  // ===== HERO: CURTAIN REVEAL + TITLE FADE/RISE + PARALLAX =====
   useLayoutEffect(() => {
     if (!isActive) return
 
-    const el = heroTitleRef.current
-    const hero = heroRef.current
-    if (!el || !hero) return
+    const titleEl = heroTitleRef.current
+    const heroEl = heroRef.current
+    const curtainEl = curtainRef.current
+    const imageEl = heroEl?.querySelector('.detailHeroImage')
+    if (!titleEl || !heroEl) return
 
+    // ===== UKUR JARAK HERO KE ATAS VIEWPORT (di scroll = 0) =====
+    const heroInitialTop = heroEl.getBoundingClientRect().top
+
+    const motionState = motionStateRef.current
+    const applyY = () => {
+      gsap.set(titleEl, { y: motionState.entrance + motionState.scroll })
+    }
+
+    const kids = []
+
+    // ===== RESET: tertutup & hidden =====
+    motionState.entrance = HERO_TITLE_RISE_PX
+    motionState.scroll = 0
+    gsap.set(titleEl, { opacity: 0 })
+    applyY()
+    if (curtainEl) gsap.set(curtainEl, { scaleY: 1 })
+
+    // ===== GATE DECODE =====
+    let decoded = !imageEl || imageEl.complete === true
+    let decodeWait = null
+    if (imageEl && !decoded) {
+      decodeWait = Promise.race([
+        imageEl.decode().catch(() => {}),
+        new Promise((res) => setTimeout(res, HERO_DECODE_CAP_MS)),
+      ]).then(() => {
+        decoded = true
+      })
+    }
+
+    const openCurtain = () => {
+      if (!curtainEl) return
+      kids.push(
+        gsap.to(curtainEl, {
+          scaleY: 0,
+          duration: HERO_CURTAIN_DURATION,
+          ease: 'power3.in',
+        })
+      )
+    }
+
+    const wasTransitioning = document.body.classList.contains('pt-active')
+
+    let fallbackTimeout = null
+    let raf1 = null
+    let raf2 = null
+    let entranceStarted = false
+
+    const startEntrance = () => {
+      if (entranceStarted) return
+      entranceStarted = true
+      if (fallbackTimeout) clearTimeout(fallbackTimeout)
+      window.removeEventListener('pt-reveal-start', onReveal)
+      window.removeEventListener('pt-settled', onSettled)
+
+      kids.push(
+        gsap.delayedCall(HERO_CURTAIN_START_DELAY, () => {
+          if (decoded) {
+            openCurtain()
+          } else if (decodeWait) {
+            decodeWait.then(openCurtain)
+          } else {
+            openCurtain()
+          }
+        })
+      )
+
+      kids.push(
+        gsap.delayedCall(HERO_TITLE_START_DELAY, () => {
+          kids.push(
+            gsap.to(titleEl, {
+              opacity: 1,
+              duration: HERO_TITLE_FADE_DURATION,
+              ease: 'power1.inOut',
+            })
+          )
+          kids.push(
+            gsap.to(motionState, {
+              entrance: 0,
+              duration: HERO_TITLE_RISE_DURATION,
+              ease: 'power1.out',
+              onUpdate: applyY,
+            })
+          )
+        })
+      )
+    }
+
+    const onReveal = () => startEntrance()
+    const onSettled = () => startEntrance()
+
+    if (wasTransitioning) {
+      window.addEventListener('pt-reveal-start', onReveal, { once: true })
+      window.addEventListener('pt-settled', onSettled, { once: true })
+      fallbackTimeout = setTimeout(startEntrance, HERO_FALLBACK_MS)
+    } else {
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(startEntrance)
+      })
+    }
+
+    // ===== PARALLAX (glide + mentok off-screen) =====
     const getTravelDistance = () => {
-      const heroHeight = hero.offsetHeight
-      const titleHeight = el.offsetHeight
+      const heroHeight = heroEl.offsetHeight
+      const titleHeight = titleEl.offsetHeight
       const topOffset = heroHeight * 0.06
       const bottomOffset = heroHeight * 0.06
       return Math.max(0, heroHeight - topOffset - bottomOffset - titleHeight)
     }
 
-    const setupParallax = () => {
-      gsap.set(el, { y: 0 })
-      const tween = gsap.to(el, {
-        y: () => getTravelDistance(),
-        ease: 'none',
-        overwrite: 'auto',
-        scrollTrigger: {
-          trigger: document.documentElement,
-          start: 0,
-          end: () => `+=${hero.offsetHeight}`,
-          scrub: 0.75,
-          invalidateOnRefresh: true,
-        },
-      })
-      ScrollTrigger.refresh()
-      return tween
-    }
-
-    let tween
-    let delayedCall
-
-    if (morphWasUsedRef.current) {
-      delayedCall = gsap.delayedCall(1.55, () => {
-        tween = setupParallax()
-      })
-    } else {
-      // FIX: matikan CSS animation heroTitleReveal (fill-mode forwards
-      // menahan transform, bikin GSAP tidak bisa kontrol y untuk parallax)
-      gsap.set(el, { animation: 'none', opacity: 1 })
-      tween = setupParallax()
-    }
+    const scrollTween = gsap.to(motionState, {
+      scroll: () => getTravelDistance(),
+      ease: 'none',
+      overwrite: false,
+      onUpdate: applyY,
+      scrollTrigger: {
+        trigger: document.documentElement,
+        start: 0,
+        end: () => `+=${heroEl.offsetHeight + heroInitialTop}`,
+        scrub: HERO_PARALLAX_SCRUB,
+        invalidateOnRefresh: true,
+      },
+    })
+    scrollTweenRef.current = scrollTween
+    ScrollTrigger.refresh()
 
     const handleResize = () => ScrollTrigger.refresh()
     window.addEventListener('resize', handleResize)
 
     return () => {
-      delayedCall?.kill()
-      tween?.scrollTrigger?.kill()
-      tween?.kill()
+      window.removeEventListener('pt-reveal-start', onReveal)
+      window.removeEventListener('pt-settled', onSettled)
       window.removeEventListener('resize', handleResize)
+      if (fallbackTimeout) clearTimeout(fallbackTimeout)
+      if (raf1) cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+
+      kids.forEach((k) => k.kill())
+
+      scrollTweenRef.current?.scrollTrigger?.kill()
+      scrollTweenRef.current?.kill()
+      scrollTweenRef.current = null
+
+      motionState.entrance = 0
+      motionState.scroll = 0
     }
   }, [isActive, slug])
 
@@ -221,6 +305,7 @@ function ProjectDetail() {
                 src={heroImage}
                 alt={content.title}
               />
+              <div className="detailHeroCurtain" aria-hidden="true" ref={curtainRef} />
               <div className="detailHeroOverlay" aria-hidden="true" />
             </>
           )}
@@ -575,7 +660,6 @@ function FlipCounter({ current, total }) {
   )
 }
 
-/* ===== SINGLE IMAGE (section 04 Hub PKP — 1 gambar, caption di bawah, tanpa slider/rail) ===== */
 function SingleImage({ image, title, aspectRatio, active }) {
   return (
     <div className="detailSingle">

@@ -114,10 +114,6 @@ function Home() {
 
   const [playIntro] = useState(() => !window.__INTRO_DONE__)
 
-  // ===== RETURN ENTRANCE (stacking jatuh setelah background pure merah) =====
-  // holdEntrance = true hanya saat Home di-mount sebagai tujuan transisi
-  // pulang (flag diset PageTransition sebelum swap). Selama hold, judul &
-  // label invisible tapi CORNER tetap visible (corner di portal terpisah).
   const [holdEntrance] = useState(() => window.__PT_HOME_ENTRANCE_PENDING__ === true)
   const [entranceReleased, setEntranceReleased] = useState(false)
   const introActive = playIntro || (holdEntrance && entranceReleased)
@@ -131,7 +127,6 @@ function Home() {
     return () => clearTimeout(t)
   }, [playIntro])
 
-  // Release entrance tepat saat transisi selesai = background sudah pure merah
   useEffect(() => {
     if (!holding) return undefined
     const onSettled = () => {
@@ -312,8 +307,6 @@ function Home() {
     if (introActive) {
       introRAF = requestAnimationFrame(stepIntro)
     } else if (holding) {
-      // HOLD: list diparkir di posisi awal descent, klik diblok,
-      // judul invisible (via inline style di render). Corner tetap visible.
       introOffsetRef.current = introOffsetStartRef.current
       writeTranslate(window.scrollY)
       entranceActiveRef.current = true
@@ -514,11 +507,11 @@ function Home() {
 
       const exitTotal = awayTotal + REPOSITION_DURATION + HOLD_AFTER_GONE
 
+      // ===== PERUBAHAN FASE 1 =====
+      // Hapus: pengambilan fontSize title + flag __MORPH_FROM_SPOTLIGHT__
+      // ProjectDetail sekarang pakai entrance hero sendiri (fade+rise) yang
+      // trigger berdasarkan pt-reveal-start dari PageTransition, bukan flag manual.
       gsap.delayedCall(exitTotal, () => {
-        const titleEl = rows[0]?.querySelector('.title')
-        window.__MORPH_FROM_SPOTLIGHT__ = {
-          fontSize: titleEl ? parseFloat(getComputedStyle(titleEl).fontSize) : null,
-        }
         navigate(`/project/${slug}`)
         setTimeout(() => {
           isPushingRef.current = false
