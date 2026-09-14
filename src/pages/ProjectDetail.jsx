@@ -19,22 +19,19 @@ const HERO_CURTAIN_START_DELAY = 1.4
 const HERO_CURTAIN_DURATION = 0.9
 const HERO_TITLE_START_DELAY = 1.6
 const HERO_TITLE_FADE_DURATION = 1.0
-// TUNING: rise diselaraskan dengan rasa parallax scrub 5.
-// power1.out = decelerasi gradual (smooth), tidak berhenti tajam.
-// 3.5s = waktu rise mirip dengan "catch-up time" parallax saat scroll.
 const HERO_TITLE_RISE_DURATION = 3.5
 const HERO_TITLE_RISE_PX = 160
 const HERO_DECODE_CAP_MS = 2500
 const HERO_FALLBACK_MS = 300
 
-// ===== HERO PARALLAX (tuning rasa glide) =====
-// scrub: seberapa "berat" judul mengejar posisi target saat scroll.
-//   0   = instan (kaku, native browser feel)
-//   0.75= halus standar
-//   1.5 = melayang terasa
-//   2.0 = melayang terasa
-//   5.0 = sangat melayang (pilihan Anda — rasa paling premium)
-//   >5.0 = mulai terasa lag berlebihan (hindari)
+// ===== EDITORIAL GATE: kapan editorial boleh reveal =====
+// Fraksi dari durasi title rise. 0.25 = di 1/4 perjalanan rise.
+//   0.0  = gate buka bareng title rise mulai (editorial reveal cepat)
+//   0.25 = gate buka di 1/4 perjalanan (pilihan Anda sekarang)
+//   0.5  = gate buka di setengah perjalanan
+//   1.0  = gate buka setelah rise selesai (paling lambat, sebelumnya)
+const HERO_EDITORIAL_GATE_FRACTION = 0.25
+
 const HERO_PARALLAX_SCRUB = 5
 
 function ProjectDetail() {
@@ -48,6 +45,7 @@ function ProjectDetail() {
 
   const motionStateRef = useRef({ entrance: 0, scroll: 0 })
   const scrollTweenRef = useRef(null)
+  const heroSettledRef = useRef(false)
 
   const { isActive } = useContext(PageTransitionContext)
 
@@ -77,7 +75,6 @@ function ProjectDetail() {
     const imageEl = heroEl?.querySelector('.detailHeroImage')
     if (!titleEl || !heroEl) return
 
-    // ===== UKUR JARAK HERO KE ATAS VIEWPORT (di scroll = 0) =====
     const heroInitialTop = heroEl.getBoundingClientRect().top
 
     const motionState = motionStateRef.current
@@ -88,13 +85,14 @@ function ProjectDetail() {
     const kids = []
 
     // ===== RESET: tertutup & hidden =====
+    heroSettledRef.current = false
+    document.body.classList.remove('hero-settled')
     motionState.entrance = HERO_TITLE_RISE_PX
     motionState.scroll = 0
     gsap.set(titleEl, { opacity: 0 })
     applyY()
     if (curtainEl) gsap.set(curtainEl, { scaleY: 1 })
 
-    // ===== GATE DECODE =====
     let decoded = !imageEl || imageEl.complete === true
     let decodeWait = null
     if (imageEl && !decoded) {
@@ -160,6 +158,20 @@ function ProjectDetail() {
               onUpdate: applyY,
             })
           )
+
+          // ===== EDITORIAL GATE: buka di fraksi perjalanan rise =====
+          // Tidak lagi menunggu rise selesai — cukup 1/4 perjalanan
+          // (T+1.6s + 0.875s = T+2.475s), editorial yang sudah .inView
+          // langsung reveal seiring title masih naik.
+          kids.push(
+            gsap.delayedCall(
+              HERO_TITLE_RISE_DURATION * HERO_EDITORIAL_GATE_FRACTION,
+              () => {
+                heroSettledRef.current = true
+                document.body.classList.add('hero-settled')
+              }
+            )
+          )
         })
       )
     }
@@ -177,7 +189,6 @@ function ProjectDetail() {
       })
     }
 
-    // ===== PARALLAX (glide + mentok off-screen) =====
     const getTravelDistance = () => {
       const heroHeight = heroEl.offsetHeight
       const titleHeight = titleEl.offsetHeight
@@ -221,6 +232,7 @@ function ProjectDetail() {
 
       motionState.entrance = 0
       motionState.scroll = 0
+      document.body.classList.remove('hero-settled')
     }
   }, [isActive, slug])
 
