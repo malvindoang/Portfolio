@@ -603,6 +603,17 @@ body:not(.hero-settled) .reveal.inView {
   will-change: transform;
 }
 
+/* Clicked state: freeze title di state hover (full fill + rotateY 0) selama
+   lock + rotate animation. Override CSS hover rule dan CSS transition bawaan
+   (.detailNextTitle { transition: transform, color }), sehingga mouse-out
+   selama lock 1.2s tidak mengembalikan title ke miring + outline.
+   pointer-events:none mencegah hover menginterupsi saat mouse masuk-keluar.
+   Class dihapus otomatis saat halaman unmount (navigate). */
+.detailNextTitle.is-clicked {
+  transition: none !important;
+  pointer-events: none !important;
+}
+
 .detailNextPerspective:hover .detailNextTitle {
   transform: rotateY(0deg);
   color: var(--color-black);

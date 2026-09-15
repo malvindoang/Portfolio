@@ -25,14 +25,14 @@ const HERO_DECODE_CAP_MS = 2500
 const HERO_FALLBACK_MS = 300
 
 // ===== EDITORIAL GATE: kapan editorial boleh reveal =====
-// Fraksi dari durasi title rise. 0.25 = di 1/4 perjalanan rise.
-//   0.0  = gate buka bareng title rise mulai (editorial reveal cepat)
-//   0.25 = gate buka di 1/4 perjalanan (pilihan Anda sekarang)
-//   0.5  = gate buka di setengah perjalanan
-//   1.0  = gate buka setelah rise selesai (paling lambat, sebelumnya)
 const HERO_EDITORIAL_GATE_FRACTION = 0.25
 
 const HERO_PARALLAX_SCRUB = 5
+
+// ===== NEXT PROJECT TITLE ANIMATION (Fill Lock + Rotate Deeper) =====
+const NEXT_TITLE_LOCK_DURATION = 1.2
+const NEXT_TITLE_ROTATE_DURATION = 0.5
+const NEXT_TITLE_ROTATE_DEG = -90
 
 function ProjectDetail() {
   const { slug } = useParams()
@@ -46,6 +46,8 @@ function ProjectDetail() {
   const motionStateRef = useRef({ entrance: 0, scroll: 0 })
   const scrollTweenRef = useRef(null)
   const heroSettledRef = useRef(false)
+  const isNavigatingRef = useRef(false)
+  const nextTitleAnimRef = useRef(null)
 
   const { isActive } = useContext(PageTransitionContext)
 
@@ -84,7 +86,6 @@ function ProjectDetail() {
 
     const kids = []
 
-    // ===== RESET: tertutup & hidden =====
     heroSettledRef.current = false
     document.body.classList.remove('hero-settled')
     motionState.entrance = HERO_TITLE_RISE_PX
@@ -159,10 +160,6 @@ function ProjectDetail() {
             })
           )
 
-          // ===== EDITORIAL GATE: buka di fraksi perjalanan rise =====
-          // Tidak lagi menunggu rise selesai — cukup 1/4 perjalanan
-          // (T+1.6s + 0.875s = T+2.475s), editorial yang sudah .inView
-          // langsung reveal seiring title masih naik.
           kids.push(
             gsap.delayedCall(
               HERO_TITLE_RISE_DURATION * HERO_EDITORIAL_GATE_FRACTION,
@@ -236,6 +233,17 @@ function ProjectDetail() {
     }
   }, [isActive, slug])
 
+  // ===== NEXT PROJECT TITLE ANIMATION CLEANUP =====
+  useEffect(() => {
+    return () => {
+      if (nextTitleAnimRef.current) {
+        nextTitleAnimRef.current.kill()
+        nextTitleAnimRef.current = null
+      }
+      isNavigatingRef.current = false
+    }
+  }, [slug])
+
   const [introRef, introInView] = useInView()
   const [closingRef, closingInView] = useInView()
 
@@ -303,6 +311,54 @@ function ProjectDetail() {
   const nextTo = nextProject?.slug ? `/project/${nextProject.slug}` : '/'
 
   const heroImage = content.hero
+
+  // ===== NEXT PROJECT CLICK HANDLER =====
+  const handleNextProjectClick = (e) => {
+    e.preventDefault()
+    if (isNavigatingRef.current) return
+    isNavigatingRef.current = true
+
+    const titleEl = nextTitleRef.current
+    if (!titleEl) {
+      navigate(nextTo)
+      return
+    }
+
+    // Kill any existing animation
+    if (nextTitleAnimRef.current) {
+      nextTitleAnimRef.current.kill()
+    }
+
+    // Freeze title di state hover (full fill + rotateY 0) selama animation.
+    // Class .is-clicked mematikan CSS transition bawaan, supaya mouse-out
+    // selama lock tidak mengembalikan title ke miring + outline.
+    // Class dihapus otomatis saat halaman unmount (navigate).
+    titleEl.classList.add('is-clicked')
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        nextTitleAnimRef.current = null
+        navigate(nextTo)
+      },
+    })
+
+    // Phase 1: Freeze inline style (rotateY 0 + color black) + lock duration.
+    // Inline style menang dari CSS hover rule biasa (non-!important), jadi
+    // saat mouse keluar, title tetap di state hover.
+    tl.set(titleEl, { rotateY: 0, color: '#1e1e1e' })
+    tl.to(titleEl, { duration: NEXT_TITLE_LOCK_DURATION })
+
+    // Phase 2: Rotate deeper — rotateY 0 → -90, opacity 1 → 0.
+    // Efek "tersedot ke dalam" karena title berputar ke -90deg sambil fade.
+    tl.to(titleEl, {
+      rotateY: NEXT_TITLE_ROTATE_DEG,
+      opacity: 0,
+      duration: NEXT_TITLE_ROTATE_DURATION,
+      ease: 'power2.in',
+    })
+
+    nextTitleAnimRef.current = tl
+  }
 
   return (
     <>
@@ -380,7 +436,11 @@ function ProjectDetail() {
           {nextProject && nextProject.title !== content.title && (
             <div className="detailNextSection">
               <span className="detailNextLabel">Next project</span>
-              <Link to={nextTo} className="detailNextPerspective">
+              <Link
+                to={nextTo}
+                className="detailNextPerspective"
+                onClick={handleNextProjectClick}
+              >
                 <span ref={nextTitleRef} className="detailNextTitle">
                   {nextProject.title}
                 </span>
