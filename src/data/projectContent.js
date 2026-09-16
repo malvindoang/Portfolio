@@ -96,7 +96,7 @@ export const PROJECT_CONTENT = {
     team: 'Individual',
     figma: true,
     figmaUrl: '',
-    hero: null,
+    hero: '/images/garbage-classification/hero-garbage.avif',
     heroLines: ['Garbage', 'Classification'],
     intro:
       'An accurate model is useless if nobody can use it. Garbage Classification is the interface I designed for my undergraduate thesis — a machine-learning model that recognizes six types of waste from a single photo — built so that anyone, not just researchers, can sort waste correctly in seconds.',
