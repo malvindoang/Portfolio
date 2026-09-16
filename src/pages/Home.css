@@ -71,10 +71,12 @@ body.home-intro {
   pointer-events: none;
 }
 
+/* Section label migrasi dari Arial ke Akzidenz Grotesk.
+   Weight 400 (inactive) & 500 (active) mengikuti pola vanholtz. */
 .sectionLabel {
   position: fixed;
   pointer-events: auto;
-  font-family: Arial, sans-serif;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 16px; /* inactive: 20% lebih kecil dari aktif */
   font-weight: 400;
   color: var(--color-white);
@@ -103,9 +105,10 @@ body.home-intro {
   }
 }
 
+/* bold (700) → 500: mengikuti pola vanholtz (Medium asli, bukan synthetic) */
 .sectionLabel--active {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 500;
   opacity: 1;
   transform: translateX(0);
 }
@@ -220,10 +223,13 @@ body.home-intro {
   opacity: 0.85;
 }
 
+/* .year migrasi dari Comic Sans ke Akzidenz Grotesk 500.
+   Rotasi -14deg & tampilan "tulisan tangan" hilang — angka tahun
+   sekarang rapi mengikuti bahasa desain vanholtz. */
 .year {
-  font-family: 'Comic Sans MS', cursive;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-black);
   opacity: 0.9;
   transform: rotate(-14deg);
@@ -237,13 +243,12 @@ body.home-intro {
    - Hover   : fill transparent -> outline muncul
                (class .is-hovered di-toggle JS di Home.jsx, diperlukan
                karena seluruh pohon 3D pointer-events:none)
-   Font 'Archivo Black NoOverlap' (hasil FontForge remove-overlap)
-   dipakai supaya outline TIDAK menampilkan garis internal saat
-   elemen di-rotasi 3D. */
+   Migrasi dari Archivo Black NoOverlap ke Druk Wide Web 900
+   (pola title raksasa vanholtz). */
 
 .title {
   position: relative;
-  font-family: 'Archivo Black NoOverlap', 'Archivo Black', 'Arial Black', sans-serif;
+  font-family: 'Druk Wide Web', sans-serif;
   font-weight: 900;
   line-height: 0.9;
   letter-spacing: 0.02em;

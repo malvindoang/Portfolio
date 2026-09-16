@@ -55,20 +55,20 @@ body.pt-tr-hidden > .corner.tr {
     opacity 0.12s ease;
 }
 
-/* ---- Warna chrome gelap (halaman project) ---- */
+/* ---- Warna chrome gelap (halaman project) — full black #000000 ---- */
 body.pt-corners-dark > .corner,
 body.pt-corners-dark > .corner .num,
 body.pt-corners-dark > .corner a,
 body.pt-corners-dark > .corner span.label,
 body.pt-corners-dark > .navLinks .label {
-  color: #1e1e1e;
+  color: #000000;
 }
 
 body.pt-corners-dark > .navWordmark .wordmark {
-  color: #1e1e1e;
-  -webkit-text-stroke-color: #1e1e1e;
+  color: #000000;
+  -webkit-text-stroke-color: #000000;
 }
 
 body.pt-corners-dark > .navWordmark .sub {
-  color: #1e1e1e;
+  color: #000000;
 }

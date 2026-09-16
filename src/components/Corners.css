@@ -3,7 +3,7 @@
   z-index: 20;
   font-size: 13px;
   color: var(--color-white);
-  font-family: Arial, sans-serif;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   letter-spacing: 0.3px;
 }
 .tr { top: 36px; right: 40px; text-align: right; font-size: 14px; z-index: 30; }
@@ -79,10 +79,11 @@
   }
 }
 
-/* WORDMARK FINAL cross-browser — TIDAK disentuh */
+/* WORDMARK — font migrasi ke Druk Wide Web 500 (pola logo vanholtz).
+   Stroke 1px & efek hover (color transparent -> outline) TIDAK disentuh. */
 .wordmark {
-  font-family: 'Arial Black', sans-serif;
-  font-weight: 900;
+  font-family: 'Druk Wide Web', sans-serif;
+  font-weight: 500;
   font-size: 34px;
   line-height: 0.95;
   color: var(--color-white);
@@ -105,7 +106,7 @@
 }
 
 .navWordmark .sub {
-  font-family: Arial, sans-serif;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 13px;
   opacity: 0.50;
 }
@@ -192,14 +193,15 @@
   transform: rotateY(-20deg); /* NAV HOVER KNOB: sudut hover, adjust kalau kurang/terlalu dramatis */
 }
 
-/* Section nav kanan-atas — TIDAK disentuh */
+/* Section nav kanan-atas — posisi & strike animation TIDAK disentuh */
 .sectionNavItem {
   position: relative;
   display: inline-block;
   cursor: pointer;
 }
+/* bold → 500: mengikuti pola vanholtz (Medium asli, bukan synthetic bold) */
 .tr .label.sectionNavItem--active {
-  font-weight: bold;
+  font-weight: 500;
 }
 
 .sectionNavItem--disabled {
@@ -324,7 +326,7 @@
   0%     { transform: translateX(0) scale(1);        opacity: 1; }
   5%     { transform: translateX(0) scale(0.75);     opacity: 1; }
   19.99% { transform: translateX(-50%) scale(0.75);  opacity: 0; }
-  20%    { transform: translateX(50%) scale(0.75);   opacity: 0;
+  20%    { transform: translateX(50%) scale(0.75);  opacity: 0;
            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
   30%    { transform: translateX(0) scale(0.75);     opacity: 1; }
   40%    { transform: translateX(0) scale(1);        opacity: 1; }
@@ -337,7 +339,7 @@
 @keyframes cornerIconLoopY {
   0%     { transform: translateY(0) scale(1);        opacity: 1; }
   5%     { transform: translateY(0) scale(0.75);     opacity: 1; }
-  24.99% { transform: translateY(50%) scale(0.75);   opacity: 0; }
+  24.99% { transform: translateY(50%) scale(0.75);  opacity: 0; }
   25%    { transform: translateY(-50%) scale(0.75);  opacity: 0;
            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
   40%    { transform: translateY(0) scale(0.75);     opacity: 1; }
@@ -345,7 +347,7 @@
   100%   { transform: translateY(0) scale(1);        opacity: 1; }
 }
 
-/* ==== MALVIN wordmark — TIDAK disentuh ==== */
+/* ==== MALVIN wordmark container — posisi TIDAK disentuh ==== */
 .navWordmark {
   position: fixed;
   left: 40px;
@@ -374,7 +376,7 @@ body.wordmark-hidden .navWordmark {
   z-index: 30;
   width: 160px;
   font-size: 14px;
-  font-family: Arial, sans-serif;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   color: var(--color-white);
   text-align: left;
   transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s cubic-bezier(0.22, 1, 0.36, 1);

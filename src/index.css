@@ -1,7 +1,7 @@
 :root {
   /* --color-bg: #4801FF; */
   --color-bg: #e34234;
-  --color-black: #1E1E1E;
+  --color-black: #000000;
   --color-white: #F2F2F2;
 }
 
@@ -18,7 +18,7 @@ html {
 body {
   background: var(--color-bg);
   color: var(--color-black);
-  font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   overflow-x: hidden;
   /* TIDAK ADA transition background-color.
      Pergantian warna body selalu instan dan SELALU terjadi di balik
@@ -29,19 +29,70 @@ body {
 /* Warna halaman project (state settled). */
 body.page-project {
   background: #F2F2F2;
-  --color-black: #1e1e1e;
+  --color-black: #000000;
 }
 
 /* Sumber kebenaran warna SAAT TRANSISI — dikontrol murni oleh
    PageTransition.jsx. Nilainya sengaja sama dengan .page-project. */
 body.pt-bg-project {
   background: #F2F2F2;
-  --color-black: #1e1e1e;
+  --color-black: #000000;
 }
 
+/* ===== FONT SYSTEM: AKZIDENZ-GROTESK + DRUK WIDE ===== */
+/* Mapping mengikuti analisa live vanholtz.co: body 300/400/500/500i, display 500/900.
+   Path ./fonts/ dibaca relatif dari lokasi file ini (src/index.css),
+   jadi menunjuk ke src/fonts/ — Opsi A. */
+
+/* 1. Light */
 @font-face {
-  font-family: 'Archivo Black NoOverlap';
-  src: url('/fonts/ArchivoBlack-NoOverlap.woff2') format('woff2');
+  font-family: 'Akzidenz Grotesk';
+  src: url('./fonts/AkzidenzGroteskPro-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 2. Regular */
+@font-face {
+  font-family: 'Akzidenz Grotesk';
+  src: url('./fonts/AkzidenzGroteskPro-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 3. Medium */
+@font-face {
+  font-family: 'Akzidenz Grotesk';
+  src: url('./fonts/AkzidenzGroteskPro-Md.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 4. Medium Italic */
+@font-face {
+  font-family: 'Akzidenz Grotesk';
+  src: url('./fonts/AkzidenzGroteskPro-MdIt.woff2') format('woff2');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* 5. Druk Wide Medium (logo, title menengah) */
+@font-face {
+  font-family: 'Druk Wide Web';
+  src: url('./fonts/DrukWide-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 6. Druk Wide Super (title raksasa) */
+@font-face {
+  font-family: 'Druk Wide Web';
+  src: url('./fonts/DrukWide-Super.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
