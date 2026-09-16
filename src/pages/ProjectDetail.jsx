@@ -77,7 +77,13 @@ function ProjectDetail() {
     const imageEl = heroEl?.querySelector('.detailHeroImage')
     if (!titleEl || !heroEl) return
 
-    const heroInitialTop = heroEl.getBoundingClientRect().top
+    // Capture posisi hero RELATIF DOKUMEN (top + scrollY), bukan viewport (top saja).
+    // Saat navigate antar project, scrollY mungkin masih tinggi dari halaman sebelumnya
+    // karena useEffect scrollTo(0,0) jalan SETELAH useLayoutEffect.
+    // Dengan +scrollY, heroInitialTop selalu benar (220) terlepas dari timing.
+    // Sebelum fix: heroInitialTop bisa negatif (misal -1842 saat scrollY=3796),
+    // end ScrollTrigger jadi negatif (+=-1304), parallax tidak pernah aktif.
+    const heroInitialTop = heroEl.getBoundingClientRect().top + window.scrollY
 
     const motionState = motionStateRef.current
     const applyY = () => {
@@ -244,6 +250,21 @@ function ProjectDetail() {
     }
   }, [slug])
 
+  // ===== RESET NEXT TITLE STATE SAAT SLUG BERUBAH =====
+  // Membersihkan inline style GSAP dan class is-clicked yang terbawa dari
+  // halaman sebelumnya. Tanpa ini, elemen .detailNextTitle di halaman baru
+  // akan masih punya opacity:0 dan rotateY(-90deg) dari animasi GSAP di
+  // halaman lama, sehingga Next Project title tidak terlihat (invisible).
+  useEffect(() => {
+    const titleEl = nextTitleRef.current
+    if (!titleEl) return
+    
+    titleEl.style.opacity = ''
+    titleEl.style.transform = ''
+    titleEl.style.color = ''
+    titleEl.classList.remove('is-clicked')
+  }, [slug])
+
   const [introRef, introInView] = useInView()
   const [closingRef, closingInView] = useInView()
 
@@ -324,7 +345,6 @@ function ProjectDetail() {
       return
     }
 
-    // Kill any existing animation
     if (nextTitleAnimRef.current) {
       nextTitleAnimRef.current.kill()
     }
@@ -332,7 +352,6 @@ function ProjectDetail() {
     // Freeze title di state hover (full fill + rotateY 0) selama animation.
     // Class .is-clicked mematikan CSS transition bawaan, supaya mouse-out
     // selama lock tidak mengembalikan title ke miring + outline.
-    // Class dihapus otomatis saat halaman unmount (navigate).
     titleEl.classList.add('is-clicked')
 
     const tl = gsap.timeline({
@@ -342,14 +361,11 @@ function ProjectDetail() {
       },
     })
 
-    // Phase 1: Freeze inline style (rotateY 0 + color black) + lock duration.
-    // Inline style menang dari CSS hover rule biasa (non-!important), jadi
-    // saat mouse keluar, title tetap di state hover.
+    // Phase 1: Freeze inline style (rotateY 0 + color black) + lock duration
     tl.set(titleEl, { rotateY: 0, color: '#1e1e1e' })
     tl.to(titleEl, { duration: NEXT_TITLE_LOCK_DURATION })
 
-    // Phase 2: Rotate deeper — rotateY 0 → -90, opacity 1 → 0.
-    // Efek "tersedot ke dalam" karena title berputar ke -90deg sambil fade.
+    // Phase 2: Rotate deeper — rotateY 0 → -90, opacity 1 → 0
     tl.to(titleEl, {
       rotateY: NEXT_TITLE_ROTATE_DEG,
       opacity: 0,
