@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 import Corners from '../components/Corners'
-import { SECTIONS, getSectionShortLabel } from '../data/projects'
+import { SECTIONS } from '../data/projects'
 import './Home.css'
 
 gsap.registerPlugin(CustomEase)
@@ -17,8 +17,6 @@ const GRID_GAP = 14
 const SLOT_BASE = 220
 const SLOT_STEP = 30
 const PARK_BUFFER = 60
-
-const ANCHOR_OFFSET = 263
 
 const PERSPECTIVE_VW = 75
 const ROTATE_Y_DEG = -42
@@ -159,17 +157,6 @@ function Home() {
     })
     return current
   }, [])
-
-  const handleSectionNavClick = (index) => {
-    const anchor = anchorRefs.current[index]
-    if (!anchor) return
-
-    const rect = anchor.getBoundingClientRect()
-    const scrollTop = window.scrollY || document.documentElement.scrollTop
-    const targetY = rect.top + scrollTop - ANCHOR_OFFSET
-
-    window.scrollTo({ top: targetY, behavior: 'smooth' })
-  }
 
   const getRowsForProject = (projectIndex) => {
     const rows = projectRowRefs.current
@@ -534,12 +521,6 @@ function Home() {
     }
   }, [navigate])
 
-  const sectionNav = SECTIONS.map((section, i) => ({
-    label: getSectionShortLabel(section.label),
-    active: activeSection === i,
-    onClick: () => handleSectionNavClick(i),
-  }))
-
   let projectCounter = 0
   let lineCounter = 0
   const nextProjectSlugs = []
@@ -547,7 +528,7 @@ function Home() {
 
   return (
     <>
-      <Corners sectionNav={sectionNav} onGridWidth={handleGridWidth} playIntro={playIntro} />
+      <Corners onGridWidth={handleGridWidth} />
 
       <div className="stageSpace" ref={spaceRef}>
         <div

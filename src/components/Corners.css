@@ -24,12 +24,6 @@
 .corner .num { color: var(--color-white); opacity: 0.6; font-size: 11px; margin-right: 6px; }
 .corner a, .corner span.label { color: var(--color-white); text-decoration: none; }
 
-/* Angka kanan-atas: putih penuh + ukuran disamakan 16px */
-.tr .num {
-  opacity: 1;
-  font-size: 14px;
-}
-
 /* ===== ENTRANCE LAYER 4 — CORNER DIRECTIONAL (keyframes) =====
    Dipakai lewat inline `animation` di Corners.jsx (bukan class statis),
    supaya delay per-baris & gating cornersIntro gampang dikontrol dari JS. */
@@ -54,7 +48,7 @@
   }
 }
 
-/* ===== BARU: EXIT LAYER — mirror entrance, MURNI meluncur tanpa fade =====
+/* ===== EXIT LAYER — mirror entrance, MURNI meluncur tanpa fade =====
    Jarak 260px supaya elemen benar-benar hilang di balik tepi layar.
    opacity: 1 di seluruh keyframe (tidak pernah fade).
    Durasi & easing (0.6s ease) sama persis dengan entrance. */
@@ -151,7 +145,7 @@
 
 /* NAV HOVER: perspective 3D di parent .row supaya .label punya "ruang 3D"
    untuk rotateY. Diterapkan HANYA di .navLinks .row (tidak menyentuh
-   .corner .row yang dipakai sectionNav/linkedin-github-email — constraint
+   .corner .row yang dipakai icon button back/close — constraint
    "jangan sentuh elemen lain" tetap aman). KNOB: makin kecil nilainya,
    makin dramatis efek perspektifnya. */
 .navLinks .row {
@@ -191,40 +185,6 @@
 .navLinks .row .label.aboutTrigger:hover,
 .navLinks .row .label.worksTrigger:hover {
   transform: rotateY(-20deg); /* NAV HOVER KNOB: sudut hover, adjust kalau kurang/terlalu dramatis */
-}
-
-/* Section nav kanan-atas — posisi & strike animation TIDAK disentuh */
-.sectionNavItem {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-/* bold → 500: mengikuti pola vanholtz (Medium asli, bukan synthetic bold) */
-.tr .label.sectionNavItem--active {
-  font-weight: 500;
-}
-
-.sectionNavItem--disabled {
-  cursor: default;
-  pointer-events: none;
-}
-.sectionNavItem--disabled::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 1.5px;
-  background: currentColor;
-  transform: translateY(-50%) scaleX(0);
-  transform-origin: left;
-  animation: sectionNavStrike var(--motion-duration) var(--motion-ease) forwards;
-  animation-delay: calc(var(--motion-duration) * 1.5);
-}
-@keyframes sectionNavStrike {
-  to {
-    transform: translateY(-50%) scaleX(1);
-  }
 }
 
 /* ==== Tombol back (←) / close (×) — TIDAK disentuh ==== */

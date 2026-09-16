@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react'
 import { createPortal } from 'react-dom'
-import LiveClock from './LiveClock'
 import About from './About'
 import { PageTransitionContext } from './PageTransitionContext'
 import { SECTIONS } from '../data/projects'
@@ -77,7 +76,10 @@ function CornerIconRows({ spacerCount, icon, onClick, ariaLabel, introOn, isHome
   )
 }
 
-function Corners({ sectionNav, onGridWidth, onBack }) {
+/* Signature props: sectionNav DIHAPUS (Fase 1: section nav 01/02/03
+   dibuang permanen, prop tidak lagi dibutuhkan). playIntro juga dihapus
+   (tidak pernah dipakai di dalam komponen). */
+function Corners({ onGridWidth, onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [bodyLeft, setBodyLeft] = useState(220)
   const wordmarkRef = useRef(null)
@@ -260,6 +262,8 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
         </div>
       </div>
 
+      {/* corner.tr: hanya close (about) atau back (project) atau kosong (home).
+          Branch sectionNav DIHAPUS di Fase 1. */}
       <div className="corner tr">
         {aboutOpen ? (
           <CornerIconRows
@@ -271,24 +275,6 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
             isHome={isHome}
             leaving={leaving}
           />
-        ) : sectionNav ? (
-          sectionNav.map((s, i) => (
-            <div
-              className="row"
-              key={`${s.label}-${entranceKey}`}
-              style={cornerStyle('right', directionalDelay(i, isHome), EXIT_DELAY_TR)}
-            >
-              <span className="num">{String(i + 1).padStart(2, '0')}</span>
-              <span
-                className={`label sectionNavItem${
-                  s.active ? ' sectionNavItem--active' : ' sectionNavItem--disabled'
-                }`}
-                onClick={s.active ? s.onClick : undefined}
-              >
-                {s.label}
-              </span>
-            </div>
-          ))
         ) : onBack ? (
           <CornerIconRows
             spacerCount={ICON_ROW_SPACER_COUNT}
@@ -302,6 +288,8 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
         ) : null}
       </div>
 
+      {/* corner.br: LiveClock DIHAPUS di Fase 1. Hanya "Jakarta, Indonesia"
+          yang tersisa. */}
       {!aboutOpen && (
         <div
           key={`br-${entranceKey}`}
@@ -309,8 +297,7 @@ function Corners({ sectionNav, onGridWidth, onBack }) {
           style={cornerStyle('right', directionalDelay(3, isHome), EXIT_DELAY_BR)}
         >
           <div className="sub">
-            Jakarta, Indonesia<br />
-            <LiveClock />
+            Jakarta, Indonesia
           </div>
         </div>
       )}
