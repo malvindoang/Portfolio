@@ -40,7 +40,6 @@ function IconBox({ type }) {
 
 function Corners({ onGridWidth, onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
-  const [bodyLeft, setBodyLeft] = useState(220)
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
   const location = useLocation()
@@ -63,17 +62,17 @@ function Corners({ onGridWidth, onBack }) {
   const delays = isHome ? HOME_DELAYS : PROJECT_DELAYS
   const play = entranceKey > 0
 
-  // ===== STATE NAIK (pola vanholtz): ul di dalam nav yang translate =====
+  // ===== STATE NAIK: hanya wordmark yang pakai class top/bottom.
+  // Links naik via ul (CSS, body class), nav tetap di aliran flex. =====
   const up = !isHome || aboutOpen
 
-  // ===== MEASUREMENT untuk bodyLeft (About overlay) =====
+  // ===== MEASUREMENT untuk onGridWidth =====
   useLayoutEffect(() => {
     const measure = () => {
       const w1 = wordmarkRef.current?.getBoundingClientRect().width || 0
       const w2 = navLinksRef.current?.getBoundingClientRect().width || 0
       const maxW = Math.max(w1, w2)
       if (onGridWidth) onGridWidth(maxW)
-      setBodyLeft(40 + maxW + GRID_GAP)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -114,7 +113,7 @@ function Corners({ onGridWidth, onBack }) {
   return createPortal(
     <>
       <header className="ui">
-        {/* ===== WORDMARK: MALVIN satu baris ===== */}
+        {/* ===== WORDMARK: MALVIN satu baris, fixed, KNOB px ===== */}
         <div
           key={`wm-${entranceKey}`}
           ref={wordmarkRef}
@@ -131,9 +130,10 @@ function Corners({ onGridWidth, onBack }) {
           </Link>
         </div>
 
-        {/* ===== INFO: SATU container footer =====
-            kiri = kontak + about/works (kolom ke-3, sejajar otomatis)
-            kanan = social + design (rata kanan di padding 60) ===== */}
+        {/* ===== INFO: SATU container footer.
+            info-left = 3 kolom flex dengan gap 3vw SERAGAM:
+            kontak-1 · kontak-2 · links(about/works).
+            Saat about open: kontak + kanan fade, links tetap & ul naik. ===== */}
         <div key={`info-${entranceKey}`} className="info">
           <div className="info-left">
             <div className="contact" style={anim(delays.info[0])}>
@@ -151,7 +151,8 @@ function Corners({ onGridWidth, onBack }) {
               </span>
             </div>
 
-            {/* about/works: kolom ke-3 container yang sama; yang naik = ul */}
+            {/* Kolom ke-3: about/works — di dalam flex flow supaya gap 3vw
+                sama di semua viewport; rise via ul (CSS body class) */}
             <nav
               key={`links-${entranceKey}`}
               ref={navLinksRef}
@@ -163,6 +164,7 @@ function Corners({ onGridWidth, onBack }) {
                   <button type="button" className="link" onClick={() => setAboutOpen((v) => !v)}>
                     <strong>about</strong>
                   </button>
+                  <span className="aboutDash" aria-hidden="true" />
                 </li>
                 <li className="works-li">
                   <button type="button" className="link" onClick={handleWorksClick}>
@@ -193,7 +195,7 @@ function Corners({ onGridWidth, onBack }) {
       </header>
 
       {/* ===== ABOUT OVERLAY ===== */}
-      <About isOpen={aboutOpen} bodyLeft={bodyLeft} />
+      <About isOpen={aboutOpen} />
 
       {/* ===== CLOSE (×) saat about open ===== */}
       {aboutOpen && (

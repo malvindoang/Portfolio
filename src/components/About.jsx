@@ -3,7 +3,7 @@ import './About.css'
 
 const SPECIALTIES = ['Front-end Development', 'UI/UX Design', 'Interactive Multimedia']
 
-function About({ isOpen, bodyLeft }) {
+function About({ isOpen }) {
   useEffect(() => {
     if (!isOpen) return
 
@@ -59,7 +59,8 @@ function About({ isOpen, bodyLeft }) {
   return (
     <div className={`aboutOverlay${isOpen ? ' aboutOverlay--open' : ''}`}>
       <div className="aboutScroll">
-        <div className="aboutContent" style={{ marginLeft: bodyLeft }}>
+        <div className="aboutContent">
+          {/* KIRI 55%: statement */}
           <div className="aboutStatement">
             <p className="aboutLead">
               Building interactive digital experiences through responsive
@@ -121,31 +122,36 @@ function About({ isOpen, bodyLeft }) {
             </p>
           </div>
 
+          {/* KANAN 45%: 2 sub-kolom 50/50 (pola vanholtz col-1/col-2) */}
           <div className="aboutInfo">
-            <div className="aboutInfoBlock">
-              <h3>Specialties</h3>
-              <ul>
-                {SPECIALTIES.map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ul>
-            </div>
+            <div className="aboutInfoSub">
+              <div className="aboutInfoBlock">
+                <h3>Specialties</h3>
+                <ul>
+                  {SPECIALTIES.map((s) => (
+                    <li key={s}>{s}</li>
+                  ))}
+                </ul>
+              </div>
 
-            <div className="aboutInfoBlock">
-              <h3>Education</h3>
-              <div className="aboutEdu">
-                <strong>BINUS University Alam Sutera</strong>
-                <span>Computer Science — Interactive Multimedia</span>
-                <span>Graduating 2026</span>
+              <div className="aboutInfoBlock">
+                <h3>Education</h3>
+                <div className="aboutEdu">
+                  <h6>BINUS University Alam Sutera</h6>
+                  <span>Computer Science — Interactive Multimedia</span>
+                  <span>Graduating 2026</span>
+                </div>
               </div>
             </div>
 
-            <div className="aboutInfoBlock">
-              <h3>Experience</h3>
-              <div className="aboutEdu">
-                <strong>UI/UX Designer</strong>
-                <span>Kementerian Perumahan dan Kawasan Pemukiman</span>
-                <span>Sep 2025 – Feb 2026</span>
+            <div className="aboutInfoSub">
+              <div className="aboutInfoBlock">
+                <h3>Experience</h3>
+                <div className="aboutEdu">
+                  <h6>UI/UX Designer</h6>
+                  <span>Kementerian Perumahan dan Kawasan Pemukiman</span>
+                  <span>Sep 2025 – Feb 2026</span>
+                </div>
               </div>
             </div>
           </div>

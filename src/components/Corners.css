@@ -1,12 +1,15 @@
 /* ============================================================
-   CORNERS v6 — model container persis vanholtz
-   band fixed bawah · padding 27/60/54 · semua kolom bottom-aligned
-   SEMUA baris teks: tinggi 16px + gap antar baris 5px (pitch 21)
+   CORNERS v10 — gap kolom footer SERAGAM 3vw di semua viewport
+   - info-left = flex, gap 3vw (57.6px @1920, 43.2px @1440 = vanholtz)
+   - Kolom 3 (about/works) KEMBALI ke flow flex (bukan fixed px)
+   - Rise links via ul translateY, KNOB --links-top (px, sama semua viewport)
+   - Wordmark tetap fixed dengan KNOB px (top 76 / left 60)
    ============================================================ */
 
 :root {
   --corner-color: #F2F2F2;
   --corner-bg: #e34234;
+  --links-top: 65px; /* KNOB: posisi atas about/works saat rise (px tetap) */
 }
 body.page-project {
   --corner-color: #000000;
@@ -30,7 +33,7 @@ body.page-project {
   pointer-events: auto;
 }
 
-/* ================= RESET LIST (hilangkan dot/marker) ================= */
+/* ================= RESET LIST ================= */
 
 .info ul {
   list-style: none;
@@ -48,20 +51,111 @@ body.page-project {
   content: none;
 }
 
-/* ================= WORDMARK ================= */
+/* ================= FOOTER (info) ================= */
+
+.info {
+  width: 100%;
+  padding: 2.5vh 60px 5vh;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+/* GAP SERAGAM: semua kolom kiri berjarak 3vw satu sama lain */
+.info-left {
+  display: flex;
+  align-items: flex-end;
+  gap: 3vw;
+}
+
+/* Kolom selebar teks (content-width), seperti vanholtz */
+.contact {
+  width: auto;
+  font-family: 'Akzidenz Grotesk', sans-serif;
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--corner-color);
+  perspective: 250px;
+  perspective-origin: 0 center;
+  transition: opacity 0.2s ease-in-out;
+  animation: fadeUp 1s ease backwards;
+}
+.contact .line {
+  display: block;
+  height: 16px;
+  line-height: 16px;
+}
+.contact .line + .line {
+  margin-top: 5px;
+}
+.contact strong {
+  font-weight: 500;
+}
+
+.email-link {
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  transform-origin: 0 center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.email-link:hover {
+  transform: rotateY(15deg);
+}
+
+/* About open: kontak + kanan fade; links TETAP (ul-nya yang naik) */
+body.about-open .contact,
+body.about-open .info-right {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ================= KANAN: social + design ================= */
+
+.info-right {
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.social {
+  width: 125px;
+  animation: fadeUp 1s ease backwards;
+}
+
+.credits {
+  width: 125px;
+  text-align: right;
+  font-family: 'Akzidenz Grotesk', sans-serif;
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--corner-color);
+  animation: fadeUp 1s ease backwards;
+}
+.credits strong {
+  display: block;
+  height: 16px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+/* ================= WORDMARK (fixed, KNOB px) ================= */
 
 .wordmark-wrap {
-  position: absolute;
-  left: 60px;
-  bottom: calc(7.5vh + 67px); /* tinggi band (2.5vh+58+5vh) + rongga 9px */
+  position: fixed;
+  top: 76px;   /* KNOB state-naik */
+  left: 60px;  /* KNOB state-naik */
+  z-index: 60;
   transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
 }
 .wordmark-wrap--bottom {
-  transform: none;
+  transform: translateY(calc(92.5vh - 177px));
   transition-delay: 0.25s;
 }
 .wordmark-wrap--top {
-  transform: translateY(calc(232px - 100vh));
+  transform: translateY(0);
   transition-delay: 0s;
 }
 
@@ -69,7 +163,6 @@ body.page-project {
   display: block;
   text-decoration: none;
 }
-
 .wordmark {
   font-family: 'Druk Wide Web', sans-serif;
   font-weight: 500;
@@ -96,63 +189,15 @@ body.page-project {
   display: block;
   animation: wmUp 1s ease backwards;
 }
-
 @keyframes wmUp {
   from { transform: translateY(120%); }
   to { transform: translateY(0); }
 }
 
-/* ================= INFO: static di dalam band ================= */
-
-.info {
-  width: 100%;
-  padding: 2.5vh 60px 5vh;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.info-left {
-  display: flex;
-  align-items: flex-end;
-  gap: 3vw; /* jarak antar kolom persis vanholtz: 57.6px @1920, 43.2px @1440 */
-}
-
-/* Kolom selebar teks (content-width), seperti vanholtz */
-.contact { width: auto; }
-
-.contact {
-  font-size: 14px;
-  line-height: 16px;
-  color: var(--corner-color);
-  transition: opacity 0.2s ease-in-out;
-  animation: fadeUp 1s ease backwards;
-}
-.contact .line {
-  display: block;
-  height: 16px;
-  line-height: 16px;
-}
-.contact .line + .line {
-  margin-top: 5px;
-}
-
-.contact {
-  perspective: 250px;
-  perspective-origin: 0 center;
-}
-.email-link {
-  display: inline-block;
-  color: inherit;
-  text-decoration: none;
-  transform-origin: 0 center;
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.email-link:hover {
-  transform: rotateY(15deg);
-}
-
-/* ================= LINKS (about/works) ================= */
+/* ================= LINKS (about/works) — di dalam flow flex =================
+   Nav tetap di aliran footer (ikut gap 3vw); yang NAIK = ul di dalamnya.
+   Rumus rise: mendarat di --links-top di viewport berapapun:
+   translateY = --links-top + 37px - 95vh   (95vh - 37px = top baris footer) */
 
 .links {
   animation: fadeUp 1s ease backwards;
@@ -162,14 +207,14 @@ body.page-project {
 }
 body.about-open .links ul,
 body.page-project .links ul {
-  transform: translateY(calc(138px - 100vh));
+  transform: translateY(calc(var(--links-top) + 37px - 95vh));
   transition-delay: 0s;
 }
 body:not(.about-open):not(.page-project) .links ul {
   transition-delay: 0.25s;
 }
 
-/* Baris links & social: kunci 16px + gap 5px = pitch 21 (sama seperti kontak) */
+/* Baris links & social: kunci 16px + gap 5px = pitch 21 */
 .links li,
 .social li {
   height: 16px;
@@ -190,6 +235,7 @@ body:not(.about-open):not(.page-project) .links ul {
   background: none;
   border: none;
   font: inherit;
+  font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 14px;
   color: var(--corner-color);
   text-decoration: none;
@@ -197,15 +243,11 @@ body:not(.about-open):not(.page-project) .links ul {
   transform-origin: 0 center;
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-/* Kolom kiri flow-based (gap 3vw): TANPA slot, supaya jarak antar teks
-   seragam persis seperti ritme vanholtz (57.6px @1920, 43.2px @1440) */
+/* Kolom kiri flow-based: TANPA slot nomor */
 .link {
   padding: 0;
 }
-
-/* Kolom kanan fixed-width (social di x1610): slot 30px DIPERTAHANKAN
-   supaya label mendarat di x1640 persis seperti instagram vanholtz */
+/* Kolom kanan fixed-width: slot 30px dipertahankan (x label = vanholtz) */
 .social a {
   padding: 0 0 0 30px;
 }
@@ -213,50 +255,27 @@ body:not(.about-open):not(.page-project) .links ul {
 .social a:hover {
   transform: rotateY(15deg);
 }
-
 .link strong,
-.social a strong,
-.credits strong {
+.social a strong {
   font-weight: 500;
   line-height: 16px;
 }
 
-/* ================= KANAN: social + design ================= */
-
-.info-right {
-  width: 250px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  transition: opacity 0.2s ease-in-out;
+/* Dash aktif di sebelah "about" — hanya saat about terbuka */
+.aboutDash {
+  display: inline-block;
+  width: 40px;
+  height: 2px;
+  background: var(--corner-color); /* ikut warna font corner: putih di home, hitam di project */
+  margin-left: 12px;
+  vertical-align: middle;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.5s cubic-bezier(0.755, 0.05, 0.855, 0.06);
 }
-
-.social {
-  width: 125px;
-  animation: fadeUp 1s ease backwards;
-}
-
-/* design: satu baris, rata kanan, bottom-aligned → otomatis sejajar
-   baris bawah social setelah pitch diperbaiki */
-.credits {
-  width: 125px;
-  text-align: right;
-  font-size: 14px;
-  line-height: 16px;
-  color: var(--corner-color);
-  animation: fadeUp 1s ease backwards;
-}
-.credits strong {
-  display: block;
-  height: 16px;
-  line-height: 16px;
-}
-
-/* About open: kontak + kanan fade, links tetap (ul-nya naik) */
-body.about-open .contact,
-body.about-open .info-right {
-  opacity: 0;
-  pointer-events: none;
+body.about-open .aboutDash {
+  transform: scaleX(1);
+  transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s;
 }
 
 @keyframes fadeUp {
@@ -280,7 +299,6 @@ body.about-open .info-right {
   cursor: pointer;
   animation: btnIn 1s cubic-bezier(0.23, 1, 0.32, 1) 0.5s backwards;
 }
-/* Ring OUTLINE saat hover (bukan fill) — pola tombol vanholtz/Asli Anda */
 .btn-back::before {
   content: '';
   position: absolute;
@@ -295,7 +313,6 @@ body.about-open .info-right {
   border-color: currentColor;
   transform: scale(1);
 }
-
 @keyframes btnIn {
   from { transform: translateX(120px); }
   to { transform: translateX(0); }
@@ -316,8 +333,6 @@ body.about-open .info-right {
   border-radius: 1px;
   background-color: currentColor;
 }
-/* Lengan kepala panah: jangkar di UJUNG KIRI (tip), pendek, rotate ±45°
-   sehingga membentuk "←" bersih, bukan lengan panjang yang berpotongan */
 .icon-back::before,
 .icon-back::after {
   content: '';
@@ -330,12 +345,8 @@ body.about-open .info-right {
   background-color: currentColor;
   transform-origin: 0 50%;
 }
-.icon-back::before {
-  transform: rotate(45deg);
-}
-.icon-back::after {
-  transform: rotate(-45deg);
-}
+.icon-back::before { transform: rotate(45deg); }
+.icon-back::after { transform: rotate(-45deg); }
 
 .icon-close {
   position: relative;
@@ -354,12 +365,8 @@ body.about-open .info-right {
   border-radius: 1px;
   background-color: currentColor;
 }
-.icon-close::before {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-.icon-close::after {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
+.icon-close::before { transform: translate(-50%, -50%) rotate(-45deg); }
+.icon-close::after { transform: translate(-50%, -50%) rotate(45deg); }
 
 .btn-back--back:hover .btn-box {
   animation: loopX 2s linear 0.25s infinite;
@@ -367,7 +374,6 @@ body.about-open .info-right {
 .btn-back--close:hover .btn-box {
   animation: loopY 2s linear 0.25s infinite;
 }
-
 @keyframes loopX {
   0%     { transform: translateX(0) scale(1); opacity: 1;
            animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045); }
@@ -379,7 +385,6 @@ body.about-open .info-right {
   40%    { transform: translateX(0) scale(1); opacity: 1; }
   100%   { transform: translateX(0) scale(1); opacity: 1; }
 }
-
 @keyframes loopY {
   0%     { transform: translateY(0) scale(1); opacity: 1;
            animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045); }
@@ -404,7 +409,7 @@ body.reading-mode .wordmark {
   -webkit-text-stroke: 0.75px #999;
 }
 
-/* ================= MOBILE (fallback sementara) ================= */
+/* ================= MOBILE ================= */
 
 @media (max-width: 768px) {
   .ui { flex-direction: column; align-items: flex-start; }
@@ -414,11 +419,14 @@ body.reading-mode .wordmark {
     gap: 12px;
     padding: 27px 24px 24px;
   }
-  .info-left { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .contact:nth-child(1),
-  .contact:nth-child(2) { width: auto; }
+  .info-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .contact { width: auto; }
   .info-right { width: 100%; }
-  .wordmark-wrap { position: static; margin: 0 0 12px 24px; }
+  .wordmark-wrap { left: 24px; }
   .wordmark { font-size: 32px; line-height: 28px; }
   body.about-open .links ul,
   body.page-project .links ul { transform: none; }

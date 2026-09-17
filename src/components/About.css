@@ -1,4 +1,27 @@
-/* ===== Wrapper overlay: fixed, TIDAK scroll ===== */
+/* ============================================================
+   ABOUT v9 — safe-top DITURUNKAN dari blok corner (Opsi 1)
+   - Corner top-state tetap px (50px) seperti vanholtz
+   - Safe-top = corner-top + tinggi wordmark + gap proporsional (10vh)
+     → rongga corner→paragraf konsisten di semua viewport
+   - Paragraf TOP-ANCHORED di garis safe-top (permintaan Anda):
+     posisi istirahat DAN garis clip scroll sama-sama di sana
+   - Kolom: kiri 45% + gap 10% · kanan 45% (2 sub-kolom 50/50)
+   - Tipografi: lead 29/36 w500 · body 20/36 w400
+                h3 18 w500 · h6 16 w500 · li/span 14 w400
+   ============================================================ */
+
+:root {
+  /* Satu-satunya tempat mengatur jarak vertikal about.
+     Ubah --corner-gap saja kalau rongga terasa kurang/lebih:
+     10vh ≈ 108px @1080, ≈ 73px @730 (proporsional). */
+  --corner-top: 50px;    /* top wordmark state naik (px, seperti vanholtz) */
+  --corner-block: 34px;  /* tinggi wordmark 1 baris */
+  --corner-gap: 10vh;    /* rongga proporsional corner → paragraf */
+  --about-safe-top: calc(var(--corner-top) + var(--corner-block) + var(--corner-gap));
+}
+
+/* ===== OVERLAY ===== */
+
 .aboutOverlay {
   position: fixed;
   inset: 0;
@@ -6,95 +29,94 @@
   background: color-mix(in srgb, var(--color-bg) 95%, transparent);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease; /* close cepat */
+  transition: opacity 0.5s ease, visibility 0.5s ease; /* close vanholtz */
   overflow: hidden;
   touch-action: none;
 }
 .aboutOverlay--open {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.4s ease, visibility 0.4s ease; /* open smooth */
+  transition: opacity 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s,
+              visibility 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s; /* open vanholtz */
 }
 
-/* ===== Page project — overlay PUTIH ===== */
+/* Project page — overlay terang */
 body.page-project .aboutOverlay {
   background: color-mix(in srgb, #F2F2F2 95%, transparent);
 }
 
-/* ===== Kotak scroll: top 172px supaya body mendarat di y=220px
-   (SLOT_BASE Home), fade 48px ===== */
+/* ===== JENDELA SCROLL =====
+   Top = garis safe-top: paragraf mulai persis di sini, dan teks
+   yang di-scroll keluar akan ter-clip di garis ini (tidak pernah
+   menyentuh tepi atas viewport maupun blok corner). */
+
 .aboutScroll {
   position: absolute;
-  top: 172px;
   left: 0;
   right: 0;
+  top: var(--about-safe-top);
   bottom: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 6vw 120px 0;
-}
-
-/* ===== Konten: statement kiri + kolom info kanan.
-   margin-left desktop TIDAK diset di CSS — datang dari INLINE style
-   bodyLeft (dikirim Corners.jsx) supaya sejajar label 01/02/03 Home.
-   Mobile di-override 24px !important di media query bawah. */
-.aboutContent {
-  --about-anim-delay: 0.35s;
   display: flex;
-  gap: 8vw;
-  flex-wrap: wrap;
-  padding-top: 0;
+  flex-direction: column;
 }
 
-/* Kolom paragraf: lebar 620px supaya tidak terlalu memanjang ke bawah */
-.aboutStatement {
-  flex: 0 1 620px;
-  max-width: 620px;
+/* ===== CONTAINER =====
+   TOP-ANCHORED: margin-top tanpa auto → tepi atas konten selalu
+   = tepi atas jendela scroll = safe-top (istirahat maupun scroll). */
+
+.aboutContent {
+  width: min(100%, 1632px);
+  margin: 0 auto;
+  padding: 0 5vw 5vh;
+  display: flex;
+  flex-wrap: nowrap;
+  transform: translateY(30px);
+  transition: transform 0.5s cubic-bezier(0.755, 0.05, 0.855, 0.06); /* close */
 }
+.aboutOverlay--open .aboutContent {
+  transform: translateY(0);
+  transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s; /* open */
+}
+
+/* ===== KIRI: STATEMENT (45% + gap 10%) ===== */
+
+.aboutStatement {
+  flex: 0 0 45%;
+  margin-right: 10%;
+}
+
+/* Body = paragraf isi: 20/36 w400 */
 .aboutStatement p {
   font-family: 'Akzidenz Grotesk', sans-serif;
-  font-size: 17px;
-  line-height: 1.6;
+  font-size: 20px;
+  line-height: 36px;
+  font-weight: 400;
   color: var(--color-white);
-  margin-bottom: 26px;
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.2s ease, transform 0.2s ease; /* close cepat */
+  margin: 0 0 24px 0;
 }
-.aboutOverlay--open .aboutStatement p {
-  opacity: 0.92;
-  transform: translateY(0);
-  transition: opacity var(--motion-duration, 0.5s) var(--motion-ease, ease),
-              transform var(--motion-duration, 0.5s) var(--motion-ease, ease);
+.aboutStatement p:last-child {
+  margin-bottom: 0;
 }
 
-/* Lead: migrasi dari Arial 700 ke Akzidenz Grotesk 500
-   (pola vanholtz: teks tebal = Medium asli, bukan synthetic bold). */
-.aboutLead {
-  font-family: 'Akzidenz Grotesk', sans-serif !important;
+/* Lead = h2 vanholtz: 29/36 w500.
+   Spesifisitas (0,2,1) mengalahkan .aboutStatement p (0,1,1). */
+.aboutStatement p.aboutLead {
+  font-family: 'Akzidenz Grotesk', sans-serif;
+  font-size: 29px;
+  line-height: 36px;
   font-weight: 500;
-  font-size: 26px !important;
-  line-height: 1.35 !important;
-  letter-spacing: -0.5px;
-}
-.aboutOverlay--open .aboutLead {
-  opacity: 1 !important;
+  color: var(--color-white);
+  margin: 0 0 24px 0;
 }
 
-/* Stagger delay — scoped OPEN-ONLY: saat close tidak ada delay,
-   paragraf lenyap serentak & cepat (tidak ngawang) */
-.aboutOverlay--open .aboutStatement p:nth-child(1) { transition-delay: var(--about-anim-delay); }
-.aboutOverlay--open .aboutStatement p:nth-child(2) { transition-delay: calc(var(--about-anim-delay) + 0.07s); }
-.aboutOverlay--open .aboutStatement p:nth-child(3) { transition-delay: calc(var(--about-anim-delay) + 0.14s); }
-.aboutOverlay--open .aboutStatement p:nth-child(4) { transition-delay: calc(var(--about-anim-delay) + 0.21s); }
-
-/* Page project — paragraf hitam */
+/* Project page — paragraf hitam (mencakup lead karena lead = p) */
 body.page-project .aboutStatement p {
   color: var(--color-black);
 }
 
-/* Link kontak — abu-abu, hover putih + underline tipis.
-   Weight 700 → 500 mengikuti pola vanholtz. */
+/* Link kontak */
 .aboutLink {
   color: #b8b8b8;
   font-weight: 500;
@@ -114,81 +136,126 @@ body.page-project .aboutLink:hover {
   border-bottom-color: var(--color-black);
 }
 
-/* Kolom info: 300px, bertumpuk vertikal, berdiri 8vw setelah statement */
+/* ===== KANAN: INFO (45%) = 2 sub-kolom 50/50 ===== */
+
 .aboutInfo {
-  flex: 0 1 300px;
+  flex: 0 0 45%;
   display: flex;
-  flex-direction: column;
-  gap: 56px;
-  align-items: flex-start;
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.2s ease, transform 0.2s ease; /* close cepat */
-}
-.aboutOverlay--open .aboutInfo {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity var(--motion-duration, 0.5s) var(--motion-ease, ease),
-              transform var(--motion-duration, 0.5s) var(--motion-ease, ease);
-  transition-delay: calc(var(--about-anim-delay) + 0.1s);
+  flex-wrap: nowrap;
+  padding-top: 8px; /* offset kanan vanholtz (276 vs 268) */
 }
 
-/* Judul blok info — migrasi dari Arial Black 900 ke Druk Wide Web 500
-   (pola logo/label display vanholtz). */
-.aboutInfoBlock h3 {
-  font-family: 'Druk Wide Web', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--color-white);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 18px;
+.aboutInfoSub {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
 }
+
+/* Heading blok = h5 vanholtz: 18 w500 */
+.aboutInfoBlock h3 {
+  font-family: 'Akzidenz Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 21px;
+  color: var(--color-white);
+  margin: 0 0 20px 0;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Jarak antar blok dalam sub-kolom (pola vanholtz ±49px) */
+.aboutInfoBlock + .aboutInfoBlock {
+  margin-top: 49px;
+}
+
 .aboutInfoBlock ul {
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
+
+/* Item biasa = 14 w400 pitch 20 */
 .aboutInfoBlock li {
   font-family: 'Akzidenz Grotesk', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
   color: var(--color-white);
-  opacity: 0.85;
-  margin-bottom: 10px;
 }
+
 .aboutEdu {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
-.aboutEdu strong {
+
+/* Item kuat = h6 vanholtz: 16 w500 */
+.aboutEdu h6 {
   font-family: 'Akzidenz Grotesk', sans-serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 20px;
   color: var(--color-white);
+  margin: 0 0 4px 0;
 }
 .aboutEdu span {
   font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
   color: var(--color-white);
   opacity: 0.75;
 }
+/* jarak antar item kuat dalam satu blok (pola vanholtz ±50px) */
+.aboutEdu h6:not(:first-child) {
+  margin-top: 50px;
+}
 
-/* Page project — info hitam */
+/* Project page — info hitam */
 body.page-project .aboutInfoBlock h3,
 body.page-project .aboutInfoBlock li,
-body.page-project .aboutEdu strong,
+body.page-project .aboutEdu h6,
 body.page-project .aboutEdu span {
   color: var(--color-black);
 }
 
-/* ===== Mobile ===== */
+/* ===== MOBILE ===== */
+
 @media (max-width: 768px) {
+  :root {
+    --corner-gap: 6vh;
+  }
   .aboutScroll {
-    top: 152px;
-    padding: 0 24px 100px;
+    top: var(--about-safe-top);
   }
   .aboutContent {
+    width: auto;
+    margin: 0 24px;
+    padding: 0 0 40px;
+    flex-direction: column;
     gap: 48px;
-    padding-top: 48px;
-    margin-left: 24px !important; /* override inline bodyLeft di mobile */
+  }
+  .aboutStatement {
+    flex: none;
+    margin-right: 0;
+  }
+  .aboutStatement p.aboutLead {
+    font-size: 22px;
+    line-height: 30px;
+  }
+  .aboutStatement p {
+    font-size: 18px;
+    line-height: 27px;
+  }
+  .aboutInfo {
+    flex: none;
+    flex-direction: column;
+    gap: 32px;
+    padding-top: 0;
+  }
+  .aboutInfoSub {
+    flex: none;
+  }
+  .aboutInfoBlock + .aboutInfoBlock {
+    margin-top: 32px;
   }
 }
