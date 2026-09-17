@@ -345,9 +345,7 @@ function Home() {
     let lastY = 0
 
     const isOtherUiTarget = (target) =>
-      !!target?.closest?.(
-        '.corner, .navLinks, .navWordmark', '.aboutOverlay, .aboutClose'
-      )
+    !!target?.closest?.('.ui, .btn-back, .aboutOverlay, .aboutClose')
 
     const findHitIndex = (x, y) => {
       const rows = projectRowRefs.current

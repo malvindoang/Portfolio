@@ -1,212 +1,287 @@
-.corner {
+/* ============================================================
+   CORNERS v6 — model container persis vanholtz
+   band fixed bawah · padding 27/60/54 · semua kolom bottom-aligned
+   SEMUA baris teks: tinggi 16px + gap antar baris 5px (pitch 21)
+   ============================================================ */
+
+:root {
+  --corner-color: #F2F2F2;
+  --corner-bg: #e34234;
+}
+body.page-project {
+  --corner-color: #000000;
+  --corner-bg: #F2F2F2;
+}
+
+/* ================= BAND CONTAINER ================= */
+
+.ui {
   position: fixed;
-  z-index: 20;
-  font-size: 13px;
-  color: var(--color-white);
-  font-family: 'Akzidenz Grotesk', sans-serif;
-  letter-spacing: 0.3px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
 }
-.tr { top: 36px; right: 40px; text-align: right; font-size: 14px; z-index: 30; }
-
-.br {
-  bottom: 36px;
-  right: 40px;
-  text-align: right;
-  transition: opacity var(--motion-duration) var(--motion-ease);
+.ui a,
+.ui button {
+  pointer-events: auto;
 }
 
-/* Gap antar baris nav — seragam untuk corner maupun navLinks */
-.corner .row,
-.navLinks .row {
-  margin-bottom: 6px;
+/* ================= RESET LIST (hilangkan dot/marker) ================= */
+
+.info ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.info li {
+  list-style: none;
+}
+.info li::marker {
+  content: '';
+}
+.info li::before,
+.info li::after {
+  content: none;
 }
 
-.corner .num { color: var(--color-white); opacity: 0.6; font-size: 11px; margin-right: 6px; }
-.corner a, .corner span.label { color: var(--color-white); text-decoration: none; }
+/* ================= WORDMARK ================= */
 
-/* ===== ENTRANCE LAYER 4 — CORNER DIRECTIONAL (keyframes) =====
-   Dipakai lewat inline `animation` di Corners.jsx (bukan class statis),
-   supaya delay per-baris & gating cornersIntro gampang dikontrol dari JS. */
-@keyframes cornerFromLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-40px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.wordmark-wrap {
+  position: absolute;
+  left: 60px;
+  bottom: calc(7.5vh + 67px); /* tinggi band (2.5vh+58+5vh) + rongga 9px */
+  transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
 }
-@keyframes cornerFromRight {
-  0% {
-    opacity: 0;
-    transform: translateX(40px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.wordmark-wrap--bottom {
+  transform: none;
+  transition-delay: 0.25s;
+}
+.wordmark-wrap--top {
+  transform: translateY(calc(232px - 100vh));
+  transition-delay: 0s;
 }
 
-/* ===== EXIT LAYER — mirror entrance, MURNI meluncur tanpa fade =====
-   Jarak 260px supaya elemen benar-benar hilang di balik tepi layar.
-   opacity: 1 di seluruh keyframe (tidak pernah fade).
-   Durasi & easing (0.6s ease) sama persis dengan entrance. */
-@keyframes cornerExitLeft {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-260px);
-  }
-}
-@keyframes cornerExitRight {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(260px);
-  }
+.wordmark-link {
+  display: block;
+  text-decoration: none;
 }
 
-/* WORDMARK — font migrasi ke Druk Wide Web 500 (pola logo vanholtz).
-   Stroke 1px & efek hover (color transparent -> outline) TIDAK disentuh. */
 .wordmark {
   font-family: 'Druk Wide Web', sans-serif;
   font-weight: 500;
-  font-size: 34px;
-  line-height: 0.95;
-  color: var(--color-white);
-  letter-spacing: -0.5px;
-  -webkit-text-stroke: 1px var(--color-white);
-  transition: color 0.3s ease;
+  font-size: 40px;
+  line-height: 34px;
+  color: var(--corner-color);
+  -webkit-text-stroke: 1px var(--corner-color);
+  transition: color 0.2s ease-in-out 0.05s;
 }
-.wordmarkLink {
-  text-decoration: none;
+.wordmark-wrap--top .wordmark {
+  transition-delay: 0s;
 }
-.wordmarkLink:hover .wordmark {
-  color: transparent;
-}
-.sub {
-  font-size: 13px;
-  color: var(--color-white);
-  opacity: 0.75;
-  margin-top: 14px;
-  transition: opacity var(--motion-duration) var(--motion-ease);
+.wordmark-link:hover .wordmark {
+  color: var(--corner-bg);
 }
 
-.navWordmark .sub {
-  font-family: 'Akzidenz Grotesk', sans-serif;
-  font-size: 13px;
-  opacity: 0.50;
-}
-
-/* ===== ENTRANCE LAYER 3 — WORDMARK MASK REVEAL =====
-   Wrapper overflow:hidden per baris (.maskLine) + inner yang di-slide
-   (.maskInner). Delay per baris ditulis inline via animationDelay di
-   Corners.jsx (WORDMARK_DELAYS_HOME / _PROJECT). fill-mode backwards:
-   sesudah selesai, transform lepas dari cascade -> balik ke `none`
-   (translateX(0)), identik dengan posisi akhir animasi -> tidak "pop". */
-.maskLine {
+.slideUp {
   display: block;
   overflow: hidden;
+  padding: 2px 0;
+  margin: -2px 0;
 }
-.maskInner {
-  display: inline-block;
-  animation: maskReveal 1s ease 1 normal backwards;
-}
-@keyframes maskReveal {
-  0% {
-    transform: translateX(-105%);
-  }
-  100% {
-    transform: translateX(0);
-  }
+.wordmark-text {
+  display: block;
+  animation: wmUp 1s ease backwards;
 }
 
-.aboutTrigger {
+@keyframes wmUp {
+  from { transform: translateY(120%); }
+  to { transform: translateY(0); }
+}
+
+/* ================= INFO: static di dalam band ================= */
+
+.info {
+  width: 100%;
+  padding: 2.5vh 60px 5vh;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.info-left {
+  display: flex;
+  align-items: flex-end;
+  gap: 3vw; /* jarak antar kolom persis vanholtz: 57.6px @1920, 43.2px @1440 */
+}
+
+/* Kolom selebar teks (content-width), seperti vanholtz */
+.contact { width: auto; }
+
+.contact {
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--corner-color);
+  transition: opacity 0.2s ease-in-out;
+  animation: fadeUp 1s ease backwards;
+}
+.contact .line {
+  display: block;
+  height: 16px;
+  line-height: 16px;
+}
+.contact .line + .line {
+  margin-top: 5px;
+}
+
+.contact {
+  perspective: 250px;
+  perspective-origin: 0 center;
+}
+.email-link {
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  transform-origin: 0 center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.email-link:hover {
+  transform: rotateY(15deg);
+}
+
+/* ================= LINKS (about/works) ================= */
+
+.links {
+  animation: fadeUp 1s ease backwards;
+}
+.links ul {
+  transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
+}
+body.about-open .links ul,
+body.page-project .links ul {
+  transform: translateY(calc(138px - 100vh));
+  transition-delay: 0s;
+}
+body:not(.about-open):not(.page-project) .links ul {
+  transition-delay: 0.25s;
+}
+
+/* Baris links & social: kunci 16px + gap 5px = pitch 21 (sama seperti kontak) */
+.links li,
+.social li {
+  height: 16px;
+  line-height: 16px;
+  perspective: 250px;
+  perspective-origin: 0 center;
+}
+.links li + li,
+.social li + li {
+  margin-top: 5px;
+}
+
+.link,
+.social a {
+  display: inline-block;
+  height: 16px;
+  line-height: 16px;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--corner-color);
+  text-decoration: none;
   cursor: pointer;
-}
-.worksTrigger {
-  cursor: pointer;
-}
-.activeDash {
-  display: inline-block;
-  width: 28px;
-  height: 1px;
-  background: var(--color-white);
-  margin-left: 12px;
-  vertical-align: middle;
+  transform-origin: 0 center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* NAV HOVER: perspective 3D di parent .row supaya .label punya "ruang 3D"
-   untuk rotateY. Diterapkan HANYA di .navLinks .row (tidak menyentuh
-   .corner .row yang dipakai icon button back/close — constraint
-   "jangan sentuh elemen lain" tetap aman). KNOB: makin kecil nilainya,
-   makin dramatis efek perspektifnya. */
-.navLinks .row {
-  perspective: 300px; /* NAV HOVER KNOB */
+/* Kolom kiri flow-based (gap 3vw): TANPA slot, supaya jarak antar teks
+   seragam persis seperti ritme vanholtz (57.6px @1920, 43.2px @1440) */
+.link {
+  padding: 0;
 }
 
-/* NAV HOVER: base state label about/work(s) — transform-origin di KIRI
-   (0% center) supaya rotasi "berengsel" dari sisi kiri (sesuai posisi nav
-   Anda yang menempel kiri, kebalikan dari .detailNextTitle vanholtz-style
-   yang anchor kanan). display:inline-block WAJIB supaya transform 3D
-   berlaku presisi (elemen inline murni punya keterbatasan render transform
-   di beberapa browser).
-   Selector sengaja 4-class (.navLinks .row .label.aboutTrigger) supaya
-   SELALU menang specificity dari rule kompetitor di ProjectDetail.css
-   (body.page-project .navLinks .label, dst — 3 class + 1 type), tanpa
-   perlu mengubah ProjectDetail.css sama sekali. transition mencakup
-   "color" juga supaya tidak menghapus/mengganti perilaku transisi warna
-   yang sudah ada di berbagai state (home/page-project/on-hero/reading-mode/
-   about-open — semua state warna itu diatur via `color` property di rule
-   lain, bukan lewat rule ini, jadi tetap aman & tetap menang sesuai
-   specificity masing-masing). */
-.navLinks .row .label.aboutTrigger,
-.navLinks .row .label.worksTrigger {
-  display: inline-block;
-  transform-origin: 0% center; /* NAV HOVER: anchor KIRI */
-  transform: rotateY(0deg);
-  transition: color 0.3s ease, transform var(--motion-duration) var(--motion-ease); /* NAV HOVER */
-  will-change: transform;
+/* Kolom kanan fixed-width (social di x1610): slot 30px DIPERTAHANKAN
+   supaya label mendarat di x1640 persis seperti instagram vanholtz */
+.social a {
+  padding: 0 0 0 30px;
+}
+.link:hover,
+.social a:hover {
+  transform: rotateY(15deg);
 }
 
-/* NAV HOVER: efek hover — rotateY negatif dari anchor kiri membuat sisi
-   KANAN label "masuk" menjauhi viewer (perspective flip berengsel kiri),
-   mirror dari .detailNextTitle (anchor kanan, rotateY di kiri) yang
-   sudah terbukti jadi signature vanholtz di kode Anda sendiri. Resting
-   TETAP flat (rotateY 0deg) — efek CUMA muncul saat hover, sesuai
-   requirement no. 3. */
-.navLinks .row .label.aboutTrigger:hover,
-.navLinks .row .label.worksTrigger:hover {
-  transform: rotateY(-20deg); /* NAV HOVER KNOB: sudut hover, adjust kalau kurang/terlalu dramatis */
+.link strong,
+.social a strong,
+.credits strong {
+  font-weight: 500;
+  line-height: 16px;
 }
 
-/* ==== Tombol back (←) / close (×) — TIDAK disentuh ==== */
-.cornerIconBtn {
-  position: relative;
-  top: -45px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* ================= KANAN: social + design ================= */
+
+.info-right {
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.social {
+  width: 125px;
+  animation: fadeUp 1s ease backwards;
+}
+
+/* design: satu baris, rata kanan, bottom-aligned → otomatis sejajar
+   baris bawah social setelah pitch diperbaiki */
+.credits {
+  width: 125px;
+  text-align: right;
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--corner-color);
+  animation: fadeUp 1s ease backwards;
+}
+.credits strong {
+  display: block;
+  height: 16px;
+  line-height: 16px;
+}
+
+/* About open: kontak + kanan fade, links tetap (ul-nya naik) */
+body.about-open .contact,
+body.about-open .info-right {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(50%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= TOMBOL BACK / CLOSE ================= */
+
+.btn-back {
+  position: fixed;
+  top: 54px;
+  right: 60px;
   width: 50px;
   height: 50px;
-  margin-right: 10px;
-  vertical-align: middle;
+  z-index: 60;
   background: none;
   border: none;
   padding: 0;
-  color: inherit;
+  color: var(--corner-color);
   cursor: pointer;
-  overflow: visible;
+  animation: btnIn 1s cubic-bezier(0.23, 1, 0.32, 1) 0.5s backwards;
 }
-
-.cornerIconBtn::before {
+/* Ring OUTLINE saat hover (bukan fill) — pola tombol vanholtz/Asli Anda */
+.btn-back::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -216,12 +291,17 @@
   transition: transform 0.25s, border-color 0.25s;
   pointer-events: none;
 }
-.cornerIconBtn:hover::before {
+.btn-back:hover::before {
   border-color: currentColor;
   transform: scale(1);
 }
 
-.cornerIconBox {
+@keyframes btnIn {
+  from { transform: translateX(120px); }
+  to { transform: translateX(0); }
+}
+
+.btn-box {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,40 +309,42 @@
   height: 100%;
 }
 
-.cornerIconBack {
+.icon-back {
   position: relative;
   width: 25px;
   height: 2px;
   border-radius: 1px;
   background-color: currentColor;
 }
-.cornerIconBack::before,
-.cornerIconBack::after {
+/* Lengan kepala panah: jangkar di UJUNG KIRI (tip), pendek, rotate ±45°
+   sehingga membentuk "←" bersih, bukan lengan panjang yang berpotongan */
+.icon-back::before,
+.icon-back::after {
   content: '';
   position: absolute;
-  width: 25px;
+  left: 0;
+  top: 0;
+  width: 10px;
   height: 2px;
   border-radius: 1px;
   background-color: currentColor;
-  display: block;
+  transform-origin: 0 50%;
 }
-.cornerIconBack::before {
-  top: -7px;
-  transform: translate3d(-7px, 2px, 0) rotate(-45deg) scaleX(0.6);
+.icon-back::before {
+  transform: rotate(45deg);
 }
-.cornerIconBack::after {
-  bottom: -7px;
-  transform: translate3d(-7px, -2px, 0) rotate(45deg) scaleX(0.6);
+.icon-back::after {
+  transform: rotate(-45deg);
 }
 
-.cornerIconClose {
+.icon-close {
   position: relative;
   display: block;
   width: 2px;
   height: 2px;
 }
-.cornerIconClose::before,
-.cornerIconClose::after {
+.icon-close::before,
+.icon-close::after {
   content: '';
   position: absolute;
   left: 0;
@@ -272,84 +354,73 @@
   border-radius: 1px;
   background-color: currentColor;
 }
-.cornerIconClose::before {
+.icon-close::before {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
-.cornerIconClose::after {
+.icon-close::after {
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-.cornerIconBtn:hover .cornerIconBox--x {
-  animation: cornerIconLoopX 2s cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.25s infinite forwards;
+.btn-back--back:hover .btn-box {
+  animation: loopX 2s linear 0.25s infinite;
 }
-@keyframes cornerIconLoopX {
-  0%     { transform: translateX(0) scale(1);        opacity: 1; }
-  5%     { transform: translateX(0) scale(0.75);     opacity: 1; }
-  19.99% { transform: translateX(-50%) scale(0.75);  opacity: 0; }
-  20%    { transform: translateX(50%) scale(0.75);  opacity: 0;
+.btn-back--close:hover .btn-box {
+  animation: loopY 2s linear 0.25s infinite;
+}
+
+@keyframes loopX {
+  0%     { transform: translateX(0) scale(1); opacity: 1;
+           animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045); }
+  5%     { transform: translateX(0) scale(0.75); opacity: 1; }
+  19.99% { transform: translateX(-50%) scale(0.75); opacity: 0; }
+  20%    { transform: translateX(50%) scale(0.75); opacity: 0;
            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
-  30%    { transform: translateX(0) scale(0.75);     opacity: 1; }
-  40%    { transform: translateX(0) scale(1);        opacity: 1; }
-  100%   { transform: translateX(0) scale(1);        opacity: 1; }
+  30%    { transform: translateX(0) scale(0.75); opacity: 1; }
+  40%    { transform: translateX(0) scale(1); opacity: 1; }
+  100%   { transform: translateX(0) scale(1); opacity: 1; }
 }
 
-.cornerIconBtn:hover .cornerIconBox--y {
-  animation: cornerIconLoopY 2s cubic-bezier(0.55, 0.055, 0.675, 0.19) 0.25s infinite forwards;
-}
-@keyframes cornerIconLoopY {
-  0%     { transform: translateY(0) scale(1);        opacity: 1; }
-  5%     { transform: translateY(0) scale(0.75);     opacity: 1; }
-  24.99% { transform: translateY(50%) scale(0.75);  opacity: 0; }
-  25%    { transform: translateY(-50%) scale(0.75);  opacity: 0;
+@keyframes loopY {
+  0%     { transform: translateY(0) scale(1); opacity: 1;
+           animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045); }
+  5%     { transform: translateY(0) scale(0.75); opacity: 1; }
+  24.99% { transform: translateY(50%) scale(0.75); opacity: 0; }
+  25%    { transform: translateY(-50%) scale(0.75); opacity: 0;
            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
-  40%    { transform: translateY(0) scale(0.75);     opacity: 1; }
-  50%    { transform: translateY(0) scale(1);        opacity: 1; }
-  100%   { transform: translateY(0) scale(1);        opacity: 1; }
+  40%    { transform: translateY(0) scale(0.75); opacity: 1; }
+  50%    { transform: translateY(0) scale(1); opacity: 1; }
+  100%   { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-/* ==== MALVIN wordmark container — posisi TIDAK disentuh ==== */
-.navWordmark {
-  position: fixed;
-  left: 40px;
-  z-index: 30;
-  transition:
-    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity var(--motion-duration) var(--motion-ease);
-}
-.navWordmark.nav--closed {
-  top: calc(100vh - 118px);
-}
-.navWordmark.nav--open {
-  top: 36px;
-}
+/* ================= READING MODE (sementara, revisi total di Fase 6) ================= */
 
-body.wordmark-hidden .navWordmark {
+body.reading-mode .info,
+body.reading-mode .btn-back--back {
   opacity: 0;
   pointer-events: none;
 }
+body.reading-mode .wordmark {
+  color: transparent;
+  -webkit-text-stroke: 0.75px #999;
+}
 
-/* ==== Nav about / work(s) — container TIDAK disentuh (posisi/left/top) ==== */
-.navLinks {
-  position: fixed;
-  top: 36px;
-  z-index: 30;
-  width: 160px;
-  font-size: 14px;
-  font-family: 'Akzidenz Grotesk', sans-serif;
-  color: var(--color-white);
-  text-align: left;
-  transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1), top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.navLinks .label {
-  color: var(--color-white);
-  text-decoration: none;
-}
-.navLinks.nav--closed {
-  left: 40px;
-  top: 36px;
-}
-.navLinks.nav--open {
-  left: 220px;
-  top: 46px;
+/* ================= MOBILE (fallback sementara) ================= */
+
+@media (max-width: 768px) {
+  .ui { flex-direction: column; align-items: flex-start; }
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 27px 24px 24px;
+  }
+  .info-left { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .contact:nth-child(1),
+  .contact:nth-child(2) { width: auto; }
+  .info-right { width: 100%; }
+  .wordmark-wrap { position: static; margin: 0 0 12px 24px; }
+  .wordmark { font-size: 32px; line-height: 28px; }
+  body.about-open .links ul,
+  body.page-project .links ul { transform: none; }
+  .btn-back { right: 24px; }
 }

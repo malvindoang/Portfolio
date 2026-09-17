@@ -3,82 +3,41 @@ import { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import About from './About'
 import { PageTransitionContext } from './PageTransitionContext'
-import { SECTIONS } from '../data/projects'
 import './Corners.css'
 
 const GRID_GAP = 14
 
-const ICON_ROW_SPACER_COUNT = Math.max(SECTIONS.length - 1, 0)
+// ===== DELAYS ENTRANCE (persis vanholtz dari Script 4) =====
+const HOME_DELAYS = {
+  wordmark: 2,
+  info: [2.4, 2.6],
+  links: 2.8,
+  social: 3.0,
+  credits: 3.2,
+}
+const PROJECT_DELAYS = {
+  wordmark: 0,
+  info: [0.4, 0.8],
+  links: 0.4,
+  social: 1.0,
+  credits: 1.2,
+}
 
-const WORDMARK_DELAYS_HOME = [2, 2.2, 2.35]
-const WORDMARK_DELAYS_PROJECT = [0, 0.2, 0.35]
+// ===== SOCIAL LINKS (tanpa nomor, urutan sesuai keputusan) =====
+const SOCIAL_LINKS = [
+  { label: 'instagram', href: 'https://www.instagram.com/malvin.15' },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/malvin-malvin-55974632b' },
+  { label: 'github', href: 'https://github.com/malvindoang' },
+]
 
-const DIRECTIONAL_BASE_HOME = 2.5
-const DIRECTIONAL_BASE_PROJECT = 0.3
-const directionalDelay = (index, isHome) =>
-  (isHome ? DIRECTIONAL_BASE_HOME : DIRECTIONAL_BASE_PROJECT) + index * 0.1
-
-// ===== EXIT (mirror entrance, MURNI meluncur tanpa fade) =====
-const EXIT_SLIDE_DURATION = 0.6
-const EXIT_SLIDE_EASE = 'ease'
-const EXIT_STAGGER = 0.18
-const EXIT_DELAY_BR = 0
-const EXIT_DELAY_TR = EXIT_STAGGER
-const EXIT_DELAY_WORKS = EXIT_STAGGER * 2
-const EXIT_DELAY_ABOUT = EXIT_STAGGER * 3
-const EXIT_DELAY_WORDMARK = EXIT_STAGGER * 4
-
-function CornerIconRows({ spacerCount, icon, onClick, ariaLabel, introOn, isHome, leaving }) {
-  const boxClass =
-    icon === 'back' ? 'cornerIconBox cornerIconBox--x' : 'cornerIconBox cornerIconBox--y'
-
-  const rowStyle = leaving
-    ? {
-        animation: `cornerExitRight ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${EXIT_DELAY_TR}s forwards`,
-      }
-    : introOn
-    ? {
-        animation: 'cornerFromRight 0.6s ease backwards',
-        animationDelay: `${directionalDelay(spacerCount, isHome)}s`,
-      }
-    : undefined
-
+function IconBox({ type }) {
   return (
-    <>
-      {Array.from({ length: spacerCount }).map((_, i) => (
-        <div
-          className="row"
-          key={`spacer-${i}`}
-          aria-hidden="true"
-          style={{ visibility: 'hidden' }}
-        >
-          <span className="num">00</span>
-          <span className="label">spacer</span>
-        </div>
-      ))}
-      <div className="row" style={rowStyle}>
-        <button
-          type="button"
-          className="cornerIconBtn"
-          onClick={onClick}
-          aria-label={ariaLabel}
-        >
-          <span className={boxClass} aria-hidden="true">
-            {icon === 'back' ? (
-              <span className="cornerIconBack" />
-            ) : (
-              <span className="cornerIconClose" />
-            )}
-          </span>
-        </button>
-      </div>
-    </>
+    <span className={type === 'back' ? 'btn-box btn-box--back' : 'btn-box btn-box--close'}>
+      <span className={type === 'back' ? 'icon-back' : 'icon-close'} />
+    </span>
   )
 }
 
-/* Signature props: sectionNav DIHAPUS (Fase 1: section nav 01/02/03
-   dibuang permanen, prop tidak lagi dibutuhkan). playIntro juga dihapus
-   (tidak pernah dipakai di dalam komponen). */
 function Corners({ onGridWidth, onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
   const [bodyLeft, setBodyLeft] = useState(220)
@@ -90,13 +49,10 @@ function Corners({ onGridWidth, onBack }) {
   const { routePath } = useContext(PageTransitionContext)
   const isHome = (routePath ?? location.pathname) === '/'
 
-  const [leaving, setLeaving] = useState(false)
+  // ===== ENTRANCE KEY: replay animasi setiap route berubah =====
   const [entranceKey, setEntranceKey] = useState(() => 1)
   const prevRoutePathRef = useRef(routePath)
 
-  const introOn = entranceKey > 0
-
-  // Track route change untuk trigger entranceKey
   useEffect(() => {
     if (prevRoutePathRef.current !== routePath) {
       setEntranceKey((k) => k + 1)
@@ -104,46 +60,13 @@ function Corners({ onGridWidth, onBack }) {
     }
   }, [routePath])
 
-  useEffect(() => {
-    const onExitStart = () => setLeaving(true)
-    const onRevealStart = () => {
-      setLeaving(false)
-    }
-    window.addEventListener('pt-exit-start', onExitStart)
-    window.addEventListener('pt-reveal-start', onRevealStart)
-    return () => {
-      window.removeEventListener('pt-exit-start', onExitStart)
-      window.removeEventListener('pt-reveal-start', onRevealStart)
-    }
-  }, [])
+  const delays = isHome ? HOME_DELAYS : PROJECT_DELAYS
+  const play = entranceKey > 0
 
-  const wordmarkDelays = isHome ? WORDMARK_DELAYS_HOME : WORDMARK_DELAYS_PROJECT
+  // ===== STATE NAIK (pola vanholtz): ul di dalam nav yang translate =====
+  const up = !isHome || aboutOpen
 
-  const entranceLeft = (d) => ({
-    animation: 'cornerFromLeft 0.6s ease backwards',
-    animationDelay: `${d}s`,
-  })
-  const entranceRight = (d) => ({
-    animation: 'cornerFromRight 0.6s ease backwards',
-    animationDelay: `${d}s`,
-  })
-  const exitLeft = (d) => ({
-    animation: `cornerExitLeft ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${d}s forwards`,
-  })
-  const exitRight = (d) => ({
-    animation: `cornerExitRight ${EXIT_SLIDE_DURATION}s ${EXIT_SLIDE_EASE} ${d}s forwards`,
-  })
-  const cornerStyle = (dir, entranceDelay, exitDelay) =>
-    leaving
-      ? dir === 'left'
-        ? exitLeft(exitDelay)
-        : exitRight(exitDelay)
-      : introOn
-      ? dir === 'left'
-        ? entranceLeft(entranceDelay)
-        : entranceRight(entranceDelay)
-      : undefined
-
+  // ===== MEASUREMENT untuk bodyLeft (About overlay) =====
   useLayoutEffect(() => {
     const measure = () => {
       const w1 = wordmarkRef.current?.getBoundingClientRect().width || 0
@@ -185,124 +108,116 @@ function Corners({ onGridWidth, onBack }) {
     if (onBack) onBack()
   }
 
+  const anim = (delay) =>
+    play ? { animationDelay: `${delay}s` } : { animation: 'none' }
+
   return createPortal(
     <>
-      <div
-        key={`wm-${entranceKey}`}
-        ref={wordmarkRef}
-        className={`navWordmark ${aboutOpen ? 'nav--open' : 'nav--closed'}`}
-        style={cornerStyle('left', 0, EXIT_DELAY_WORDMARK)}
-      >
-        <Link to="/" className="wordmarkLink" onClick={handleWordmarkClick}>
-          <div className="wordmark">
-            <div className="maskLine">
-              <div
-                className="maskInner"
-                style={
-                  introOn
-                    ? { animationDelay: `${wordmarkDelays[0]}s` }
-                    : { animation: 'none' }
-                }
-              >
-                MALVIN
-              </div>
+      <header className="ui">
+        {/* ===== WORDMARK: MALVIN satu baris ===== */}
+        <div
+          key={`wm-${entranceKey}`}
+          ref={wordmarkRef}
+          className={`wordmark-wrap ${up ? 'wordmark-wrap--top' : 'wordmark-wrap--bottom'}`}
+        >
+          <Link to="/" className="wordmark-link" onClick={handleWordmarkClick}>
+            <div className="wordmark">
+              <span className="slideUp">
+                <span className="wordmark-text" style={anim(delays.wordmark)}>
+                  MALVIN
+                </span>
+              </span>
             </div>
-          </div>
-        </Link>
-        <div className="sub">
-          <div className="maskLine">
-            <div
-              className="maskInner"
-              style={
-                introOn
-                  ? { animationDelay: `${wordmarkDelays[1]}s` }
-                  : { animation: 'none' }
-              }
+          </Link>
+        </div>
+
+        {/* ===== INFO: SATU container footer =====
+            kiri = kontak + about/works (kolom ke-3, sejajar otomatis)
+            kanan = social + design (rata kanan di padding 60) ===== */}
+        <div key={`info-${entranceKey}`} className="info">
+          <div className="info-left">
+            <div className="contact" style={anim(delays.info[0])}>
+              <span className="line">Front-end Developer</span>
+              <span className="line">UI/UX Designer</span>
+            </div>
+            <div className="contact" style={anim(delays.info[1])}>
+              <span className="line">Jakarta, Indonesia</span>
+              <span className="line">
+                <strong>
+                  <a href="mailto:malvin15.doang@gmail.com" className="email-link">
+                    malvin15.doang@gmail.com
+                  </a>
+                </strong>
+              </span>
+            </div>
+
+            {/* about/works: kolom ke-3 container yang sama; yang naik = ul */}
+            <nav
+              key={`links-${entranceKey}`}
+              ref={navLinksRef}
+              className="links"
+              style={anim(delays.links)}
             >
-              Front-end Developer
+              <ul>
+                <li className="about-li">
+                  <button type="button" className="link" onClick={() => setAboutOpen((v) => !v)}>
+                    <strong>about</strong>
+                  </button>
+                </li>
+                <li className="works-li">
+                  <button type="button" className="link" onClick={handleWorksClick}>
+                    <strong>works</strong>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          <div className="info-right">
+            <nav className="social" style={anim(delays.social)}>
+              <ul>
+                {SOCIAL_LINKS.map((s) => (
+                  <li key={s.label}>
+                    <a href={s.href} target="_blank" rel="noreferrer">
+                      <strong>{s.label}</strong>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="credits" style={anim(delays.credits)}>
+              <strong>design</strong>
             </div>
           </div>
-          <div className="maskLine">
-            <div
-              className="maskInner"
-              style={
-                introOn
-                  ? { animationDelay: `${wordmarkDelays[2]}s` }
-                  : { animation: 'none' }
-              }
-            >
-              UI/UX Designer
-            </div>
-          </div>
         </div>
-      </div>
+      </header>
 
-      <div
-        key={`nl-${entranceKey}`}
-        ref={navLinksRef}
-        className={`navLinks ${aboutOpen ? 'nav--open' : 'nav--closed'}`}
-      >
-        <div
-          className="row"
-          style={cornerStyle('left', directionalDelay(0, isHome), EXIT_DELAY_ABOUT)}
-        >
-          <span className="label aboutTrigger" onClick={() => setAboutOpen((v) => !v)}>
-            about
-          </span>
-          {aboutOpen && <span className="activeDash" />}
-        </div>
-        <div
-          className="row"
-          style={cornerStyle('left', directionalDelay(1, isHome), EXIT_DELAY_WORKS)}
-        >
-          <span className="label worksTrigger" onClick={handleWorksClick}>
-            work(s)
-          </span>
-          {!aboutOpen && isHome && <span className="activeDash" />}
-        </div>
-      </div>
+      {/* ===== ABOUT OVERLAY ===== */}
+      <About isOpen={aboutOpen} bodyLeft={bodyLeft} />
 
-      {/* corner.tr: hanya close (about) atau back (project) atau kosong (home).
-          Branch sectionNav DIHAPUS di Fase 1. */}
-      <div className="corner tr">
-        {aboutOpen ? (
-          <CornerIconRows
-            spacerCount={ICON_ROW_SPACER_COUNT}
-            icon="close"
-            ariaLabel="Close about"
-            onClick={() => setAboutOpen(false)}
-            introOn={introOn}
-            isHome={isHome}
-            leaving={leaving}
-          />
-        ) : onBack ? (
-          <CornerIconRows
-            spacerCount={ICON_ROW_SPACER_COUNT}
-            icon="back"
-            ariaLabel="Back to home"
-            onClick={handleBackClick}
-            introOn={introOn}
-            isHome={isHome}
-            leaving={leaving}
-          />
-        ) : null}
-      </div>
-
-      {/* corner.br: LiveClock DIHAPUS di Fase 1. Hanya "Jakarta, Indonesia"
-          yang tersisa. */}
-      {!aboutOpen && (
-        <div
-          key={`br-${entranceKey}`}
-          className="corner br"
-          style={cornerStyle('right', directionalDelay(3, isHome), EXIT_DELAY_BR)}
+      {/* ===== CLOSE (×) saat about open ===== */}
+      {aboutOpen && (
+        <button
+          type="button"
+          className="btn-back btn-back--close"
+          onClick={() => setAboutOpen(false)}
+          aria-label="Close about"
         >
-          <div className="sub">
-            Jakarta, Indonesia
-          </div>
-        </div>
+          <IconBox type="close" />
+        </button>
       )}
 
-      <About isOpen={aboutOpen} bodyLeft={bodyLeft} />
+      {/* ===== BACK (←) saat project & about tutup ===== */}
+      {!isHome && !aboutOpen && onBack && (
+        <button
+          type="button"
+          className="btn-back btn-back--back"
+          onClick={handleBackClick}
+          aria-label="Back to home"
+        >
+          <IconBox type="back" />
+        </button>
+      )}
     </>,
     document.body
   )
