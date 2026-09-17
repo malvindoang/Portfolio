@@ -549,7 +549,7 @@ function Home() {
                   ref={(el) => (contentRefs.current[sIdx] = el)}
                 >
                   {section.projects.map((p, i) => {
-                    const lines = getLines(p.title)
+                    const lines = p.homeLines || getLines(p.title)
                     const fontSize = getFontSize(lines)
                     const projectIndex = projectCounter++
                     nextProjectSlugs[projectIndex] = p.slug || null

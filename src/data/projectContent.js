@@ -88,7 +88,7 @@ export const PROJECT_CONTENT = {
   },
 
   'garbage-classification': {
-    title: 'Garbage Classification',
+    title: 'Waste Classifier',
     role: 'UI/UX Designer & Website Designer',
     tools: 'Figma, Photoshop',
     year: 2026,
@@ -97,9 +97,9 @@ export const PROJECT_CONTENT = {
     figma: true,
     figmaUrl: '',
     hero: '/images/garbage-classification/hero-garbage.avif',
-    heroLines: ['Garbage', 'Classification'],
+    heroLines: ['Waste', 'Classifier'],
     intro:
-      'An accurate model is useless if nobody can use it. Garbage Classification is the interface I designed for my undergraduate thesis — a machine-learning model that recognizes six types of waste from a single photo — built so that anyone, not just researchers, can sort waste correctly in seconds.',
+      'An accurate model is useless if nobody can use it. Waste Classifier is the interface I designed for my undergraduate thesis — a machine-learning model that recognizes six types of waste from a single photo — built so that anyone, not just researchers, can sort waste correctly in seconds.',
     approach:
       'In just five days, I prototyped the entire experience in Figma: a friendly, illustration-driven web app in Bahasa Indonesia that explains itself before asking anything. The prototype later became the blueprint for the deployed web application (Web Development section), while the model and the research paper live in the Research section.',
     sections: [

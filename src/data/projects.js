@@ -3,7 +3,7 @@ export const SECTIONS = [
     label: '01 — UI/UX',
     projects: [
       { title: 'HUB PKP', year: 2026, slug: 'hub-pkp', theme: 'mono' },
-      { title: 'GARBAGE CLASSIFICATION', year: 2026, slug: 'garbage-classification' },
+      { title: 'WASTE CLASSIFIER', year: 2026, slug: 'garbage-classification', homeLines: ['WASTE', 'CLASSIFIER'] },
       { title: 'CALM', year: 2025 },
       { title: 'PLANET HEROES', year: 2024 },
       { title: 'PURE PLATES', year: 2024 },
@@ -12,7 +12,7 @@ export const SECTIONS = [
   {
     label: '02 — WEB DEVELOPMENT',
     projects: [
-      { title: 'GARBAGE CLASSIFICATION', year: 2026 },
+      { title: 'WASTE CLASSIFIER', year: 2026, homeLines: ['WASTE', 'CLASSIFIER'] },
     ],
   },
   {
