@@ -1,15 +1,15 @@
 /* ============================================================
-   CORNERS v10 — gap kolom footer SERAGAM 3vw di semua viewport
-   - info-left = flex, gap 3vw (57.6px @1920, 43.2px @1440 = vanholtz)
-   - Kolom 3 (about/works) KEMBALI ke flow flex (bukan fixed px)
-   - Rise links via ul translateY, KNOB --links-top (px, sama semua viewport)
-   - Wordmark tetap fixed dengan KNOB px (top 76 / left 60)
+   CORNERS v16 — FIX OSILASI HIT-TEST (Root Cause A terkonfirmasi)
+   - Hit-area .email-link diperluas 16px (padding 8px + margin -8px)
+   - Layout visual tidak berubah (margin kompensasi)
+   - Saat glyph rotate 15° (menyusut ~3.4%), kursor tetap di hit-area
+   - Hover tidak pernah mati → tidak ada loop → tidak ada kedip
    ============================================================ */
 
 :root {
   --corner-color: #F2F2F2;
   --corner-bg: #e34234;
-  --links-top: 65px; /* KNOB: posisi atas about/works saat rise (px tetap) */
+  --links-top: 65px;
 }
 body.page-project {
   --corner-color: #000000;
@@ -61,22 +61,19 @@ body.page-project {
   align-items: flex-end;
 }
 
-/* GAP SERAGAM: semua kolom kiri berjarak 3vw satu sama lain */
 .info-left {
   display: flex;
   align-items: flex-end;
   gap: 3vw;
 }
 
-/* Kolom selebar teks (content-width), seperti vanholtz */
+/* EMAIL: perspective 400px di .contact (parent langsung A) */
 .contact {
   width: auto;
   font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 14px;
   line-height: 16px;
   color: var(--corner-color);
-  perspective: 250px;
-  perspective-origin: 0 center;
   transition: opacity 0.2s ease-in-out;
   animation: fadeUp 1s ease backwards;
 }
@@ -84,6 +81,8 @@ body.page-project {
   display: block;
   height: 16px;
   line-height: 16px;
+  perspective: 400px;
+  perspective-origin: 0 center;
 }
 .contact .line + .line {
   margin-top: 5px;
@@ -92,18 +91,25 @@ body.page-project {
   font-weight: 500;
 }
 
+/* ✅ v16: hit-area diperluas 16px (padding 8px + margin -8px).
+   Saat glyph rotate 15° (menyusut ~3.4%), kursor tetap di hit-area.
+   Resting transform identity + translateZ(0) = layer pre-promoted.
+   text-rendering: optimizeLegibility = anti-aliasing konsisten. */
 .email-link {
   display: inline-block;
   color: inherit;
   text-decoration: none;
+  transform: rotateY(0deg) translateZ(0px);
   transform-origin: 0 center;
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-rendering: optimizeLegibility;
+  padding: 0 8px;
+  margin: 0 -8px;
 }
-.email-link:hover {
-  transform: rotateY(15deg);
+.contact:hover .email-link {
+  transform: rotateY(15deg) translateZ(0px);
 }
 
-/* About open: kontak + kanan fade; links TETAP (ul-nya yang naik) */
 body.about-open .contact,
 body.about-open .info-right {
   opacity: 0;
@@ -145,8 +151,8 @@ body.about-open .info-right {
 
 .wordmark-wrap {
   position: fixed;
-  top: 76px;   /* KNOB state-naik */
-  left: 60px;  /* KNOB state-naik */
+  top: 76px;
+  left: 60px;
   z-index: 60;
   transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
 }
@@ -194,10 +200,7 @@ body.about-open .info-right {
   to { transform: translateY(0); }
 }
 
-/* ================= LINKS (about/works) — di dalam flow flex =================
-   Nav tetap di aliran footer (ikut gap 3vw); yang NAIK = ul di dalamnya.
-   Rumus rise: mendarat di --links-top di viewport berapapun:
-   translateY = --links-top + 37px - 95vh   (95vh - 37px = top baris footer) */
+/* ================= LINKS (about/works) ================= */
 
 .links {
   animation: fadeUp 1s ease backwards;
@@ -214,19 +217,33 @@ body:not(.about-open):not(.page-project) .links ul {
   transition-delay: 0.25s;
 }
 
-/* Baris links & social: kunci 16px + gap 5px = pitch 21 */
 .links li,
 .social li {
+  position: relative;
   height: 16px;
   line-height: 16px;
-  perspective: 250px;
+  perspective: 400px;
   perspective-origin: 0 center;
+  pointer-events: auto;
 }
 .links li + li,
 .social li + li {
   margin-top: 5px;
 }
 
+.links li + li::before,
+.social li + li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -5px;
+  height: 5px;
+}
+
+/* ✅ v16: hit-area diperluas untuk .link & .social a juga.
+   Nav "about" = ~40px, social "instagram" = ~70px. Padding 6px = 12px total.
+   Saat rotate 15° (menyusut ~3.4%), masih di dalam hit-area. */
 .link,
 .social a {
   display: inline-block;
@@ -240,25 +257,31 @@ body:not(.about-open):not(.page-project) .links ul {
   color: var(--corner-color);
   text-decoration: none;
   cursor: pointer;
+  transform: rotateY(0deg) translateZ(0px);
   transform-origin: 0 center;
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-rendering: optimizeLegibility;
+  padding: 0 6px;
+  margin: 0 -6px;
 }
-/* Kolom kiri flow-based: TANPA slot nomor */
 .link {
-  padding: 0;
+  padding: 0 6px;
+  margin: 0 -6px;
 }
-/* Kolom kanan fixed-width: slot 30px dipertahankan (x label = vanholtz) */
 .social a {
-  padding: 0 0 0 30px;
+  padding: 0 6px 0 30px;
+  margin: 0 -6px;
 }
-.link:hover,
-.social a:hover {
-  transform: rotateY(15deg);
-}
+
 .link strong,
 .social a strong {
   font-weight: 500;
   line-height: 16px;
+  display: inline-block;
+}
+.links li:hover .link,
+.social li:hover a {
+  transform: rotateY(15deg) translateZ(0px);
 }
 
 /* Dash aktif di sebelah "about" — hanya saat about terbuka */
@@ -266,7 +289,7 @@ body:not(.about-open):not(.page-project) .links ul {
   display: inline-block;
   width: 40px;
   height: 2px;
-  background: var(--corner-color); /* ikut warna font corner: putih di home, hitam di project */
+  background: var(--corner-color);
   margin-left: 12px;
   vertical-align: middle;
   transform: scaleX(0);
@@ -397,7 +420,7 @@ body.about-open .aboutDash {
   100%   { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-/* ================= READING MODE (sementara, revisi total di Fase 6) ================= */
+/* ================= READING MODE ================= */
 
 body.reading-mode .info,
 body.reading-mode .btn-back--back {
@@ -424,7 +447,7 @@ body.reading-mode .wordmark {
     align-items: flex-start;
     gap: 12px;
   }
-  .contact { width: auto; }
+  .contact { width: auto; margin-right: 0; padding-right: 0; }
   .info-right { width: 100%; }
   .wordmark-wrap { left: 24px; }
   .wordmark { font-size: 32px; line-height: 28px; }

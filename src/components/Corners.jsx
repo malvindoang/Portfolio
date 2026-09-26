@@ -103,7 +103,8 @@ function Corners({ onGridWidth, onBack }) {
   }
 
   const handleBackClick = () => {
-    window.__SKIP_HOME_SCROLL_RESET__ = true
+    // ===== FASE 3.11: Dead code removed (window.__SKIP_HOME_SCROLL_RESET__) =====
+    // Scroll reset sekarang ditangani langsung di Home.jsx
     if (onBack) onBack()
   }
 
@@ -143,11 +144,12 @@ function Corners({ onGridWidth, onBack }) {
             <div className="contact" style={anim(delays.info[1])}>
               <span className="line">Jakarta, Indonesia</span>
               <span className="line">
-                <strong>
-                  <a href="mailto:malvin15.doang@gmail.com" className="email-link">
-                    malvin15.doang@gmail.com
-                  </a>
-                </strong>
+                {/* ✅ FIX STRUKTUR: <a> di luar, <strong> di dalam.
+                    Persis resep vanholtz: .contact(perspective 400px) > A.email-link > STRONG > text.
+                    <a> yang berotasi saat parent .contact di-hover. */}
+                <a href="mailto:malvin15.doang@gmail.com" className="email-link">
+                  <strong>malvin15.doang@gmail.com</strong>
+                </a>
               </span>
             </div>
 
