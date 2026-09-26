@@ -59,7 +59,11 @@ function ProjectDetail() {
     window.scrollTo(0, 0)
   }, [slug, isActive])
 
-  useEffect(() => {
+  // ===== MODEL A: class page-project dipasang PRE-PAINT =====
+  // SATU-SATUNYA PERUBAHAN DI FILE INI: useEffect → useLayoutEffect.
+  // Saat refresh di project, background putih + posisi/warna corners sudah
+  // benar SEBELUM paint pertama → tidak ada flash merah, tidak ada desinkron.
+  useLayoutEffect(() => {
     if (!isActive) return
     document.body.classList.add('page-project', `theme-${projectTheme}`)
     return () => {
@@ -444,7 +448,7 @@ function ProjectDetail() {
               <FigmaSpecTag
                 href={content.figmaUrl || '#'}
                 target={content.figmaUrl ? '_blank' : undefined}
-                rel={content.figmaUrl ? 'noreferrer' : undefined}
+                rel={content.figmaUrl ? '_blank' : undefined}
               />
             </div>
           )}

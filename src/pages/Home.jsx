@@ -61,27 +61,16 @@ function Home() {
   const projectSlugsRef = useRef([])
   const lineToProjectIndexRef = useRef([])
 
-  // ===== FASE 3.8: Ref untuk memetakan projectIndex ke sectionIndex =====
   const projectToSectionRef = useRef([])
 
   const hoveredIndexRef = useRef(-1)
   const entranceActiveRef = useRef(false)
   const exitActiveRef = useRef(false)
 
-  // ===== FASE 3.8: State untuk highlight section label =====
   const [highlightedSectionIdx, setHighlightedSectionIdx] = useState(-1)
 
-  const [gridLeft, setGridLeft] = useState(220)
-
-  const handleGridWidth = useCallback((width) => {
-    setGridLeft(40 + width + GRID_GAP)
-  }, [])
-
   // ===== FASE 3.11: SCROLL RESET (INSTANT) =====
-  // Setiap kali Home mount (refresh, back, wordmark click), 
-  // paksa scroll ke atas SEBELUM paint terjadi
   useLayoutEffect(() => {
-    // Force instant scroll reset (tidak terpengaruh scroll-behavior: smooth)
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [])
 
@@ -183,7 +172,6 @@ function Home() {
       const group = projectGroupRefs.current[projectIndex]
       if (group) group.classList.add('is-hovered')
 
-      // ===== FASE 3.8: Highlight section label yang sesuai =====
       const sIdx = projectToSectionRef.current[projectIndex]
       setHighlightedSectionIdx(sIdx)
     } else {
@@ -236,10 +224,8 @@ function Home() {
       const slug = idx >= 0 ? projectSlugsRef.current[idx] : null
       if (!slug) return
 
-      // ===== FASE 3.9: EXIT TRIGGER =====
       exitActiveRef.current = true
 
-      // Bersihkan inline animationDelay dari entrance
       projectGroupRefs.current.forEach((el) => {
         if (el) el.style.animationDelay = ''
       })
@@ -253,20 +239,17 @@ function Home() {
         if (i === idx) {
           el.classList.add('is-clicked')
         } else {
-          // Stagger dari bawah ke atas
           const awayDelay = (200 + (totalProjects - 1 - i) * 100) / 1000
           el.style.setProperty('--exit-delay', `${awayDelay}s`)
         }
       })
 
-      // Parent lift mulai di 1400ms (overlap dengan akhir fade)
       setTimeout(() => {
         if (stageMoverRef.current) {
           stageMoverRef.current.classList.add('is-lifting')
         }
       }, 1400)
 
-      // Navigate setelah semua selesai (2000ms)
       setTimeout(() => {
         navigate(`/project/${slug}`)
       }, EXIT_TOTAL_MS)
@@ -294,8 +277,7 @@ function Home() {
 
   return (
     <>
-      <Corners onGridWidth={handleGridWidth} />
-
+      <Corners />
       <div className="stageSpace" ref={spaceRef}>
         <div className="stageFixed">
           <div className="stageMover" ref={stageMoverRef}>
@@ -307,9 +289,7 @@ function Home() {
                       const lines = p.homeLines || getLines(p.title)
                       const projectIndex = projectCounter++
 
-                      // ===== FASE 3.8: Simpan mapping project ke section =====
                       projectToSectionRef.current[projectIndex] = sIdx
-
                       nextProjectSlugs[projectIndex] = p.slug || null
 
                       const introDelay = Math.max(0, INTRO_DELAY_BASE - projectIndex * INTRO_DELAY_STEP)
@@ -375,13 +355,13 @@ function Home() {
       {(projectSlugsRef.current = nextProjectSlugs) && null}
       {(lineToProjectIndexRef.current = nextLineToProjectIndex) && null}
 
-      {/* ===== FASE 3.8: SECTION LABELS + BOOSTER A (spotlight) ===== */}
+      {/* ===== SECTION LABELS: Menggunakan CSS Variable --grid-left dari Corners ===== */}
       <div className={`labelLayer ${highlightedSectionIdx >= 0 ? 'labelLayer--active' : ''}`}>
         {SECTIONS.map((section, sIdx) => (
           <div
             key={section.label}
             className={`sectionLabel ${highlightedSectionIdx === sIdx ? 'is-highlighted' : ''}`}
-            style={{ left: gridLeft, top: 220 + sIdx * 30 }}
+            style={{ left: 'var(--grid-left, 220px)', top: 220 + sIdx * 30 }}
           >
             {section.label}
           </div>

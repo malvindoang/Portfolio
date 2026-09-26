@@ -1,9 +1,10 @@
 /* ============================================================
-   CORNERS v16 — FIX OSILASI HIT-TEST (Root Cause A terkonfirmasi)
-   - Hit-area .email-link diperluas 16px (padding 8px + margin -8px)
-   - Layout visual tidak berubah (margin kompensasi)
-   - Saat glyph rotate 15° (menyusut ~3.4%), kursor tetap di hit-area
-   - Hover tidak pernah mati → tidak ada loop → tidak ada kedip
+   CORNERS v22 — MODEL A (CHROME PERSISTENT, VAN HOLTZ)
+   - Posisi (naik/turun): SATU sumber = class body
+     (page-project / about-open / pt-corners-hold-top / hold-down)
+   - Warna: sistem 4 rule (root / page-project / pt-corners-dark /
+     pt-active:not(pt-corners-dark))
+   - Entrance: hanya saat lahir TANPA pt-active (refresh/direct)
    ============================================================ */
 
 :root {
@@ -15,6 +16,22 @@ body.page-project {
   --corner-color: #000000;
   --corner-bg: #F2F2F2;
 }
+
+/* Saat transisi ke project (home→project), corners hitam di atas curtain putih */
+body.pt-corners-dark {
+  --corner-color: #000000;
+  --corner-bg: #F2F2F2;
+}
+
+/* Saat transisi pulang (project→home): curtain sudah merah tapi body masih
+   page-project sampai swap. Paksa putih HANYA selama pt-active tanpa
+   pt-corners-dark. Spesifisitas (0,2,1) mengalahkan body.page-project. */
+body.pt-active:not(.pt-corners-dark) {
+  --corner-color: #F2F2F2;
+  --corner-bg: #e34234;
+}
+
+/* EDIT 1: BLOK INI SUDAH DIHAPUS (tidak ada lagi rule yang menimpa transition) */
 
 /* ================= BAND CONTAINER ================= */
 
@@ -67,14 +84,15 @@ body.page-project {
   gap: 3vw;
 }
 
-/* EMAIL: perspective 400px di .contact (parent langsung A) */
 .contact {
   width: auto;
   font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 14px;
   line-height: 16px;
   color: var(--corner-color);
-  transition: opacity 0.2s ease-in-out;
+  transition: 
+    color 0.2s ease-in-out 0.05s,
+    opacity 0.2s ease-in-out;
   animation: fadeUp 1s ease backwards;
 }
 .contact .line {
@@ -91,10 +109,6 @@ body.page-project {
   font-weight: 500;
 }
 
-/* ✅ v16: hit-area diperluas 16px (padding 8px + margin -8px).
-   Saat glyph rotate 15° (menyusut ~3.4%), kursor tetap di hit-area.
-   Resting transform identity + translateZ(0) = layer pre-promoted.
-   text-rendering: optimizeLegibility = anti-aliasing konsisten. */
 .email-link {
   display: inline-block;
   color: inherit;
@@ -105,6 +119,7 @@ body.page-project {
   text-rendering: optimizeLegibility;
   padding: 0 8px;
   margin: 0 -8px;
+  will-change: transform;
 }
 .contact:hover .email-link {
   transform: rotateY(15deg) translateZ(0px);
@@ -116,14 +131,14 @@ body.about-open .info-right {
   pointer-events: none;
 }
 
-/* ================= KANAN: social + design ================= */
-
 .info-right {
   width: 250px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  transition: opacity 0.2s ease-in-out;
+  transition: 
+    color 0.2s ease-in-out 0.05s,
+    opacity 0.2s ease-in-out;
 }
 
 .social {
@@ -147,21 +162,34 @@ body.about-open .info-right {
   font-weight: 500;
 }
 
-/* ================= WORDMARK (fixed, KNOB px) ================= */
+/* ================= WORDMARK (fixed, KNOB px) =================
+   Posisi murni class body. Default = BAWAH.
+   Turun/naik = 0.5s bezier vanholtz; turun punya beat 0.25s. */
 
 .wordmark-wrap {
   position: fixed;
   top: 76px;
   left: 60px;
   z-index: 60;
-  transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
+  transform: translateY(calc(92.5vh - 177px)); /* BAWAH = default */
+  transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1) 0.25s;
+  /* EDIT 2: Layer compositor sendiri untuk smooth fall */
+  will-change: transform;
+  backface-visibility: hidden;
 }
-.wordmark-wrap--bottom {
-  transform: translateY(calc(92.5vh - 177px));
-  transition-delay: 0.25s;
-}
-.wordmark-wrap--top {
+
+/* DRIVER NAIK: project settled, about open, atau hold-top saat transisi pulang */
+body.page-project .wordmark-wrap,
+body.about-open .wordmark-wrap,
+body.pt-corners-hold-top .wordmark-wrap {
   transform: translateY(0);
+  transition-delay: 0s;
+}
+
+/* HOLD-DOWN: instance project yang lahir di balik curtain tetap di BAWAH,
+   supaya rise TERLIHAT saat reveal. Ditaruh terakhir = menang specificity. */
+body.pt-corners-hold-down .wordmark-wrap {
+  transform: translateY(calc(92.5vh - 177px));
   transition-delay: 0s;
 }
 
@@ -176,10 +204,9 @@ body.about-open .info-right {
   line-height: 34px;
   color: var(--corner-color);
   -webkit-text-stroke: 1px var(--corner-color);
-  transition: color 0.2s ease-in-out 0.05s;
-}
-.wordmark-wrap--top .wordmark {
-  transition-delay: 0s;
+  transition: 
+    color 0.2s ease-in-out 0.05s,
+    -webkit-text-stroke-color 0.2s ease-in-out 0.05s;
 }
 .wordmark-link:hover .wordmark {
   color: var(--corner-bg);
@@ -206,15 +233,25 @@ body.about-open .info-right {
   animation: fadeUp 1s ease backwards;
 }
 .links ul {
+  transform: translateY(0);
   transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
 }
+
+/* DRIVER NAIK (sama persis dengan wordmark) */
 body.about-open .links ul,
-body.page-project .links ul {
+body.page-project .links ul,
+body.pt-corners-hold-top .links ul {
   transform: translateY(calc(var(--links-top) + 37px - 95vh));
   transition-delay: 0s;
 }
 body:not(.about-open):not(.page-project) .links ul {
   transition-delay: 0.25s;
+}
+
+/* HOLD-DOWN: lahir project di balik curtain tetap bawah → rise terlihat */
+body.pt-corners-hold-down .links ul {
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .links li,
@@ -241,9 +278,6 @@ body:not(.about-open):not(.page-project) .links ul {
   height: 5px;
 }
 
-/* ✅ v16: hit-area diperluas untuk .link & .social a juga.
-   Nav "about" = ~40px, social "instagram" = ~70px. Padding 6px = 12px total.
-   Saat rotate 15° (menyusut ~3.4%), masih di dalam hit-area. */
 .link,
 .social a {
   display: inline-block;
@@ -259,10 +293,13 @@ body:not(.about-open):not(.page-project) .links ul {
   cursor: pointer;
   transform: rotateY(0deg) translateZ(0px);
   transform-origin: 0 center;
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: 
+    transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    color 0.2s ease-in-out 0.05s;
   text-rendering: optimizeLegibility;
   padding: 0 6px;
   margin: 0 -6px;
+  will-change: transform;
 }
 .link {
   padding: 0 6px;
@@ -294,11 +331,15 @@ body:not(.about-open):not(.page-project) .links ul {
   vertical-align: middle;
   transform: scaleX(0);
   transform-origin: 0 50%;
-  transition: transform 0.5s cubic-bezier(0.755, 0.05, 0.855, 0.06);
+  transition: 
+    transform 0.5s cubic-bezier(0.755, 0.05, 0.855, 0.06),
+    background-color 0.2s ease-in-out 0.05s;
 }
 body.about-open .aboutDash {
   transform: scaleX(1);
-  transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s;
+  transition: 
+    transform 1s cubic-bezier(0.23, 1, 0.32, 1) 0.25s,
+    background-color 0.2s ease-in-out 0.05s;
 }
 
 @keyframes fadeUp {
@@ -320,6 +361,7 @@ body.about-open .aboutDash {
   padding: 0;
   color: var(--corner-color);
   cursor: pointer;
+  transition: color 0.2s ease-in-out 0.05s;
   animation: btnIn 1s cubic-bezier(0.23, 1, 0.32, 1) 0.5s backwards;
 }
 .btn-back::before {
@@ -329,7 +371,9 @@ body.about-open .aboutDash {
   border: 1.5px solid transparent;
   border-radius: 50%;
   transform: scale(0.9);
-  transition: transform 0.25s, border-color 0.25s;
+  transition: 
+    transform 0.25s,
+    border-color 0.25s;
   pointer-events: none;
 }
 .btn-back:hover::before {
@@ -452,6 +496,8 @@ body.reading-mode .wordmark {
   .wordmark-wrap { left: 24px; }
   .wordmark { font-size: 32px; line-height: 28px; }
   body.about-open .links ul,
-  body.page-project .links ul { transform: none; }
+  body.page-project .links ul,
+  body.pt-corners-hold-top .links ul,
+  body.pt-corners-hold-down .links ul { transform: none; }
   .btn-back { right: 24px; }
 }

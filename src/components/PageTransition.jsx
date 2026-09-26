@@ -17,10 +17,7 @@ const COVER_DURATION = 0.35
 const HOLD_COVER = 0.12
 const TR_OUT = 0.12
 
-// ===== BARU: durasi exit phase (project→home saja) =====
-// Corner meluncur keluar (1.32s) + jeda kosong (~0.28s) sebelum cover
-// warna merah mulai fade-in. Total 1.6s memberi panggung kosong yang
-// terbaca mata sebelum beat warna masuk.
+// ===== durasi exit phase (project→home saja) =====
 const EXIT_DURATION = 1.6
 
 function PageTransition({ children }) {
@@ -58,7 +55,12 @@ function PageTransition({ children }) {
     const finish = () => {
       gsap.set(viewport, { clearProps: 'opacity' })
       gsap.set(curtain, { opacity: 0 })
-      document.body.classList.remove('pt-active', 'overflowHidden', 'pt-tr-hidden', 'pt-exit-active')
+      // EDIT 4: Lepas semua class transisi termasuk pt-corners-dark dan pt-bg-project
+      document.body.classList.remove(
+        'pt-active', 'overflowHidden', 'pt-tr-hidden', 'pt-exit-active',
+        'pt-corners-hold', 'pt-corners-hold-top', 'pt-corners-hold-down',
+        'pt-corners-dark', 'pt-bg-project'
+      )
       runningRef.current = false
       if (safetyRef.current) clearTimeout(safetyRef.current)
       window.dispatchEvent(new Event('pt-settled'))
@@ -67,9 +69,7 @@ function PageTransition({ children }) {
     const tl = gsap.timeline({ onComplete: finish })
     tlRef.current = tl
 
-    // ===== BARU: EXIT PHASE (hanya project→home) =====
-    // Corner akan meluncur keluar via listener `pt-exit-start` di Corners.jsx.
-    // Home→Project tidak pakai ini karena Home.jsx sudah handle spiral exit.
+    // ===== EXIT PHASE (hanya project→home) =====
     const coverStart = fromProject ? EXIT_DURATION : 0
 
     if (fromProject) {
@@ -85,6 +85,7 @@ function PageTransition({ children }) {
     }
 
     // ===== COVER: konten lama meluruh DI ATAS warna baru yang masuk =====
+    // Color crossfade corners dimulai DI SINI (0.2s, di balik/bersamaan curtain)
     tl.call(
       () => {
         document.body.classList.toggle('pt-corners-dark', toProject)
@@ -98,7 +99,7 @@ function PageTransition({ children }) {
     tl.set(curtain, { opacity: 1 }, coverStart + COVER_DURATION)
     tl.set(viewport, { opacity: 0 }, coverStart + COVER_DURATION)
 
-    // Fade-out grup chrome yang akan berganti konten
+    // Fade-out grup chrome LAMA (jendela TR_OUT, selesai tepat saat swap)
     tl.call(
       () => {
         document.body.classList.add('pt-tr-hidden')
@@ -107,9 +108,17 @@ function PageTransition({ children }) {
       coverStart + COVER_DURATION - TR_OUT
     )
 
-    // ===== SWAP: mount konten baru di balik beat warna (sudah opacity 0) =====
+    // ===== SWAP: mount konten baru di balik beat warna =====
+    // MODEL A: pasang HOLD class SEBELUM swap supaya instance baru lahir
+    // di posisi "lama" (hold-top untuk home, hold-down untuk project).
+    // Dengan begitu rise/fall TERLIHAT saat hold dilepas di REVEAL.
     tl.call(
       () => {
+        document.body.classList.add(
+          'pt-corners-hold',
+          toProject ? 'pt-corners-hold-down' : 'pt-corners-hold-top'
+        )
+        document.body.classList.remove('pt-tr-hidden')
         window.__PT_HOME_ENTRANCE_PENDING__ = !toProject
         window.scrollTo(0, 0)
         setDisplayLoc(location)
@@ -121,11 +130,13 @@ function PageTransition({ children }) {
     )
 
     // ===== REVEAL: CUT, bukan fade =====
-    // Konten baru LANGSUNG penuh (opacity 1) tepat saat beat warna selesai,
-    // sehingga "konten sudah ada saat warna putih muncul" — tanpa fade-in.
+    // Lepas hold → posisi corners ber-transisi (rise di project, fall di home)
     tl.call(
       () => {
         document.body.classList.remove('pt-tr-hidden', 'pt-exit-active')
+        document.body.classList.remove(
+          'pt-corners-hold', 'pt-corners-hold-top', 'pt-corners-hold-down'
+        )
         window.dispatchEvent(new Event('pt-reveal-start'))
       },
       null,

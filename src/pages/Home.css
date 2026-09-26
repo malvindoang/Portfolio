@@ -26,7 +26,6 @@ html, body {
   right: 0;
   top: 0;
   transform-style: preserve-3d;
-  /* Lift transition: 500ms smooth (data: lift dari 0 ke -182.5 dalam ~482ms) */
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -57,7 +56,6 @@ html, body {
   pointer-events: none;
   transform-style: preserve-3d;
   transform: rotateY(-45deg);
-  /* KUNCI ANCHOR: 100% center = engsel di tepi kanan */
   transform-origin: 100% center;
   transition: transform 1.5s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
@@ -126,10 +124,8 @@ html, body {
 }
 
 /* =====================================================
-   FASE 3.8 — SECTION LABELS (TANPA FONT-WEIGHT + BOOSTER A)
-   - font-weight KONSTAN 400 selamanya (tidak ada snap)
-   - Highlight: Geser Kiri + Scale + Mencerah
-   - BOOSTER A: saudara meredup (spotlight) via .labelLayer--active
+   FASE 3.8 — SECTION LABELS
+   ✅ COLOR TRANSITION: 0.2s ease-in-out, delay 0.05s (vanholtz timing)
 ===================================================== */
 .labelLayer {
   position: fixed;
@@ -142,32 +138,25 @@ html, body {
   position: fixed;
   font-family: 'Akzidenz Grotesk', sans-serif;
   font-size: 16px;
-  font-weight: 400; /* KONSTAN — jangan pernah dianimasikan */
+  font-weight: 400;
   color: var(--color-white);
   opacity: 0.55;
   letter-spacing: 1px;
-
-  /* HANYA opacity + transform = mustahil lompat */
+  
   transition:
     opacity 0.3s ease,
     transform 0.3s ease;
-
-  /* Engsel kiri: scale membesar ke kanan, translateX = geser tab buku */
+  
   transform-origin: left center;
   transform: translateX(0) scale(1);
   will-change: opacity, transform;
 }
 
-/* HIGHLIGHT: maju 10px ke kiri + membesar 15% + mencerah penuh */
 .sectionLabel.is-highlighted {
   opacity: 1;
   transform: translateX(-10px) scale(1.15);
 }
 
-/* ===== BOOSTER A: SAUDARA MEREDUP (EFEK SPOTLIGHT) =====
-   Saat ada satu label aktif, label lain meredup 0.55 → 0.30
-   sehingga yang aktif terasa disorot lampu panggung.
-   KNOB: ganti 0.3 di bawah (0.22 = dramatis, 0.38 = subtil). */
 .labelLayer--active .sectionLabel:not(.is-highlighted) {
   opacity: 0.22;
 }
@@ -210,7 +199,7 @@ body.home-intro .stageMover {
 }
 
 /* =====================================================
-   FASE 3.9 — EXIT TRANSITION (FINAL DATA-DRIVEN)
+   FASE 3.9 — EXIT TRANSITION
 ===================================================== */
 
 @keyframes vhExitClicked {

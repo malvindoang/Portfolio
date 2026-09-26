@@ -7,7 +7,7 @@ import './Corners.css'
 
 const GRID_GAP = 14
 
-// ===== DELAYS ENTRANCE (persis vanholtz dari Script 4) =====
+// ===== ENTRANCE DELAYS (MODEL A) =====
 const HOME_DELAYS = {
   wordmark: 2,
   info: [2.4, 2.6],
@@ -17,13 +17,12 @@ const HOME_DELAYS = {
 }
 const PROJECT_DELAYS = {
   wordmark: 0,
-  info: [0.4, 0.8],
-  links: 0.4,
+  info: [0.4, 0.6],
+  links: 0.8,
   social: 1.0,
   credits: 1.2,
 }
 
-// ===== SOCIAL LINKS (tanpa nomor, urutan sesuai keputusan) =====
 const SOCIAL_LINKS = [
   { label: 'instagram', href: 'https://www.instagram.com/malvin.15' },
   { label: 'linkedin', href: 'https://www.linkedin.com/in/malvin-malvin-55974632b' },
@@ -38,7 +37,7 @@ function IconBox({ type }) {
   )
 }
 
-function Corners({ onGridWidth, onBack }) {
+function Corners({ onBack }) {
   const [aboutOpen, setAboutOpen] = useState(false)
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
@@ -48,31 +47,20 @@ function Corners({ onGridWidth, onBack }) {
   const { routePath } = useContext(PageTransitionContext)
   const isHome = (routePath ?? location.pathname) === '/'
 
-  // ===== ENTRANCE KEY: replay animasi setiap route berubah =====
-  const [entranceKey, setEntranceKey] = useState(() => 1)
-  const prevRoutePathRef = useRef(routePath)
-
-  useEffect(() => {
-    if (prevRoutePathRef.current !== routePath) {
-      setEntranceKey((k) => k + 1)
-      prevRoutePathRef.current = routePath
-    }
-  }, [routePath])
+  const [bornDuringTransition] = useState(() =>
+    document.body.classList.contains('pt-active')
+  )
 
   const delays = isHome ? HOME_DELAYS : PROJECT_DELAYS
-  const play = entranceKey > 0
 
-  // ===== STATE NAIK: hanya wordmark yang pakai class top/bottom.
-  // Links naik via ul (CSS, body class), nav tetap di aliran flex. =====
-  const up = !isHome || aboutOpen
-
-  // ===== MEASUREMENT untuk onGridWidth =====
+  // ===== MEASUREMENT: Hitung lebar max, set ke CSS Variable --grid-left =====
   useLayoutEffect(() => {
     const measure = () => {
       const w1 = wordmarkRef.current?.getBoundingClientRect().width || 0
       const w2 = navLinksRef.current?.getBoundingClientRect().width || 0
       const maxW = Math.max(w1, w2)
-      if (onGridWidth) onGridWidth(maxW)
+      const gridLeft = 40 + maxW + GRID_GAP
+      document.documentElement.style.setProperty('--grid-left', `${gridLeft}px`)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -83,7 +71,7 @@ function Corners({ onGridWidth, onBack }) {
       ro.disconnect()
       window.removeEventListener('resize', measure)
     }
-  }, [onGridWidth])
+  }, [])
 
   useEffect(() => {
     document.body.classList.toggle('about-open', aboutOpen)
@@ -91,6 +79,24 @@ function Corners({ onGridWidth, onBack }) {
       document.body.classList.remove('about-open')
     }
   }, [aboutOpen])
+
+  useEffect(() => {
+    const resetInlineAnim = () => {
+      const sel = '.links, .social, .contact, .credits'
+      document.querySelectorAll(sel).forEach(el => {
+        if (el.style.animation === 'none') {
+          el.style.animation = ''
+        }
+      })
+    }
+    
+    window.addEventListener('pt-settled', resetInlineAnim)
+    
+    return () => {
+      document.body.classList.remove('pt-corners-pre')
+      window.removeEventListener('pt-settled', resetInlineAnim)
+    }
+  }, [])
 
   const handleWorksClick = () => {
     setAboutOpen(false)
@@ -103,23 +109,19 @@ function Corners({ onGridWidth, onBack }) {
   }
 
   const handleBackClick = () => {
-    // ===== FASE 3.11: Dead code removed (window.__SKIP_HOME_SCROLL_RESET__) =====
-    // Scroll reset sekarang ditangani langsung di Home.jsx
     if (onBack) onBack()
   }
 
   const anim = (delay) =>
-    play ? { animationDelay: `${delay}s` } : { animation: 'none' }
+    bornDuringTransition ? { animation: 'none' } : { animationDelay: `${delay}s` }
+  const btnAnim = bornDuringTransition ? { animation: 'none' } : undefined
+
+  const up = !isHome || aboutOpen
 
   return createPortal(
     <>
       <header className="ui">
-        {/* ===== WORDMARK: MALVIN satu baris, fixed, KNOB px ===== */}
-        <div
-          key={`wm-${entranceKey}`}
-          ref={wordmarkRef}
-          className={`wordmark-wrap ${up ? 'wordmark-wrap--top' : 'wordmark-wrap--bottom'}`}
-        >
+        <div ref={wordmarkRef} className={`wordmark-wrap ${up ? 'wordmark-wrap--top' : 'wordmark-wrap--bottom'}`}>
           <Link to="/" className="wordmark-link" onClick={handleWordmarkClick}>
             <div className="wordmark">
               <span className="slideUp">
@@ -131,11 +133,7 @@ function Corners({ onGridWidth, onBack }) {
           </Link>
         </div>
 
-        {/* ===== INFO: SATU container footer.
-            info-left = 3 kolom flex dengan gap 3vw SERAGAM:
-            kontak-1 · kontak-2 · links(about/works).
-            Saat about open: kontak + kanan fade, links tetap & ul naik. ===== */}
-        <div key={`info-${entranceKey}`} className="info">
+        <div className="info">
           <div className="info-left">
             <div className="contact" style={anim(delays.info[0])}>
               <span className="line">Front-end Developer</span>
@@ -144,23 +142,13 @@ function Corners({ onGridWidth, onBack }) {
             <div className="contact" style={anim(delays.info[1])}>
               <span className="line">Jakarta, Indonesia</span>
               <span className="line">
-                {/* ✅ FIX STRUKTUR: <a> di luar, <strong> di dalam.
-                    Persis resep vanholtz: .contact(perspective 400px) > A.email-link > STRONG > text.
-                    <a> yang berotasi saat parent .contact di-hover. */}
                 <a href="mailto:malvin15.doang@gmail.com" className="email-link">
                   <strong>malvin15.doang@gmail.com</strong>
                 </a>
               </span>
             </div>
 
-            {/* Kolom ke-3: about/works — di dalam flex flow supaya gap 3vw
-                sama di semua viewport; rise via ul (CSS body class) */}
-            <nav
-              key={`links-${entranceKey}`}
-              ref={navLinksRef}
-              className="links"
-              style={anim(delays.links)}
-            >
+            <nav ref={navLinksRef} className="links" style={anim(delays.links)}>
               <ul>
                 <li className="about-li">
                   <button type="button" className="link" onClick={() => setAboutOpen((v) => !v)}>
@@ -196,28 +184,27 @@ function Corners({ onGridWidth, onBack }) {
         </div>
       </header>
 
-      {/* ===== ABOUT OVERLAY ===== */}
       <About isOpen={aboutOpen} />
 
-      {/* ===== CLOSE (×) saat about open ===== */}
       {aboutOpen && (
         <button
           type="button"
           className="btn-back btn-back--close"
           onClick={() => setAboutOpen(false)}
           aria-label="Close about"
+          style={btnAnim}
         >
           <IconBox type="close" />
         </button>
       )}
 
-      {/* ===== BACK (←) saat project & about tutup ===== */}
       {!isHome && !aboutOpen && onBack && (
         <button
           type="button"
           className="btn-back btn-back--back"
           onClick={handleBackClick}
           aria-label="Back to home"
+          style={btnAnim}
         >
           <IconBox type="back" />
         </button>
