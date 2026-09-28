@@ -44,6 +44,11 @@ body.pt-bg-project {
    Path ./fonts/ dibaca relatif dari lokasi file ini (src/index.css),
    jadi menunjuk ke src/fonts/ — Opsi A. */
 
+/* ===== AKZIDENZ GROTESK (body text) — font-display: swap ===== */
+/* Strategi swap: render dengan fallback dulu, ganti saat font siap.
+   Untuk body text, ini lebih baik karena user bisa baca segera.
+   Flash font di paragraf kecil hampir tidak terlihat. */
+
 /* 1. Light */
 @font-face {
   font-family: 'Akzidenz Grotesk';
@@ -80,13 +85,22 @@ body.pt-bg-project {
   font-display: swap;
 }
 
+/* ===== DRUK WIDE WEB (display font) — font-display: block ===== */
+/* Strategi block: browser tunggu font siap sebelum render teks
+   (maksimal 3 detik). Karena kita sudah preload di index.html,
+   download selesai sangat cepat (< 100ms), sehingga user TIDAK
+   melihat teks kosong. Tapi saat font ready, TIDAK ADA flash font.
+   
+   Ini penting untuk elemen besar yang hanya 1-2 di layar (wordmark
+   MALVIN, hero title) — flash font di elemen besar sangat terlihat. */
+
 /* 5. Druk Wide Medium (logo, title menengah) */
 @font-face {
   font-family: 'Druk Wide Web';
   src: url('./fonts/DrukWide-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
-  font-display: swap;
+  font-display: block; /* ← diubah dari swap */
 }
 
 /* 6. Druk Wide Super (title raksasa) */
@@ -95,5 +109,5 @@ body.pt-bg-project {
   src: url('./fonts/DrukWide-Super.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
-  font-display: swap;
+  font-display: block; /* ← diubah dari swap */
 }
