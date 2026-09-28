@@ -3,7 +3,6 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Corners from '../components/Corners'
 import { PageTransitionContext } from '../components/PageTransitionContext'
 import { PROJECT_CONTENT } from '../data/projectContent'
 import { SECTIONS } from '../data/projects'
@@ -382,7 +381,6 @@ function ProjectDetail() {
 
   return (
     <>
-      <Corners onBack={() => navigate('/')} />
 
       <article className="detail">
         <section ref={heroRef} className="detailHero">

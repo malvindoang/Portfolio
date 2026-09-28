@@ -23,10 +23,10 @@ body.pt-corners-dark {
   --corner-bg: #F2F2F2;
 }
 
-/* Saat transisi pulang (project→home): curtain sudah merah tapi body masih
-   page-project sampai swap. Paksa putih HANYA selama pt-active tanpa
-   pt-corners-dark. Spesifisitas (0,2,1) mengalahkan body.page-project. */
-body.pt-active:not(.pt-corners-dark) {
+/* Saat transisi pulang (project→home): paksa putih HANYA saat pt-corners-light aktif.
+   Class ini ditambahkan oleh PageTransition tepat saat curtain merah mulai fade-in,
+   sehingga corners crossfade bersamaan dengan background. */
+body.pt-corners-light {
   --corner-color: #F2F2F2;
   --corner-bg: #e34234;
 }
@@ -466,8 +466,7 @@ body.about-open .aboutDash {
 
 /* ================= READING MODE ================= */
 
-body.reading-mode .info,
-body.reading-mode .btn-back--back {
+body.reading-mode .info {
   opacity: 0;
   pointer-events: none;
 }

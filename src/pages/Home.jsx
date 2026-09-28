@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Corners from '../components/Corners'
 import { SECTIONS } from '../data/projects'
 import './Home.css'
 
@@ -277,7 +276,7 @@ function Home() {
 
   return (
     <>
-      <Corners />
+    
       <div className="stageSpace" ref={spaceRef}>
         <div className="stageFixed">
           <div className="stageMover" ref={stageMoverRef}>

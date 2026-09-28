@@ -704,10 +704,6 @@ body.page-project .corner a,
 body.page-project .corner span.label,
 body.page-project .navLinks .label { color: var(--color-black); }
 
-body.page-project .wordmark {
-  color: #000000;
-  -webkit-text-stroke: 1px #000000;
-}
 body.page-project .sub { color: #000000; }
 
 body.page-project .activeDash { background: var(--color-black); }

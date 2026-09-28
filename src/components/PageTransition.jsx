@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import gsap from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 import { PageTransitionContext } from './PageTransitionContext'
+import Corners from './Corners'
 
 gsap.registerPlugin(CustomEase)
 
@@ -55,11 +56,10 @@ function PageTransition({ children }) {
     const finish = () => {
       gsap.set(viewport, { clearProps: 'opacity' })
       gsap.set(curtain, { opacity: 0 })
-      // EDIT 4: Lepas semua class transisi termasuk pt-corners-dark dan pt-bg-project
       document.body.classList.remove(
         'pt-active', 'overflowHidden', 'pt-tr-hidden', 'pt-exit-active',
         'pt-corners-hold', 'pt-corners-hold-top', 'pt-corners-hold-down',
-        'pt-corners-dark', 'pt-bg-project'
+        'pt-corners-dark', 'pt-corners-light', 'pt-bg-project'
       )
       runningRef.current = false
       if (safetyRef.current) clearTimeout(safetyRef.current)
@@ -85,10 +85,10 @@ function PageTransition({ children }) {
     }
 
     // ===== COVER: konten lama meluruh DI ATAS warna baru yang masuk =====
-    // Color crossfade corners dimulai DI SINI (0.2s, di balik/bersamaan curtain)
     tl.call(
       () => {
         document.body.classList.toggle('pt-corners-dark', toProject)
+        document.body.classList.toggle('pt-corners-light', !toProject) // TAMBAHAN: Nyalakan putih saat pulang
         window.dispatchEvent(new Event('pt-cover-start'))
       },
       null,
@@ -109,9 +109,6 @@ function PageTransition({ children }) {
     )
 
     // ===== SWAP: mount konten baru di balik beat warna =====
-    // MODEL A: pasang HOLD class SEBELUM swap supaya instance baru lahir
-    // di posisi "lama" (hold-top untuk home, hold-down untuk project).
-    // Dengan begitu rise/fall TERLIHAT saat hold dilepas di REVEAL.
     tl.call(
       () => {
         document.body.classList.add(
@@ -130,7 +127,6 @@ function PageTransition({ children }) {
     )
 
     // ===== REVEAL: CUT, bukan fade =====
-    // Lepas hold → posisi corners ber-transisi (rise di project, fall di home)
     tl.call(
       () => {
         document.body.classList.remove('pt-tr-hidden', 'pt-exit-active')
@@ -169,6 +165,9 @@ function PageTransition({ children }) {
       <div ref={viewportRef} className="ptViewport">
         {cloneElement(children, { location: displayLoc })}
       </div>
+
+      {/* CORNERS PERSISTENT: hidup di luar viewport, tidak ikut unmount saat route swap */}
+      <Corners />
     </PageTransitionContext.Provider>
   )
 }

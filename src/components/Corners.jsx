@@ -37,7 +37,7 @@ function IconBox({ type }) {
   )
 }
 
-function Corners({ onBack }) {
+function Corners() {
   const [aboutOpen, setAboutOpen] = useState(false)
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
@@ -89,9 +89,9 @@ function Corners({ onBack }) {
         }
       })
     }
-    
+
     window.addEventListener('pt-settled', resetInlineAnim)
-    
+
     return () => {
       document.body.classList.remove('pt-corners-pre')
       window.removeEventListener('pt-settled', resetInlineAnim)
@@ -109,7 +109,7 @@ function Corners({ onBack }) {
   }
 
   const handleBackClick = () => {
-    if (onBack) onBack()
+    navigate('/')
   }
 
   const anim = (delay) =>
@@ -198,7 +198,7 @@ function Corners({ onBack }) {
         </button>
       )}
 
-      {!isHome && !aboutOpen && onBack && (
+      {!isHome && !aboutOpen && (
         <button
           type="button"
           className="btn-back btn-back--back"
