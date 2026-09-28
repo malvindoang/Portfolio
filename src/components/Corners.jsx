@@ -39,6 +39,7 @@ function IconBox({ type }) {
 
 function Corners() {
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [exitingBtn, setExitingBtn] = useState(null) // 'back' | 'close' | null
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
   const location = useLocation()
@@ -80,6 +81,14 @@ function Corners() {
     }
   }, [aboutOpen])
 
+  // ===== AUTO-RESET exitingBtn =====
+  // Mencegah state terjebak (stuck) setelah navigasi atau tutup about.
+  // Setiap kali routePath atau aboutOpen berubah, exitingBtn di-reset ke null.
+  // Ini menjamin tombol back/close selalu siap untuk interaksi berikutnya.
+  useEffect(() => {
+    setExitingBtn(null)
+  }, [routePath, aboutOpen])
+
   useEffect(() => {
     const resetInlineAnim = () => {
       const sel = '.links, .social, .contact, .credits'
@@ -108,8 +117,22 @@ function Corners() {
     navigate('/')
   }
 
+  // ===== HANDLER DENGAN EXIT ANIMATION =====
   const handleBackClick = () => {
-    navigate('/')
+    if (exitingBtn) return // Cegah double click
+    setExitingBtn('back')
+    setTimeout(() => {
+      navigate('/')
+    }, 500) // Tunggu animasi 0.5s selesai
+  }
+
+  const handleCloseClick = () => {
+    if (exitingBtn) return // Cegah double click
+    setExitingBtn('close')
+    setTimeout(() => {
+      setAboutOpen(false)
+      setExitingBtn(null)
+    }, 500) // Tunggu animasi 0.5s selesai
   }
 
   const anim = (delay) =>
@@ -186,29 +209,33 @@ function Corners() {
 
       <About isOpen={aboutOpen} />
 
-      {aboutOpen && (
+      {/* TOMBOL CLOSE (ABOUT) */}
+      {(aboutOpen && !exitingBtn) || exitingBtn === 'close' ? (
         <button
           type="button"
-          className="btn-back btn-back--close"
-          onClick={() => setAboutOpen(false)}
+          className={`btn-back btn-back--close ${exitingBtn === 'close' ? 'is-exiting' : ''}`}
+          onClick={handleCloseClick}
           aria-label="Close about"
           style={btnAnim}
+          disabled={!!exitingBtn}
         >
           <IconBox type="close" />
         </button>
-      )}
+      ) : null}
 
-      {!isHome && !aboutOpen && (
+      {/* TOMBOL BACK (PROJECT) */}
+      {(!isHome && !aboutOpen && !exitingBtn) || exitingBtn === 'back' ? (
         <button
           type="button"
-          className="btn-back btn-back--back"
+          className={`btn-back btn-back--back ${exitingBtn === 'back' ? 'is-exiting' : ''}`}
           onClick={handleBackClick}
           aria-label="Back to home"
           style={btnAnim}
+          disabled={!!exitingBtn}
         >
           <IconBox type="back" />
         </button>
-      )}
+      ) : null}
     </>,
     document.body
   )

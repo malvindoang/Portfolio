@@ -380,9 +380,23 @@ body.about-open .aboutDash {
   border-color: currentColor;
   transform: scale(1);
 }
+
+/* Entrance */
 @keyframes btnIn {
   from { transform: translateX(120px); }
   to { transform: translateX(0); }
+}
+
+/* Exit (Mirror dari btnIn) */
+@keyframes btnOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(120px); opacity: 0; }
+}
+
+/* Class is-exiting ditambahkan via React state, override animasi masuk */
+.btn-back.is-exiting {
+  animation: btnOut 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
+  pointer-events: none;
 }
 
 .btn-box {
