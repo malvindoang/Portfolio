@@ -13,7 +13,6 @@ gsap.registerPlugin(ScrollTrigger)
 
 const ALL_PROJECTS = SECTIONS.flatMap((s) => s.projects)
 
-// ===== HERO ENTRANCE (POLA VANHOLTZ: CURTAIN REVEAL) =====
 const HERO_CURTAIN_START_DELAY = 1.4
 const HERO_CURTAIN_DURATION = 0.9
 const HERO_TITLE_START_DELAY = 1.6
@@ -23,12 +22,10 @@ const HERO_TITLE_RISE_PX = 160
 const HERO_DECODE_CAP_MS = 2500
 const HERO_FALLBACK_MS = 300
 
-// ===== EDITORIAL GATE: kapan editorial boleh reveal =====
 const HERO_EDITORIAL_GATE_FRACTION = 0.25
 
 const HERO_PARALLAX_SCRUB = 5
 
-// ===== NEXT PROJECT TITLE ANIMATION (Fill Lock + Rotate Deeper) =====
 const NEXT_TITLE_LOCK_DURATION = 1.2
 const NEXT_TITLE_ROTATE_DURATION = 0.5
 const NEXT_TITLE_ROTATE_DEG = -90
@@ -55,13 +52,10 @@ function ProjectDetail() {
 
   useEffect(() => {
     if (!isActive) return
-    window.scrollTo(0, 0)
+    // T5 #4: Tambah behavior: 'instant' untuk hindari smooth scroll animation
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }, [slug, isActive])
 
-  // ===== MODEL A: class page-project dipasang PRE-PAINT =====
-  // SATU-SATUNYA PERUBAHAN DI FILE INI: useEffect → useLayoutEffect.
-  // Saat refresh di project, background putih + posisi/warna corners sudah
-  // benar SEBELUM paint pertama → tidak ada flash merah, tidak ada desinkron.
   useLayoutEffect(() => {
     if (!isActive) return
     document.body.classList.add('page-project', `theme-${projectTheme}`)
@@ -70,7 +64,6 @@ function ProjectDetail() {
     }
   }, [projectTheme, isActive])
 
-  // ===== HERO: CURTAIN REVEAL + TITLE FADE/RISE + PARALLAX =====
   useLayoutEffect(() => {
     if (!isActive) return
 
@@ -80,12 +73,6 @@ function ProjectDetail() {
     const imageEl = heroEl?.querySelector('.detailHeroImage')
     if (!titleEl || !heroEl) return
 
-    // Capture posisi hero RELATIF DOKUMEN (top + scrollY), bukan viewport (top saja).
-    // Saat navigate antar project, scrollY mungkin masih tinggi dari halaman sebelumnya
-    // karena useEffect scrollTo(0,0) jalan SETELAH useLayoutEffect.
-    // Dengan +scrollY, heroInitialTop selalu benar (220) terlepas dari timing.
-    // Sebelum fix: heroInitialTop bisa negatif (misal -1842 saat scrollY=3796),
-    // end ScrollTrigger jadi negatif (+=-1304), parallax tidak pernah aktif.
     const heroInitialTop = heroEl.getBoundingClientRect().top + window.scrollY
 
     const motionState = motionStateRef.current
@@ -242,7 +229,6 @@ function ProjectDetail() {
     }
   }, [isActive, slug])
 
-  // ===== NEXT PROJECT TITLE ANIMATION CLEANUP =====
   useEffect(() => {
     return () => {
       if (nextTitleAnimRef.current) {
@@ -253,11 +239,6 @@ function ProjectDetail() {
     }
   }, [slug])
 
-  // ===== RESET NEXT TITLE STATE SAAT SLUG BERUBAH =====
-  // Membersihkan inline style GSAP dan class is-clicked yang terbawa dari
-  // halaman sebelumnya. Tanpa ini, elemen .detailNextTitle di halaman baru
-  // akan masih punya opacity:0 dan rotateY(-90deg) dari animasi GSAP di
-  // halaman lama, sehingga Next Project title tidak terlihat (invisible).
   useEffect(() => {
     const titleEl = nextTitleRef.current
     if (!titleEl) return
@@ -280,10 +261,6 @@ function ProjectDetail() {
       const r = heroRef.current?.getBoundingClientRect()
       const overHero = r ? r.top < 90 && r.bottom > 90 : false
       document.body.classList.toggle('on-hero', overHero)
-
-      const inTransition = document.body.classList.contains('pt-active')
-      const heroCoversWordmark = !inTransition && r ? r.bottom > vh - 118 : false
-      document.body.classList.toggle('wordmark-hidden', heroCoversWordmark)
 
       const readingOn = window.scrollY >= 50
 
@@ -323,7 +300,6 @@ function ProjectDetail() {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', update)
       document.body.classList.remove('on-hero')
-      document.body.classList.remove('wordmark-hidden')
       document.body.classList.remove('reading-mode')
     }
   }, [isActive])
@@ -336,7 +312,6 @@ function ProjectDetail() {
 
   const heroImage = content.hero
 
-  // ===== NEXT PROJECT CLICK HANDLER =====
   const handleNextProjectClick = (e) => {
     e.preventDefault()
     if (isNavigatingRef.current) return
@@ -352,9 +327,6 @@ function ProjectDetail() {
       nextTitleAnimRef.current.kill()
     }
 
-    // Freeze title di state hover (full fill + rotateY 0) selama animation.
-    // Class .is-clicked mematikan CSS transition bawaan, supaya mouse-out
-    // selama lock tidak mengembalikan title ke miring + outline.
     titleEl.classList.add('is-clicked')
 
     const tl = gsap.timeline({
@@ -364,11 +336,9 @@ function ProjectDetail() {
       },
     })
 
-    // Phase 1: Freeze inline style (rotateY 0 + color black) + lock duration
     tl.set(titleEl, { rotateY: 0, color: '#1e1e1e' })
     tl.to(titleEl, { duration: NEXT_TITLE_LOCK_DURATION })
 
-    // Phase 2: Rotate deeper — rotateY 0 → -90, opacity 1 → 0
     tl.to(titleEl, {
       rotateY: NEXT_TITLE_ROTATE_DEG,
       opacity: 0,
@@ -381,7 +351,6 @@ function ProjectDetail() {
 
   return (
     <>
-
       <article className="detail">
         <section ref={heroRef} className="detailHero">
           {heroImage && (

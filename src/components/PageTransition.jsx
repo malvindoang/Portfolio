@@ -18,7 +18,6 @@ const COVER_DURATION = 0.35
 const HOLD_COVER = 0.12
 const TR_OUT = 0.12
 
-// ===== durasi exit phase (project→home saja) =====
 const EXIT_DURATION = 1.6
 
 function PageTransition({ children }) {
@@ -69,14 +68,12 @@ function PageTransition({ children }) {
     const tl = gsap.timeline({ onComplete: finish })
     tlRef.current = tl
 
-    // ===== EXIT PHASE (hanya project→home) =====
     const coverStart = fromProject ? EXIT_DURATION : 0
 
     if (fromProject) {
       tl.call(
         () => {
           document.body.classList.add('pt-exit-active')
-          window.dispatchEvent(new Event('pt-exit-start'))
         },
         null,
         0
@@ -84,12 +81,10 @@ function PageTransition({ children }) {
       tl.to({}, { duration: EXIT_DURATION }, 0)
     }
 
-    // ===== COVER: konten lama meluruh DI ATAS warna baru yang masuk =====
     tl.call(
       () => {
         document.body.classList.toggle('pt-corners-dark', toProject)
-        document.body.classList.toggle('pt-corners-light', !toProject) // TAMBAHAN: Nyalakan putih saat pulang
-        window.dispatchEvent(new Event('pt-cover-start'))
+        document.body.classList.toggle('pt-corners-light', !toProject)
       },
       null,
       coverStart
@@ -99,7 +94,6 @@ function PageTransition({ children }) {
     tl.set(curtain, { opacity: 1 }, coverStart + COVER_DURATION)
     tl.set(viewport, { opacity: 0 }, coverStart + COVER_DURATION)
 
-    // Fade-out grup chrome LAMA (jendela TR_OUT, selesai tepat saat swap)
     tl.call(
       () => {
         document.body.classList.add('pt-tr-hidden')
@@ -108,25 +102,23 @@ function PageTransition({ children }) {
       coverStart + COVER_DURATION - TR_OUT
     )
 
-    // ===== SWAP: mount konten baru di balik beat warna =====
     tl.call(
       () => {
-        document.body.classList.add(
-          'pt-corners-hold',
-          toProject ? 'pt-corners-hold-down' : 'pt-corners-hold-top'
-        )
+        if (!fromProject && toProject) {
+          document.body.classList.add('pt-corners-hold', 'pt-corners-hold-down')
+        } else if (fromProject && !toProject) {
+          document.body.classList.add('pt-corners-hold', 'pt-corners-hold-top')
+        }
         document.body.classList.remove('pt-tr-hidden')
         window.__PT_HOME_ENTRANCE_PENDING__ = !toProject
-        window.scrollTo(0, 0)
+        window.scrollTo({ top: 0, behavior: 'instant' })
         setDisplayLoc(location)
         document.body.classList.toggle('pt-bg-project', toProject)
-        window.dispatchEvent(new Event('pt-bg-set'))
       },
       null,
       coverStart + COVER_DURATION + 0.02
     )
 
-    // ===== REVEAL: CUT, bukan fade =====
     tl.call(
       () => {
         document.body.classList.remove('pt-tr-hidden', 'pt-exit-active')
@@ -149,7 +141,6 @@ function PageTransition({ children }) {
 
   return (
     <PageTransitionContext.Provider value={{ isActive: true, routePath: displayLoc.pathname }}>
-      {/* Curtain = lapis warna, DI BAWAH konten (z 5) */}
       <div
         ref={curtainRef}
         aria-hidden="true"
@@ -161,12 +152,10 @@ function PageTransition({ children }) {
           pointerEvents: 'none',
         }}
       />
-      {/* Viewport = konten, DI ATAS curtain (z 10), DI BAWAH corners (z 60) */}
       <div ref={viewportRef} className="ptViewport">
         {cloneElement(children, { location: displayLoc })}
       </div>
 
-      {/* CORNERS PERSISTENT: hidup di luar viewport, tidak ikut unmount saat route swap */}
       <Corners />
     </PageTransitionContext.Provider>
   )

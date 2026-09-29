@@ -6,55 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MALVIN - PORTOFOLIO</title>
 
-    <!-- ===== PRELOAD FONT KRITIS (Druk Wide Web) =====
-         Download font SEBELUM CSS di-parse, supaya saat browser render
-         teks wordmark / hero title, font SUDAH siap. Tidak ada FOUT
-         (Flash of Unstyled Text) — teks tidak berubah font setelah load.
-         
-         Catatan: preload TIDAK menambah berat website. File yang
-         didownload tetap sama (2 file woff2). Hanya mengubah KAPAN
-         download dimulai (lebih awal), bukan APA yang didownload.
-    -->
-    <link
-      rel="preload"
-      href="/src/fonts/DrukWide-Super.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="/src/fonts/DrukWide-Medium.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+    <link rel="preload" href="/src/fonts/DrukWide-Super.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/fonts/DrukWide-Medium.woff2" as="font" type="font/woff2" crossorigin />
 
-    <!-- FONT: Archivo Black — pengganti gratis Druk Wide Web (berbayar).
-         Karakter lebih lebar & blocky dibanding Arial Black, dipakai
-         sebagai basis "brutal" untuk .title (lihat Home.css).
-         Catatan: akan dihapus di Fase C (Performance Optimization). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- ===== INLINE SCRIPT ANTI-FLASH BACKGROUND =====
-         Jalan SEBELUM React render. Cek URL saat ini:
-         - Jika di /project/... → langsung set class page-project
-         - Jika tidak → biarkan default (merah)
-         
-         Ini mencegah flash merah saat refresh di halaman project,
-         karena body sudah punya background putih SEBELUM frame
-         pertama digambar oleh browser.
-    -->
+    <!-- ===== INLINE SCRIPT: UNIVERSAL FIRST-LOAD RESET ===== -->
     <script>
-      if (window.location.pathname.startsWith('/project')) {
-        document.body.classList.add('page-project');
-      }
+      (function() {
+        var path = window.location.pathname;
+        
+        // Regex ketat: HANYA match jika formatnya /project/slug-tanpa-slash
+        var isValidProject = /^\/project\/[^/]+$/.test(path);
+        
+        if (isValidProject) {
+          document.body.classList.add('page-project');
+        } else {
+          document.body.classList.remove('page-project');
+        }
+      })();
     </script>
 
     <div id="root"></div>

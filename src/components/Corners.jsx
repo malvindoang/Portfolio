@@ -39,22 +39,21 @@ function IconBox({ type }) {
 
 function Corners() {
   const [aboutOpen, setAboutOpen] = useState(false)
-  const [exitingBtn, setExitingBtn] = useState(null) // 'back' | 'close' | null
+  const [exitingBtn, setExitingBtn] = useState(null)
   const wordmarkRef = useRef(null)
   const navLinksRef = useRef(null)
   const location = useLocation()
   const navigate = useNavigate()
 
   const { routePath } = useContext(PageTransitionContext)
-  const isHome = (routePath ?? location.pathname) === '/'
-
-  const [bornDuringTransition] = useState(() =>
-    document.body.classList.contains('pt-active')
-  )
+  const currentPath = routePath ?? location.pathname
+  
+  // Regex ketat untuk menentukan isHome.
+  const isValidProjectUrl = /^\/project\/[^/]+$/.test(currentPath)
+  const isHome = !isValidProjectUrl
 
   const delays = isHome ? HOME_DELAYS : PROJECT_DELAYS
 
-  // ===== MEASUREMENT: Hitung lebar max, set ke CSS Variable --grid-left =====
   useLayoutEffect(() => {
     const measure = () => {
       const w1 = wordmarkRef.current?.getBoundingClientRect().width || 0
@@ -81,63 +80,42 @@ function Corners() {
     }
   }, [aboutOpen])
 
-  // ===== AUTO-RESET exitingBtn =====
-  // Mencegah state terjebak (stuck) setelah navigasi atau tutup about.
-  // Setiap kali routePath atau aboutOpen berubah, exitingBtn di-reset ke null.
-  // Ini menjamin tombol back/close selalu siap untuk interaksi berikutnya.
+  // ===== AUTO-RESET exitingBtn + aboutOpen =====
   useEffect(() => {
     setExitingBtn(null)
-  }, [routePath, aboutOpen])
-
-  useEffect(() => {
-    const resetInlineAnim = () => {
-      const sel = '.links, .social, .contact, .credits'
-      document.querySelectorAll(sel).forEach(el => {
-        if (el.style.animation === 'none') {
-          el.style.animation = ''
-        }
-      })
-    }
-
-    window.addEventListener('pt-settled', resetInlineAnim)
-
-    return () => {
-      document.body.classList.remove('pt-corners-pre')
-      window.removeEventListener('pt-settled', resetInlineAnim)
-    }
-  }, [])
+    setAboutOpen(false)
+  }, [routePath])
 
   const handleWorksClick = () => {
     setAboutOpen(false)
-    navigate('/')
+    if (!isHome) {
+      navigate('/')
+    }
   }
 
-  const handleWordmarkClick = () => {
+  const handleWordmarkClick = (e) => {
     setAboutOpen(false)
-    navigate('/')
+    if (isHome) {
+      e.preventDefault()
+    }
   }
 
-  // ===== HANDLER DENGAN EXIT ANIMATION =====
   const handleBackClick = () => {
-    if (exitingBtn) return // Cegah double click
+    if (exitingBtn) return
     setExitingBtn('back')
     setTimeout(() => {
       navigate('/')
-    }, 500) // Tunggu animasi 0.5s selesai
+    }, 500)
   }
 
   const handleCloseClick = () => {
-    if (exitingBtn) return // Cegah double click
+    if (exitingBtn) return
     setExitingBtn('close')
     setTimeout(() => {
       setAboutOpen(false)
       setExitingBtn(null)
-    }, 500) // Tunggu animasi 0.5s selesai
+    }, 500)
   }
-
-  const anim = (delay) =>
-    bornDuringTransition ? { animation: 'none' } : { animationDelay: `${delay}s` }
-  const btnAnim = bornDuringTransition ? { animation: 'none' } : undefined
 
   const up = !isHome || aboutOpen
 
@@ -148,7 +126,7 @@ function Corners() {
           <Link to="/" className="wordmark-link" onClick={handleWordmarkClick}>
             <div className="wordmark">
               <span className="slideUp">
-                <span className="wordmark-text" style={anim(delays.wordmark)}>
+                <span className="wordmark-text" style={{ animationDelay: `${delays.wordmark}s` }}>
                   MALVIN
                 </span>
               </span>
@@ -158,11 +136,11 @@ function Corners() {
 
         <div className="info">
           <div className="info-left">
-            <div className="contact" style={anim(delays.info[0])}>
+            <div className="contact" style={{ animationDelay: `${delays.info[0]}s` }}>
               <span className="line">Front-end Developer</span>
               <span className="line">UI/UX Designer</span>
             </div>
-            <div className="contact" style={anim(delays.info[1])}>
+            <div className="contact" style={{ animationDelay: `${delays.info[1]}s` }}>
               <span className="line">Jakarta, Indonesia</span>
               <span className="line">
                 <a href="mailto:malvin15.doang@gmail.com" className="email-link">
@@ -171,7 +149,7 @@ function Corners() {
               </span>
             </div>
 
-            <nav ref={navLinksRef} className="links" style={anim(delays.links)}>
+            <nav ref={navLinksRef} className="links" style={{ animationDelay: `${delays.links}s` }}>
               <ul>
                 <li className="about-li">
                   <button type="button" className="link" onClick={() => setAboutOpen((v) => !v)}>
@@ -189,7 +167,7 @@ function Corners() {
           </div>
 
           <div className="info-right">
-            <nav className="social" style={anim(delays.social)}>
+            <nav className="social" style={{ animationDelay: `${delays.social}s` }}>
               <ul>
                 {SOCIAL_LINKS.map((s) => (
                   <li key={s.label}>
@@ -200,7 +178,7 @@ function Corners() {
                 ))}
               </ul>
             </nav>
-            <div className="credits" style={anim(delays.credits)}>
+            <div className="credits" style={{ animationDelay: `${delays.credits}s` }}>
               <strong>design</strong>
             </div>
           </div>
@@ -209,28 +187,24 @@ function Corners() {
 
       <About isOpen={aboutOpen} />
 
-      {/* TOMBOL CLOSE (ABOUT) */}
       {(aboutOpen && !exitingBtn) || exitingBtn === 'close' ? (
         <button
           type="button"
           className={`btn-back btn-back--close ${exitingBtn === 'close' ? 'is-exiting' : ''}`}
           onClick={handleCloseClick}
           aria-label="Close about"
-          style={btnAnim}
           disabled={!!exitingBtn}
         >
           <IconBox type="close" />
         </button>
       ) : null}
 
-      {/* TOMBOL BACK (PROJECT) */}
       {(!isHome && !aboutOpen && !exitingBtn) || exitingBtn === 'back' ? (
         <button
           type="button"
           className={`btn-back btn-back--back ${exitingBtn === 'back' ? 'is-exiting' : ''}`}
           onClick={handleBackClick}
           aria-label="Back to home"
-          style={btnAnim}
           disabled={!!exitingBtn}
         >
           <IconBox type="back" />
