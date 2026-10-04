@@ -16,7 +16,6 @@ const COLOR_HOME = '#E34234'
 const COLOR_PROJECT = '#F2F2F2'
 const COVER_DURATION = 0.35
 const HOLD_COVER = 0.12
-const TR_OUT = 0.12
 
 const EXIT_DURATION = 1.6
 
@@ -56,8 +55,8 @@ function PageTransition({ children }) {
       gsap.set(viewport, { clearProps: 'opacity' })
       gsap.set(curtain, { opacity: 0 })
       document.body.classList.remove(
-        'pt-active', 'overflowHidden', 'pt-tr-hidden', 'pt-exit-active',
-        'pt-corners-hold', 'pt-corners-hold-top', 'pt-corners-hold-down',
+        'pt-active', 'overflowHidden', 'pt-exit-active',
+        'pt-corners-hold-top', 'pt-corners-hold-down',
         'pt-corners-dark', 'pt-corners-light', 'pt-bg-project'
       )
       runningRef.current = false
@@ -96,20 +95,11 @@ function PageTransition({ children }) {
 
     tl.call(
       () => {
-        document.body.classList.add('pt-tr-hidden')
-      },
-      null,
-      coverStart + COVER_DURATION - TR_OUT
-    )
-
-    tl.call(
-      () => {
         if (!fromProject && toProject) {
-          document.body.classList.add('pt-corners-hold', 'pt-corners-hold-down')
+          document.body.classList.add('pt-corners-hold-down')
         } else if (fromProject && !toProject) {
-          document.body.classList.add('pt-corners-hold', 'pt-corners-hold-top')
+          document.body.classList.add('pt-corners-hold-top')
         }
-        document.body.classList.remove('pt-tr-hidden')
         window.__PT_HOME_ENTRANCE_PENDING__ = !toProject
         window.scrollTo({ top: 0, behavior: 'instant' })
         setDisplayLoc(location)
@@ -121,9 +111,9 @@ function PageTransition({ children }) {
 
     tl.call(
       () => {
-        document.body.classList.remove('pt-tr-hidden', 'pt-exit-active')
+        document.body.classList.remove('pt-exit-active')
         document.body.classList.remove(
-          'pt-corners-hold', 'pt-corners-hold-top', 'pt-corners-hold-down'
+          'pt-corners-hold-top', 'pt-corners-hold-down'
         )
         window.dispatchEvent(new Event('pt-reveal-start'))
       },
