@@ -1,20 +1,24 @@
 .detail {
-  padding: 220px 0 220px;
+  padding: 24vh 0 220px;
   color: var(--color-black);
 }
 
-/* ================= HERO ================= */
+/* ================= HERO =================
+   GEOMETRI FOLD-PINNING (pola Van Holtz, terkunci via audit DevTools):
+   24vh (top band) + 60vh (hero) + 16vh (gap) = 100vh
+   → intro editorial SELALU mulai tepat di garis fold (scroll 0 = below fold)
+   → hero bottom = 84vh → band 84–100vh = putih lega + corners saja
+   Jangan ubah ketiga angka ini tanpa mengukur ulang via script audit. */
 
 .detailHero {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  height: 28vw;
+  height: 60vh;
   min-height: 360px;
-  max-height: 70vh;
   overflow: visible;
-  margin-bottom: calc(51px + 5vh);
+  margin-bottom: 16vh;
 }
 
 .detailHeroImage {
