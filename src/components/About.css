@@ -1,23 +1,26 @@
 /* ============================================================
-   ABOUT v9 — safe-top DITURUNKAN dari blok corner (Opsi 1)
-   - Corner top-state tetap px (50px) seperti vanholtz
-   - Safe-top = corner-top + tinggi wordmark + gap proporsional (10vh)
-     → rongga corner→paragraf konsisten di semua viewport
+   ABOUT v10 — safe-top dikunci dari audit DevTools Van Holtz
+   - Container isi konten mulai di calc(103px + 15vh):
+     reverse-engineered dari 227px @1440x812 & 268px @1920x1080
+     → rongga chrome→paragraf proporsional di semua viewport
+   - Wordmark & navigasi TIDAK terpengaruh variabel ini
    - Paragraf TOP-ANCHORED di garis safe-top (permintaan Anda):
      posisi istirahat DAN garis clip scroll sama-sama di sana
    - Kolom: kiri 45% + gap 10% · kanan 45% (2 sub-kolom 50/50)
-   - Tipografi: lead 29/36 w500 · body 20/36 w400
-                h3 18 w500 · h6 16 w500 · li/span 14 w400
+   - Tipografi TIDAK diubah (keputusan Anda):
+     lead 29/36 w500 · body 20/36 w400
+     h3 18 w500 · h6 16 w500 · li/span 14 w400
    ============================================================ */
 
 :root {
-  /* Satu-satunya tempat mengatur jarak vertikal about.
-     Ubah --corner-gap saja kalau rongga terasa kurang/lebih:
-     10vh ≈ 108px @1080, ≈ 73px @730 (proporsional). */
-  --corner-top: 50px;    /* top wordmark state naik (px, seperti vanholtz) */
-  --corner-block: 34px;  /* tinggi wordmark 1 baris */
-  --corner-gap: 10vh;    /* rongga proporsional corner → paragraf */
-  --about-safe-top: calc(var(--corner-top) + var(--corner-block) + var(--corner-gap));
+  /* Satu-satunya tempat mengatur jarak vertikal atas container isi About.
+     Hasil audit DevTools Van Holtz (div.container):
+       1440x812  → 227px (28.0vh)
+       1920x1080 → 268px (24.8vh)
+     Reverse-engineered: calc(103px + 15vh)
+       @812  → 224.8px (Δ2px) · @1080 → 265px (Δ3px)
+     Wordmark/navigasi tidak memakai variabel ini — aman diubah. */
+  --about-safe-top: calc(103px + 15vh);
 }
 
 /* ===== OVERLAY ===== */
@@ -222,7 +225,9 @@ body.page-project .aboutEdu span {
 
 @media (max-width: 768px) {
   :root {
-    --corner-gap: 6vh;
+    /* Mobile mempertahankan perilaku lama (84px chrome + 6vh rongga)
+       supaya tidak regressi sebelum Fase D. */
+    --about-safe-top: calc(84px + 6vh);
   }
   .aboutScroll {
     top: var(--about-safe-top);
